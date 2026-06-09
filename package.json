@@ -1,0 +1,30 @@
+{
+  "name": "paradox_player",
+  "version": "1.0.0",
+  "description": "PARADOX Player",
+  "main": "main.js",
+
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+
+  "build": {
+    "appId": "com.paradox.player",
+    "productName": "PARADOX Player",
+
+    "mac": {
+      "target": "dmg"
+    }
+  },
+
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+
+  "devDependencies": {
+    "electron": "^38.8.6",
+    "electron-builder": "^26.15.2"
+  }
+}

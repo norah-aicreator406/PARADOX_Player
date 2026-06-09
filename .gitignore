@@ -1,0 +1,4 @@
+node_modules/
+dist/
+music/
+.DS_Store
