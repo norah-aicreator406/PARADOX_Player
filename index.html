@@ -449,6 +449,7 @@ let queue = [];
 let currentFilteredSongs = [];
 let currentFilteredSongIndex = -1;
 const MAX_QUEUE = 5;
+const RECENT_PLAYED_LIMIT = 10;
 
 const audio = document.getElementById('audio');
 
@@ -730,6 +731,8 @@ async function playSong(song, songIndex) {
   currentSong = song;
   currentFilteredSongIndex = songIndex;
 
+  addRecentPlayedSong(song);
+
   document.getElementById('nowPlaying').textContent = text;
 
   await ipcRenderer.invoke('copy-text', text);
@@ -915,17 +918,30 @@ function randomReserve() {
 
   const excludedArtists = getExcludedArtists();
   const alreadyQueuedArtists = queue.map(song => song.artist);
+  const recentPlayedSongs = getRecentPlayedSongs();
 
-  const candidateArtists = data.filter(artistData => {
-    if (excludedArtists.includes(artistData.artist)) return false;
-    if (alreadyQueuedArtists.includes(artistData.artist)) return false;
-    if (!artistData.songs || artistData.songs.length === 0) return false;
+  const candidateArtists = data
+    .filter(artistData => {
+      if (excludedArtists.includes(artistData.artist)) return false;
+      if (alreadyQueuedArtists.includes(artistData.artist)) return false;
+      if (!artistData.songs || artistData.songs.length === 0) return false;
 
-    return true;
-  });
+      return true;
+    })
+    .map(artistData => {
+      const availableSongs = artistData.songs.filter(song => {
+        return !recentPlayedSongs.includes(getSongKey(song));
+      });
+
+      return {
+        artist: artistData.artist,
+        songs: availableSongs
+      };
+    })
+    .filter(artistData => artistData.songs.length > 0);
 
   if (candidateArtists.length === 0) {
-    alert('ランダム予約できるアーティストがいません。');
+    alert(`ランダム予約できる曲がありません。直近${RECENT_PLAYED_LIMIT}曲に含まれる曲は除外されています。`);
     return;
   }
 
@@ -942,6 +958,35 @@ function randomReserve() {
   openQueueModal();
 
   alert(`${selectedArtists.length}曲をランダム予約しました。`);
+}
+
+function getSongKey(song) {
+  return `${song.artist}|||${song.title}`;
+}
+
+function getRecentPlayedSongs() {
+  const saved = localStorage.getItem('paradoxRecentPlayedSongs');
+
+  if (!saved) return [];
+
+  try {
+    return JSON.parse(saved);
+  } catch (error) {
+    return [];
+  }
+}
+
+function addRecentPlayedSong(song) {
+  const key = getSongKey(song);
+
+  let recent = getRecentPlayedSongs();
+
+  recent = recent.filter(item => item !== key);
+  recent.unshift(key);
+
+  recent = recent.slice(0, RECENT_PLAYED_LIMIT);
+
+  localStorage.setItem('paradoxRecentPlayedSongs', JSON.stringify(recent));
 }
 
 function getRandomSong(songs) {
