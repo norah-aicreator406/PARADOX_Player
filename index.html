@@ -317,6 +317,32 @@ audio {
   margin-top: 8px;
   height: 32px;
 }
+
+.tab.dragging {
+  opacity: 0.45;
+}
+
+.tab {
+  user-select: none;
+}
+.tab {
+  user-select: none;
+  cursor: grab;
+}
+
+.tab:active {
+  cursor: grabbing;
+}
+
+.tab.dragging {
+  opacity: 0.45;
+  transform: scale(0.96);
+}
+
+.tab.drag-over {
+  outline: 2px solid #00ffcc;
+  outline-offset: 2px;
+}
 </style>
 </head>
 
@@ -335,7 +361,7 @@ audio {
       <button class="nav" onclick="playNext()">⏭ 次</button>
       <button class="copy" onclick="copyCurrent()">📋 再生中をコピー</button>
       <button class="nav" onclick="openQueueModal()">予約リスト</button>
-      <button class="reload" onclick="loadSheet()">再読込</button>
+      <button class="reload" onclick="loadSongs()">曲リスト更新</button>
     </div>
 
     <audio id="audio" controls></audio>
@@ -354,8 +380,6 @@ audio {
 <div id="songs"></div>
 
 <script>
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQNKyegX34VNuejAAc8Er5XwH7jXwalfUtpvlKKmqrLdLJmMun9dHKqHuqskSxfQzUfItpNYittGj_6/pub?gid=0&single=true&output=csv';
-
 const { ipcRenderer } = require('electron');
 
 let data = [];
@@ -366,6 +390,7 @@ let currentFilteredSongs = [];
 let currentFilteredSongIndex = -1;
 
 const audio = document.getElementById('audio');
+
 audio.addEventListener('ended', () => {
   if (queue.length === 0) return;
 
@@ -376,6 +401,7 @@ audio.addEventListener('ended', () => {
 
   playSong(nextSong, -1);
 });
+
 let isDraggingQueue = false;
 let queueOffsetX = 0;
 let queueOffsetY = 0;
@@ -384,52 +410,40 @@ window.addEventListener('DOMContentLoaded', () => {
   const queueWindow = document.getElementById('queueFloatingWindow');
   const queueHeader = document.getElementById('queueFloatingHeader');
 
-  queueHeader.addEventListener('mousedown', (event) => {
-    isDraggingQueue = true;
-    queueOffsetX = event.clientX - queueWindow.offsetLeft;
-    queueOffsetY = event.clientY - queueWindow.offsetTop;
-  });
+  if (queueWindow && queueHeader) {
+    queueHeader.addEventListener('mousedown', (event) => {
+      isDraggingQueue = true;
+      queueOffsetX = event.clientX - queueWindow.offsetLeft;
+      queueOffsetY = event.clientY - queueWindow.offsetTop;
+    });
 
-  document.addEventListener('mousemove', (event) => {
-    if (!isDraggingQueue) return;
+    document.addEventListener('mousemove', (event) => {
+      if (!isDraggingQueue) return;
 
-    queueWindow.style.left = `${event.clientX - queueOffsetX}px`;
-    queueWindow.style.top = `${event.clientY - queueOffsetY}px`;
-  });
+      queueWindow.style.left = `${event.clientX - queueOffsetX}px`;
+      queueWindow.style.top = `${event.clientY - queueOffsetY}px`;
+    });
 
-  document.addEventListener('mouseup', () => {
-    isDraggingQueue = false;
-  });
+    document.addEventListener('mouseup', () => {
+      isDraggingQueue = false;
+    });
+  }
+
+  loadSongs();
 });
 
-loadSheet();
-
-async function loadSheet() {
+async function loadSongs() {
   try {
-    document.getElementById('nowPlaying').textContent = 'スプレッドシート読込中...';
+    document.getElementById('nowPlaying').textContent = 'musicフォルダ読込中...';
 
-    const response = await fetch(SHEET_CSV_URL + '&cache=' + Date.now());
-    const csvText = await response.text();
+    data = await ipcRenderer.invoke('get-songs');
 
-    data = parseSheetCsv(csvText);
-    await checkAllAudioFiles();
-    async function checkAllAudioFiles() {
-  for (const artistData of data) {
-    for (const song of artistData.songs) {
-      const audioPath = await ipcRenderer.invoke(
-        'find-audio-file',
-        song.artist,
-        song.title
-      );
-
-      song.hasAudio = !!audioPath;
-    }
-  }
-}
+    applySavedArtistOrder();
 
     currentIndex = 0;
     currentSong = null;
     currentFilteredSongIndex = -1;
+    currentFilteredSongs = [];
 
     renderTabs();
     renderSongs(0);
@@ -437,75 +451,9 @@ async function loadSheet() {
 
     document.getElementById('nowPlaying').textContent = '再生待機中';
   } catch (error) {
-    alert('スプレッドシートを読み込めませんでした: ' + error.message);
+    alert('musicフォルダを読み込めませんでした: ' + error.message);
     document.getElementById('nowPlaying').textContent = '読込失敗';
   }
-}
-
-function parseSheetCsv(csvText) {
-  const rows = parseCsv(csvText);
-  if (rows.length === 0) return [];
-
-  const artists = rows[0].map(name => name.trim());
-  const result = [];
-
-  artists.forEach((artist, colIndex) => {
-    if (!artist) return;
-
-    const songs = [];
-
-    for (let rowIndex = 1; rowIndex < rows.length; rowIndex++) {
-      const title = rows[rowIndex][colIndex];
-
-      if (title && title.trim()) {
-        songs.push({
-  artist,
-  title: title.trim(),
-  filePath: `${artist}/${title.trim()}`,
-  hasAudio: false
-});
-      }
-    }
-
-    result.push({ artist, songs });
-  });
-
-  return result;
-}
-
-function parseCsv(text) {
-  const rows = [];
-  let row = [];
-  let cell = '';
-  let inQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const nextChar = text[i + 1];
-
-    if (char === '"' && inQuotes && nextChar === '"') {
-      cell += '"';
-      i++;
-    } else if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
-      row.push(cell);
-      cell = '';
-    } else if ((char === '\n' || char === '\r') && !inQuotes) {
-      if (char === '\r' && nextChar === '\n') i++;
-      row.push(cell);
-      rows.push(row);
-      row = [];
-      cell = '';
-    } else {
-      cell += char;
-    }
-  }
-
-  row.push(cell);
-  rows.push(row);
-
-  return rows.filter(r => r.some(c => c.trim() !== ''));
 }
 
 function renderTabs() {
@@ -517,14 +465,95 @@ function renderTabs() {
     button.className = 'tab' + (index === currentIndex ? ' active' : '');
     button.textContent = `${item.artist} (${item.songs.length})`;
 
+    button.draggable = true;
+    button.dataset.index = index;
+
     button.onclick = () => {
       currentIndex = index;
       renderTabs();
       renderSongs(index);
     };
 
+    button.addEventListener('dragstart', (event) => {
+      event.dataTransfer.setData('text/plain', index);
+      button.classList.add('dragging');
+    });
+
+    button.addEventListener('dragend', () => {
+      button.classList.remove('dragging');
+    });
+
+    button.addEventListener('dragover', (event) => {
+  event.preventDefault();
+  button.classList.add('drag-over');
+});
+
+button.addEventListener('dragleave', () => {
+  button.classList.remove('drag-over');
+});
+
+    button.addEventListener('drop', (event) => {
+      event.preventDefault();
+      button.classList.remove('drag-over');
+
+      const fromIndex = Number(event.dataTransfer.getData('text/plain'));
+      const toIndex = index;
+
+      if (fromIndex === toIndex) return;
+
+      moveArtistTab(fromIndex, toIndex);
+    });
+
     tabs.appendChild(button);
   });
+}
+function moveArtistTab(fromIndex, toIndex) {
+  const movedItem = data.splice(fromIndex, 1)[0];
+  data.splice(toIndex, 0, movedItem);
+
+  if (currentIndex === fromIndex) {
+    currentIndex = toIndex;
+  } else if (fromIndex < currentIndex && toIndex >= currentIndex) {
+    currentIndex--;
+  } else if (fromIndex > currentIndex && toIndex <= currentIndex) {
+    currentIndex++;
+  }
+
+  saveArtistOrder();
+
+  renderTabs();
+  renderSongs(currentIndex);
+}
+
+function saveArtistOrder() {
+  const artistOrder = data.map(item => item.artist);
+  localStorage.setItem('paradoxArtistOrder', JSON.stringify(artistOrder));
+}
+
+function applySavedArtistOrder() {
+  const saved = localStorage.getItem('paradoxArtistOrder');
+
+  if (!saved) return;
+
+  try {
+    const artistOrder = JSON.parse(saved);
+
+    data.sort((a, b) => {
+      const indexA = artistOrder.indexOf(a.artist);
+      const indexB = artistOrder.indexOf(b.artist);
+
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+
+      return a.artist.localeCompare(b.artist, 'ja');
+    });
+  } catch (error) {
+    console.warn('タブ順の読み込みに失敗しました:', error);
+  }
 }
 
 function renderSongs(index) {
@@ -532,42 +561,32 @@ function renderSongs(index) {
   container.innerHTML = '';
 
   if (!data[index]) {
-    container.innerHTML = '<p>データがありません。</p>';
+    container.innerHTML = '<p>musicフォルダ内に曲がありません。</p>';
+    currentFilteredSongs = [];
     return;
   }
 
   const keyword = document
-  .getElementById('searchInput')
-  .value
-  .trim()
-  .toLowerCase();
+    .getElementById('searchInput')
+    .value
+    .trim()
+    .toLowerCase();
 
-if (keyword) {
+  if (keyword) {
+    currentFilteredSongs = [];
 
-  currentFilteredSongs = [];
+    data.forEach(artistData => {
+      artistData.songs.forEach(song => {
+        const text = `${song.title} ${song.artist}`.toLowerCase();
 
-  data.forEach(artistData => {
-
-    artistData.songs.forEach(song => {
-
-      const text =
-        `${song.title} ${song.artist}`
-        .toLowerCase();
-
-      if (text.includes(keyword)) {
-        currentFilteredSongs.push(song);
-      }
-
+        if (text.includes(keyword)) {
+          currentFilteredSongs.push(song);
+        }
+      });
     });
-
-  });
-
-} else {
-
-  currentFilteredSongs =
-    data[index].songs;
-
-}
+  } else {
+    currentFilteredSongs = data[index].songs;
+  }
 
   if (currentFilteredSongs.length === 0) {
     container.innerHTML = '<p>該当する曲がありません。</p>';
@@ -580,16 +599,18 @@ if (keyword) {
     const card = document.createElement('div');
     card.className = 'song';
 
-    if (currentSong && currentSong.title === song.title && currentSong.artist === song.artist) {
+    if (
+      currentSong &&
+      currentSong.title === song.title &&
+      currentSong.artist === song.artist
+    ) {
       card.classList.add('playing');
       currentFilteredSongIndex = songIndex;
     }
 
-   const icon = song.hasAudio ? '🟢' : '⚪';
-
-const title = document.createElement('div');
-title.className = 'title';
-title.textContent = `${icon} ${text}`;
+    const title = document.createElement('div');
+    title.className = 'title';
+    title.textContent = text;
 
     const buttons = document.createElement('div');
     buttons.className = 'buttons';
@@ -612,13 +633,13 @@ title.textContent = `${icon} ${text}`;
       setTimeout(() => copyBtn.textContent = '📋 コピー', 1000);
     };
 
-const reserveBtn = document.createElement('button');
-reserveBtn.className = 'nav';
-reserveBtn.textContent = '➕ 予約';
+    const reserveBtn = document.createElement('button');
+    reserveBtn.className = 'nav';
+    reserveBtn.textContent = '➕ 予約';
 
-reserveBtn.onclick = () => {
-  addToQueue(song);
-};
+    reserveBtn.onclick = () => {
+      addToQueue(song);
+    };
 
     buttons.appendChild(playBtn);
     buttons.appendChild(copyBtn);
@@ -633,14 +654,12 @@ reserveBtn.onclick = () => {
 async function playSong(song, songIndex) {
   const text = `♫${song.title} - ${song.artist}`;
 
-  const audioPath = await ipcRenderer.invoke('find-audio-file', song.artist, song.title);
-
-  if (!audioPath) {
-    alert('音源ファイルが見つかりませんでした。');
+  if (!song.fileUrl) {
+    alert('音源ファイルのURLが取得できませんでした。');
     return;
   }
 
-  audio.src = 'file://' + audioPath;
+  audio.src = song.fileUrl;
 
   audio.play().catch(error => {
     alert('再生できませんでした: ' + error.message);
@@ -719,6 +738,7 @@ function removeFromQueue(index) {
   renderQueue();
   renderSongs(currentIndex);
 }
+
 function renderQueue() {
   const queueList = document.getElementById('queueList');
   queueList.innerHTML = '';
