@@ -117,16 +117,16 @@ function openVisualizerWindow() {
   }
 
   visualizerWindow = new BrowserWindow({
-  width: 540,
-  height: 960,
-  title: 'PARADOX Visualizer',
-  backgroundColor: '#000000',
-  alwaysOnTop: true,
-  webPreferences: {
-    nodeIntegration: true,
-    contextIsolation: false
-  }
-});
+    width: 540,
+    height: 960,
+    title: 'PARADOX Visualizer',
+    backgroundColor: '#000000',
+    alwaysOnTop: true,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    }
+  });
 
   visualizerWindow.loadFile('visualizer.html');
   visualizerWindow.setAlwaysOnTop(true);
@@ -287,6 +287,26 @@ ipcMain.handle('send-visualizer-template', async (event, templateName) => {
   if (!visualizerWindow || visualizerWindow.isDestroyed()) return false;
 
   visualizerWindow.webContents.send('visualizer-template', templateName);
+  return true;
+});
+
+ipcMain.handle('send-visualizer-effect-settings', async (event, settings) => {
+  if (!visualizerWindow || visualizerWindow.isDestroyed()) return false;
+
+  visualizerWindow.webContents.send('visualizer-effect-settings', settings);
+  return true;
+});
+
+ipcMain.handle('set-visualizer-aspect-ratio', async (event, ratio) => {
+  if (!visualizerWindow || visualizerWindow.isDestroyed()) return false;
+
+  if (ratio === '16:9') {
+    visualizerWindow.setSize(1280, 720);
+  } else {
+    visualizerWindow.setSize(540, 960);
+  }
+
+  visualizerWindow.webContents.send('visualizer-aspect-ratio', ratio);
   return true;
 });
 

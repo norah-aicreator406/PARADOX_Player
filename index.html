@@ -556,6 +556,12 @@ audio {
   <span id="visualizerToggleLabel">ON</span>
 </div>
 
+<div id="aspectRatioControl">
+  <span>比率：</span>
+  <button onclick="changeVisualizerAspectRatio('9:16')">9:16</button>
+  <button onclick="changeVisualizerAspectRatio('16:9')">16:9</button>
+</div>
+
 <div id="brandNameControl">
   <span>表示名：</span>
   <input
@@ -571,6 +577,26 @@ audio {
   <select id="templateSelect" onchange="changeVisualizerTemplate()">
     <option value="standard">Standard</option>
   </select>
+</div>
+
+<div id="effectControl">
+  <div>エフェクト調整</div>
+
+  <label>スペクトラム
+    <input type="range" min="0" max="100" value="100" oninput="changeEffectSettings()">
+  </label>
+
+  <label>パーティクル
+    <input type="range" min="0" max="100" value="100" oninput="changeEffectSettings()">
+  </label>
+
+  <label>オーロラ
+    <input type="range" min="0" max="100" value="100" oninput="changeEffectSettings()">
+  </label>
+
+  <label>グロー
+    <input type="range" min="0" max="100" value="100" oninput="changeEffectSettings()">
+  </label>
 </div>
 
     <audio id="audio" controls></audio>
@@ -597,7 +623,6 @@ audio {
 
 <div id="songs"></div>
 
-<option value="neon-circle">Neon Circle</option>
 
 <script>
 const { ipcRenderer } = require('electron');
@@ -1549,6 +1574,24 @@ function openQueueModal() {
 
 function closeQueueWindow() {
   document.getElementById('queueFloatingWindow').classList.remove('show');
+}
+
+async function changeVisualizerAspectRatio(ratio) {
+  await ipcRenderer.invoke('open-visualizer-window');
+  await ipcRenderer.invoke('set-visualizer-aspect-ratio', ratio);
+}
+
+async function changeEffectSettings() {
+  const inputs = document.querySelectorAll('#effectControl input');
+
+  const settings = {
+    spectrum: Number(inputs[0].value) / 100,
+    particles: Number(inputs[1].value) / 100,
+    aurora: Number(inputs[2].value) / 100,
+    glow: Number(inputs[3].value) / 100
+  };
+
+  await ipcRenderer.invoke('send-visualizer-effect-settings', settings);
 }
 
 </script>
