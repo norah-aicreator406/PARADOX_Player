@@ -392,6 +392,130 @@ audio {
   margin-top: 10px;
   flex-wrap: wrap;
 }
+
+#backgroundControl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #ccc;
+}
+
+#backgroundSelect {
+  background: #111;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+#visualizerSwitchControl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #ccc;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #333;
+  border: 1px solid #555;
+  transition: 0.2s;
+  border-radius: 999px;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  top: 2px;
+  background: #aaa;
+  transition: 0.2s;
+  border-radius: 50%;
+}
+
+.switch input:checked + .slider {
+  background: rgba(0,255,204,0.25);
+  border-color: rgba(0,255,204,0.8);
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(21px);
+  background: #00ffcc;
+}
+
+
+#brandNameControl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #ccc;
+}
+
+#brandNameInput {
+  width: 220px;
+  background: #111;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  outline: none;
+}
+
+#brandNameInput:focus {
+  border-color: rgba(0,255,204,0.85);
+  box-shadow: 0 0 8px rgba(0,255,204,0.25);
+}
+
+#templateControl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #ccc;
+}
+
+#templateSelect {
+  width: 220px;
+  background: #111;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  outline: none;
+}
+
+#templateSelect:focus {
+  border-color: rgba(0,255,204,0.85);
+  box-shadow: 0 0 8px rgba(0,255,204,0.25);
+}
+
 </style>
 </head>
 
@@ -409,11 +533,45 @@ audio {
       <button class="stop" onclick="stopAudio()">⏹ 停止</button>
       <button class="nav" onclick="playNext()">⏭ 次</button>
       <button class="copy" onclick="copyCurrent()">📋 再生中をコピー</button>
+      <button class="nav" onclick="openVisualizer()">外出し画面</button>
       <button class="nav" onclick="openQueueModal()">予約リスト</button>
       <button class="nav" onclick="toggleRandomPanel()">🎲 ランダム予約</button>
       <button class="reload" onclick="loadSongs()">曲リスト更新</button>
       
     </div>
+
+<div id="backgroundControl">
+  <span>背景：</span>
+  <select id="backgroundSelect" onchange="changeVisualizerBackground()">
+    <option value="">背景なし</option>
+  </select>
+</div>
+
+<div id="visualizerSwitchControl">
+  <span>ビジュアライザー：</span>
+  <label class="switch">
+    <input type="checkbox" id="visualizerToggle" checked onchange="toggleVisualizerEnabled()">
+    <span class="slider"></span>
+  </label>
+  <span id="visualizerToggleLabel">ON</span>
+</div>
+
+<div id="brandNameControl">
+  <span>表示名：</span>
+  <input
+    type="text"
+    id="brandNameInput"
+    placeholder="PARADOX VISUALIZER"
+    oninput="changeVisualizerBrandName()"
+  >
+</div>
+
+<div id="templateControl">
+  <span>テンプレート：</span>
+  <select id="templateSelect" onchange="changeVisualizerTemplate()">
+    <option value="standard">Standard</option>
+  </select>
+</div>
 
     <audio id="audio" controls></audio>
     <div id="randomPanel">
@@ -439,6 +597,8 @@ audio {
 
 <div id="songs"></div>
 
+<option value="neon-circle">Neon Circle</option>
+
 <script>
 const { ipcRenderer } = require('electron');
 
@@ -446,6 +606,11 @@ let data = [];
 let currentIndex = 0;
 let currentSong = null;
 let queue = [];
+let audioContext = null;
+let analyser = null;
+let sourceNode = null;
+let analyserDataArray = null;
+let visualizerAnimationId = null;
 let currentFilteredSongs = [];
 let currentFilteredSongIndex = -1;
 const MAX_QUEUE = 5;
@@ -454,6 +619,17 @@ const RECENT_PLAYED_LIMIT = 10;
 const audio = document.getElementById('audio');
 
 audio.addEventListener('ended', () => {
+  if (queue.length === 0) return;
+
+  const nextSong = queue.shift();
+
+  renderQueue();
+  renderSongs(currentIndex);
+
+  playSong(nextSong, -1);
+});
+
+ipcRenderer.on('visualizer-video-ended', () => {
   if (queue.length === 0) return;
 
   const nextSong = queue.shift();
@@ -511,6 +687,10 @@ async function loadSongs() {
     renderSongs(0);
     renderQueue();
     renderRandomPanel();
+    loadBackgrounds();
+    loadVisualizerEnabledSetting();
+    loadVisualizerBrandNameSetting();
+    loadVisualizerTemplateSetting();
 
     document.getElementById('nowPlaying').textContent = '再生待機中';
   } catch (error) {
@@ -673,7 +853,7 @@ function renderSongs(index) {
 
     const title = document.createElement('div');
     title.className = 'title';
-    title.textContent = text;
+    title.textContent = `${song.mediaType === 'video' ? '🎬 ' : ''}${text}`;
 
     const buttons = document.createElement('div');
     buttons.className = 'buttons';
@@ -718,15 +898,9 @@ async function playSong(song, songIndex) {
   const text = `♫${song.title} - ${song.artist}`;
 
   if (!song.fileUrl) {
-    alert('音源ファイルのURLが取得できませんでした。');
+    alert('ファイルのURLが取得できませんでした。');
     return;
   }
-
-  audio.src = song.fileUrl;
-
-  audio.play().catch(error => {
-    alert('再生できませんでした: ' + error.message);
-  });
 
   currentSong = song;
   currentFilteredSongIndex = songIndex;
@@ -735,14 +909,186 @@ async function playSong(song, songIndex) {
 
   document.getElementById('nowPlaying').textContent = text;
 
+  if (song.mediaType === 'video') {
+  stopVisualizerLevelLoop();
+
+  audio.pause();
+  audio.removeAttribute('src');
+  audio.load();
+
+  await ipcRenderer.invoke('send-song-to-visualizer', song);
+  await ipcRenderer.invoke('copy-text', text);
+
+  renderSongs(currentIndex);
+  return;
+}
+
+  await ipcRenderer.invoke('stop-visualizer-video');
+
+  audio.src = song.fileUrl;
+
+setupAudioAnalyzer();
+
+if (audioContext.state === 'suspended') {
+  await audioContext.resume();
+}
+
+audio.play().catch(error => {
+  alert('再生できませんでした: ' + error.message);
+});
+
+startVisualizerLevelLoop();
+
+  await ipcRenderer.invoke('send-song-to-visualizer', song);
+  await ipcRenderer.invoke('send-background-to-visualizer', currentBackground);
   await ipcRenderer.invoke('copy-text', text);
 
   renderSongs(currentIndex);
 }
 
-function stopAudio() {
+function setupAudioAnalyzer() {
+  if (audioContext && analyser) return;
+
+  audioContext = new AudioContext();
+
+  analyser = audioContext.createAnalyser();
+  analyser.fftSize = 256;
+
+  analyserDataArray = new Uint8Array(analyser.frequencyBinCount);
+
+  sourceNode = audioContext.createMediaElementSource(audio);
+  sourceNode.connect(analyser);
+  analyser.connect(audioContext.destination);
+}
+
+function averageRange(array, start, end) {
+  const safeStart = Math.max(0, start);
+  const safeEnd = Math.min(array.length, end);
+
+  if (safeEnd <= safeStart) return 0;
+
+  let sum = 0;
+
+  for (let i = safeStart; i < safeEnd; i++) {
+    sum += array[i];
+  }
+
+  return sum / (safeEnd - safeStart);
+}
+
+function normalizeAudioValue(value, sensitivity = 220, curve = 0.75) {
+  const normalized = Math.max(0, Math.min(1, value / sensitivity));
+
+  return Math.pow(normalized, curve);
+}
+
+function createVisualizerData(array) {
+  const bassRaw = averageRange(array, 1, 8);
+  const midRaw = averageRange(array, 8, 42);
+  const highRaw = averageRange(array, 42, 115);
+  const masterRaw = averageRange(array, 1, 115);
+
+  const bass = normalizeAudioValue(bassRaw, 230, 0.85);
+const mid = normalizeAudioValue(midRaw, 215, 0.82);
+const high = normalizeAudioValue(highRaw, 205, 0.78);
+const master = normalizeAudioValue(masterRaw, 225, 0.86);
+
+  const barCount = 30;
+  const bars = [];
+
+  for (let i = 0; i < barCount; i++) {
+    let start;
+    let end;
+    let sensitivity;
+    let boost;
+
+    if (i < 6) {
+  // 左：低音 6本。強くなりすぎるのでかなり抑える
+  const localIndex = i;
+  start = 1 + localIndex * 2;
+  end = start + 3;
+  sensitivity = 250;
+  boost = 0.82;
+} else if (i < 20) {
+  // 中央：中音 14本
+  const localIndex = i - 6;
+  start = 8 + localIndex * 2;
+  end = start + 4;
+  sensitivity = 225;
+  boost = 0.92;
+} else {
+  // 右：高音 10本。少し跳ねやすくする
+  const localIndex = i - 20;
+  start = 42 + localIndex * 5;
+  end = start + 8;
+  sensitivity = 210;
+  boost = 1.05;
+}
+
+    const raw = averageRange(array, start, end);
+const variation = 0.72 + (Math.sin(i * 1.7) + 1) * 0.16;
+
+// 値を少し圧縮して、サビで全部マックスにならないようにする
+let value = normalizeAudioValue(raw * boost * variation, sensitivity, 0.9);
+
+// 帯域ごとの最大値をあえて少し制限する
+if (i < 6) {
+  value = Math.min(value, 0.82);
+} else if (i < 20) {
+  value = Math.min(value, 0.88);
+} else {
+  value = Math.min(value, 0.94);
+}
+
+bars.push(value);
+  }
+
+  return {
+    bass,
+    mid,
+    high,
+    master,
+    bars
+  };
+}
+
+function startVisualizerLevelLoop() {
+  if (!analyser || !analyserDataArray) return;
+
+  if (visualizerAnimationId) {
+    cancelAnimationFrame(visualizerAnimationId);
+  }
+
+  const update = () => {
+    analyser.getByteFrequencyData(analyserDataArray);
+
+    if (visualizerEnabled) {
+  const visualizerData = createVisualizerData(analyserDataArray);
+  ipcRenderer.invoke('send-visualizer-level', visualizerData);
+}
+
+    visualizerAnimationId = requestAnimationFrame(update);
+  };
+
+  update();
+}
+
+function stopVisualizerLevelLoop() {
+  if (visualizerAnimationId) {
+    cancelAnimationFrame(visualizerAnimationId);
+    visualizerAnimationId = null;
+  }
+
+  ipcRenderer.invoke('send-visualizer-level', 0);
+}
+
+async function stopAudio() {
   audio.pause();
   audio.currentTime = 0;
+
+  stopVisualizerLevelLoop();
+
+  await ipcRenderer.invoke('stop-visualizer-video');
 }
 
 function playPrevious() {
@@ -775,6 +1121,187 @@ async function copyCurrent() {
 
   const text = `♫${currentSong.title} - ${currentSong.artist}`;
   await ipcRenderer.invoke('copy-text', text);
+}
+
+async function openVisualizer() {
+  await ipcRenderer.invoke('open-visualizer-window');
+
+  await ipcRenderer.invoke('send-visualizer-enabled', visualizerEnabled);
+  await ipcRenderer.invoke('send-visualizer-brand-name', visualizerBrandName);
+  await ipcRenderer.invoke('send-visualizer-template', visualizerTemplate);
+
+  if (currentSong) {
+    await ipcRenderer.invoke('send-song-to-visualizer', currentSong);
+  }
+
+  if (currentBackground) {
+    await ipcRenderer.invoke('send-background-to-visualizer', currentBackground);
+  }
+}
+
+let currentBackground = null;
+let visualizerEnabled = true;
+let visualizerBrandName = 'PARADOX VISUALIZER';
+let visualizerTemplate = 'standard';
+
+async function loadBackgrounds() {
+  const select = document.getElementById('backgroundSelect');
+  if (!select) return;
+
+  const backgrounds = await ipcRenderer.invoke('get-backgrounds');
+
+  select.innerHTML = '<option value="">背景なし</option>';
+
+  backgrounds.forEach(background => {
+    const option = document.createElement('option');
+    option.value = background.fileUrl;
+    option.textContent = background.name;
+
+    select.appendChild(option);
+  });
+
+  applySavedBackground(backgrounds);
+}
+
+function applySavedBackground(backgrounds) {
+  const saved = localStorage.getItem('paradoxVisualizerBackground');
+  if (!saved) return;
+
+  try {
+    const savedBackground = JSON.parse(saved);
+
+    const matchedBackground = backgrounds.find(background => {
+      return background.fileUrl === savedBackground.fileUrl;
+    });
+
+    if (!matchedBackground) {
+      localStorage.removeItem('paradoxVisualizerBackground');
+      currentBackground = null;
+      return;
+    }
+
+    const select = document.getElementById('backgroundSelect');
+    select.value = matchedBackground.fileUrl;
+
+    currentBackground = {
+      fileUrl: matchedBackground.fileUrl,
+      name: matchedBackground.name
+    };
+  } catch (error) {
+    localStorage.removeItem('paradoxVisualizerBackground');
+    currentBackground = null;
+  }
+}
+
+async function changeVisualizerBackground() {
+  const select = document.getElementById('backgroundSelect');
+  if (!select) return;
+
+  const fileUrl = select.value;
+  const name = select.options[select.selectedIndex]?.textContent || '';
+
+  currentBackground = fileUrl
+    ? { fileUrl, name }
+    : null;
+
+  if (currentBackground) {
+    localStorage.setItem('paradoxVisualizerBackground', JSON.stringify(currentBackground));
+  } else {
+    localStorage.removeItem('paradoxVisualizerBackground');
+  }
+
+  await ipcRenderer.invoke('send-background-to-visualizer', currentBackground);
+}
+
+function loadVisualizerEnabledSetting() {
+  const saved = localStorage.getItem('paradoxVisualizerEnabled');
+
+  if (saved === null) {
+    visualizerEnabled = true;
+  } else {
+    visualizerEnabled = saved === 'true';
+  }
+
+  const toggle = document.getElementById('visualizerToggle');
+  const label = document.getElementById('visualizerToggleLabel');
+
+  if (toggle) toggle.checked = visualizerEnabled;
+  if (label) label.textContent = visualizerEnabled ? 'ON' : 'OFF';
+}
+
+async function toggleVisualizerEnabled() {
+  const toggle = document.getElementById('visualizerToggle');
+  const label = document.getElementById('visualizerToggleLabel');
+
+  visualizerEnabled = toggle ? toggle.checked : true;
+
+  localStorage.setItem('paradoxVisualizerEnabled', String(visualizerEnabled));
+
+  if (label) {
+    label.textContent = visualizerEnabled ? 'ON' : 'OFF';
+  }
+
+  await ipcRenderer.invoke('send-visualizer-enabled', visualizerEnabled);
+
+  if (!visualizerEnabled) {
+    await ipcRenderer.invoke('send-visualizer-level', {
+      bass: 0,
+      mid: 0,
+      high: 0,
+      master: 0,
+      bars: []
+    });
+  }
+}
+
+function loadVisualizerBrandNameSetting() {
+  const saved = localStorage.getItem('paradoxVisualizerBrandName');
+
+  visualizerBrandName = saved || 'PARADOX VISUALIZER';
+
+  const input = document.getElementById('brandNameInput');
+
+  if (input) {
+    input.value = saved || '';
+    input.placeholder = 'PARADOX VISUALIZER';
+  }
+}
+
+async function changeVisualizerBrandName() {
+  const input = document.getElementById('brandNameInput');
+
+  const value = input ? input.value.trim() : '';
+  visualizerBrandName = value || 'PARADOX VISUALIZER';
+
+  if (value) {
+    localStorage.setItem('paradoxVisualizerBrandName', value);
+  } else {
+    localStorage.removeItem('paradoxVisualizerBrandName');
+  }
+
+  await ipcRenderer.invoke('send-visualizer-brand-name', visualizerBrandName);
+}
+
+function loadVisualizerTemplateSetting() {
+  const saved = localStorage.getItem('paradoxVisualizerTemplate');
+
+  visualizerTemplate = saved || 'standard';
+
+  const select = document.getElementById('templateSelect');
+
+  if (select) {
+    select.value = visualizerTemplate;
+  }
+}
+
+async function changeVisualizerTemplate() {
+  const select = document.getElementById('templateSelect');
+
+  visualizerTemplate = select ? select.value : 'standard';
+
+  localStorage.setItem('paradoxVisualizerTemplate', visualizerTemplate);
+
+  await ipcRenderer.invoke('send-visualizer-template', visualizerTemplate);
 }
 
 function addToQueue(song) {
