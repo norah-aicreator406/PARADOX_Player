@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Lyrics Editor</title>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  background: #111;
+  color: #fff;
+  font-family: system-ui, sans-serif;
+  overflow: hidden;
+}
+
+h1 {
+  margin-top: 0;
+  color: #00ffcc;
+}
+
+label {
+  display: block;
+  margin-top: 16px;
+  font-size: 13px;
+  color: #ccc;
+}
+
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+  padding: 10px;
+  background: #181818;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+select,
+input[type="color"] {
+  width: 100%;
+  height: 38px;
+  box-sizing: border-box;
+  margin-top: 8px;
+  padding: 0 10px;
+  background: #1b1b1b;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 10px;
+}
+
+input[type="color"] {
+  padding: 4px;
+  cursor: pointer;
+}
+
+input[type="range"] {
+  width: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+
+.editorHeader {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #111;
+  padding: 18px 20px 12px;
+  border-bottom: 1px solid #333;
+}
+
+.editorContent {
+  height: calc(100vh - 76px);
+  overflow-y: auto;
+  padding: 0 20px 24px;
+}
+
+
+.editorSection {
+  margin-top: 18px;
+  padding: 16px;
+  background: #171717;
+  border: 1px solid #2f2f2f;
+  border-radius: 14px;
+}
+
+.editorSectionTitle {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #00ffcc;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.controlGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.controlFull {
+  grid-column: 1 / -1;
+}
+
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  min-height: 38px;
+}
+
+.sliderRow input[type="range"] {
+  flex: 1;
+}
+
+.valueBadge {
+  min-width: 54px;
+  height: 28px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  background: #0f0f0f;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #00ffcc;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+</style>
+</head>
+
+<body>
+  <div class="editorHeader">
+    <h1>Lyrics Editor</h1>
+  </div>
+
+  <div class="editorContent">
+
+    <div class="editorSection">
+      <div class="editorSectionTitle">テキスト</div>
+
+      <label>歌詞テキスト</label>
+      <textarea id="lyricsText" rows="5">NORAH Studio</textarea>
+    </div>
+
+    <div class="editorSection">
+      <div class="editorSectionTitle">スタイル</div>
+
+      <div class="controlGrid">
+
+<div class="controlFull">
+  <label>スタイルプリセット</label>
+  <select id="lyricsStylePreset">
+    <option value="default">Default</option>
+    <option value="pop">Pop</option>
+    <option value="rock">Rock</option>
+    <option value="metal">Metal</option>
+    <option value="neon">Neon</option>
+    <option value="cinematic">Cinematic</option>
+  </select>
+</div>
+
+        <div>
+          <label>フォント</label>
+
+          <select id="lyricsFont"></select>
+
+        </div>
+
+        <div>
+          <label>文字色</label>
+          <input id="lyricsColor" type="color" value="#ffffff">
+        </div>
+
+        <div class="controlFull">
+          <label>サイズ</label>
+
+<div class="sliderRow">
+  <input
+    id="lyricsSize"
+    type="range"
+    min="24"
+    max="180"
+    value="72">
+
+  <span
+    id="lyricsSizeValue"
+    class="valueBadge">
+    72
+  </span>
+</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="editorSection">
+      <div class="editorSectionTitle">アウトライン</div>
+
+      <div class="controlGrid">
+        <div>
+          <label>アウトライン色</label>
+          <input id="lyricsOutlineColor" type="color" value="#000000">
+        </div>
+
+        <div class="controlFull">
+          <label>アウトライン幅</label>
+
+<div class="sliderRow">
+
+<input
+    id="lyricsOutlineWidth"
+    type="range"
+    min="0"
+    max="12"
+    value="0">
+
+<span
+    id="outlineWidthValue"
+    class="valueBadge">
+0
+</span>
+
+</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="editorSection">
+      <div class="editorSectionTitle">シャドウ</div>
+
+      <div class="controlGrid">
+        <div class="controlFull">
+          <label>シャドウプリセット</label>
+          <select id="shadowPreset">
+            <option value="custom">Custom</option>
+            <option value="off">OFF</option>
+            <option value="soft">Soft</option>
+            <option value="hard">Hard</option>
+            <option value="glow">Glow</option>
+            <option value="neon">Neon</option>
+          </select>
+        </div>
+
+        <div>
+          <label>シャドウカラー</label>
+          <input id="lyricsShadowColor" type="color" value="#000000">
+        </div>
+
+        <div>
+  <label>ぼかし</label>
+
+  <div class="sliderRow">
+    <input
+      id="lyricsShadowBlur"
+      type="range"
+      min="0"
+      max="40"
+      value="0">
+
+    <span
+      id="shadowBlurValue"
+      class="valueBadge">
+      0
+    </span>
+  </div>
+</div>
+
+<div>
+  <label>横位置</label>
+
+  <div class="sliderRow">
+    <input
+      id="lyricsShadowX"
+      type="range"
+      min="-30"
+      max="30"
+      value="0">
+
+    <span
+      id="shadowXValue"
+      class="valueBadge">
+      0
+    </span>
+  </div>
+</div>
+
+<div>
+  <label>縦位置</label>
+
+  <div class="sliderRow">
+    <input
+      id="lyricsShadowY"
+      type="range"
+      min="-30"
+      max="30"
+      value="0">
+
+    <span
+      id="shadowYValue"
+      class="valueBadge">
+      0
+    </span>
+  </div>
+</div>
+      </div>
+    </div>
+
+    <div class="editorSection">
+      <div class="editorSectionTitle">レイアウト</div>
+
+      <div class="controlGrid">
+        <div>
+          <label>揃え</label>
+          <select id="lyricsAlign">
+            <option value="left">左揃え</option>
+            <option value="center">中央揃え</option>
+            <option value="right">右揃え</option>
+          </select>
+        </div>
+
+        <div>
+  <label>文字間隔</label>
+
+  <div class="sliderRow">
+    <input
+      id="lyricsLetterSpacing"
+      type="range"
+      min="-10"
+      max="30"
+      value="0">
+
+    <span
+      id="letterSpacingValue"
+      class="valueBadge">
+      0
+    </span>
+  </div>
+</div>
+
+<div class="controlFull">
+  <label>行間</label>
+
+  <div class="sliderRow">
+    <input
+      id="lyricsLineHeight"
+      type="range"
+      min="0.8"
+      max="2.5"
+      step="0.05"
+      value="1.2">
+
+    <span
+      id="lineHeightValue"
+      class="valueBadge">
+      1.2
+    </span>
+  </div>
+</div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+const { ipcRenderer } = require('electron');
+const fontGroups = [
+  {
+    label: 'Japanese',
+    fonts: [
+      'Yu Gothic UI',
+      'Yu Gothic',
+      'Meiryo',
+      'MS Gothic',
+      'MS PGothic',
+      'MS UI Gothic',
+      'Yu Mincho',
+      'MS Mincho'
+    ]
+  },
+  {
+    label: 'English',
+    fonts: [
+      'Arial',
+      'Verdana',
+      'Tahoma',
+      'Trebuchet MS',
+      'Georgia',
+      'Times New Roman',
+      'Impact',
+      'Comic Sans MS'
+    ]
+  }
+];
+
+const stylePresets = {
+
+  default: {
+    color: "#ffffff",
+    outlineColor: "#000000",
+    outlineWidth: 0,
+    shadowPreset: "off",
+    shadowColor: "#000000",
+    shadowBlur: 0,
+    shadowX: 0,
+    shadowY: 0,
+    letterSpacing: 0,
+    lineHeight: 1.2
+  },
+
+  pop: {
+    color: "#ffffff",
+    outlineColor: "#ff4fc3",
+    outlineWidth: 2,
+    shadowPreset: "soft",
+    shadowColor: "#ff4fc3",
+    shadowBlur: 12,
+    shadowX: 2,
+    shadowY: 2,
+    letterSpacing: 0,
+    lineHeight: 1.2
+  },
+
+  rock: {
+    color: "#ffffff",
+    outlineColor: "#000000",
+    outlineWidth: 4,
+    shadowPreset: "hard",
+    shadowColor: "#000000",
+    shadowBlur: 0,
+    shadowX: 6,
+    shadowY: 6,
+    letterSpacing: 0,
+    lineHeight: 1.1
+  },
+
+  metal: {
+    color: "#dcdcdc",
+    outlineColor: "#000000",
+    outlineWidth: 5,
+    shadowPreset: "hard",
+    shadowColor: "#000000",
+    shadowBlur: 0,
+    shadowX: 8,
+    shadowY: 8,
+    letterSpacing: 1,
+    lineHeight: 1.0
+  },
+
+  neon: {
+    color: "#ffffff",
+    outlineColor: "#00ffff",
+    outlineWidth: 2,
+    shadowPreset: "neon",
+    shadowColor: "#00ffff",
+    shadowBlur: 32,
+    shadowX: 0,
+    shadowY: 0,
+    letterSpacing: 1,
+    lineHeight: 1.2
+  },
+
+  cinematic: {
+    color: "#ffffff",
+    outlineColor: "#222222",
+    outlineWidth: 1,
+    shadowPreset: "soft",
+    shadowColor: "#000000",
+    shadowBlur: 16,
+    shadowX: 4,
+    shadowY: 4,
+    letterSpacing: 2,
+    lineHeight: 1.35
+  }
+
+};
+
+
+function setupFontOptions() {
+  fontInput.innerHTML = '';
+
+  fontGroups.forEach((group) => {
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = group.label;
+
+    group.fonts.forEach((fontName) => {
+      const option = document.createElement('option');
+      option.value = fontName;
+      option.textContent = fontName;
+      option.style.fontFamily = fontName;
+
+      optgroup.appendChild(option);
+    });
+
+    fontInput.appendChild(optgroup);
+  });
+}
+
+
+const textInput = document.getElementById('lyricsText');
+const sizeInput = document.getElementById('lyricsSize');
+const colorInput = document.getElementById('lyricsColor');
+const fontInput = document.getElementById('lyricsFont');
+const stylePresetInput =
+    document.getElementById('lyricsStylePreset');
+const outlineColorInput = document.getElementById('lyricsOutlineColor');
+const outlineWidthInput = document.getElementById('lyricsOutlineWidth');
+const alignInput = document.getElementById('lyricsAlign');
+const shadowColorInput = document.getElementById('lyricsShadowColor');
+const shadowBlurInput = document.getElementById('lyricsShadowBlur');
+const shadowXInput = document.getElementById('lyricsShadowX');
+const shadowYInput = document.getElementById('lyricsShadowY');
+const shadowPresetInput =
+    document.getElementById('shadowPreset');
+const letterSpacingInput =
+    document.getElementById('lyricsLetterSpacing');
+const lineHeightInput = document.getElementById('lyricsLineHeight');
+const sizeValue =
+    document.getElementById('lyricsSizeValue');
+const outlineWidthValue =
+    document.getElementById('outlineWidthValue');
+const shadowBlurValue =
+    document.getElementById('shadowBlurValue');
+
+const shadowXValue =
+    document.getElementById('shadowXValue');
+
+const shadowYValue =
+    document.getElementById('shadowYValue');
+
+const letterSpacingValue =
+    document.getElementById('letterSpacingValue');
+
+const lineHeightValue =
+    document.getElementById('lineHeightValue');
+
+setupFontOptions();
+
+
+function sendLyricsUpdate() {
+
+  sizeValue.textContent =
+    sizeInput.value;
+
+  outlineWidthValue.textContent =
+    outlineWidthInput.value;
+
+  shadowBlurValue.textContent =
+    shadowBlurInput.value;
+
+  shadowXValue.textContent =
+    shadowXInput.value;
+
+  shadowYValue.textContent =
+    shadowYInput.value;
+
+  letterSpacingValue.textContent =
+    letterSpacingInput.value;
+
+  lineHeightValue.textContent =
+    lineHeightInput.value;
+
+  ipcRenderer.invoke('update-selected-lyrics-layer', {
+    text: textInput.value,
+    size: Number(sizeInput.value),
+    color: colorInput.value,
+    font: fontInput.value,
+    outlineColor: outlineColorInput.value,
+    outlineWidth: Number(outlineWidthInput.value),
+    align: alignInput.value,
+    shadowColor: shadowColorInput.value,
+    shadowBlur: Number(shadowBlurInput.value),
+    shadowX: Number(shadowXInput.value),
+    shadowY: Number(shadowYInput.value),
+    letterSpacing:
+    Number(letterSpacingInput.value),
+    lineHeight: Number(lineHeightInput.value)
+  });
+}
+
+
+function applyShadowPreset() {
+
+    switch (shadowPresetInput.value) {
+
+        case "off":
+            shadowColorInput.value="#000000";
+            shadowBlurInput.value=0;
+            shadowXInput.value=0;
+            shadowYInput.value=0;
+            break;
+
+        case "soft":
+    shadowColorInput.value = "#000000";
+    shadowBlurInput.value = 22;
+    shadowXInput.value = 6;
+    shadowYInput.value = 6;
+    break;
+
+case "hard":
+    shadowColorInput.value = "#000000";
+    shadowBlurInput.value = 0;
+    shadowXInput.value = 8;
+    shadowYInput.value = 8;
+    break;
+
+        case "glow":
+            shadowColorInput.value="#ffffff";
+            shadowBlurInput.value=24;
+            shadowXInput.value=0;
+            shadowYInput.value=0;
+            break;
+
+        case "neon":
+            shadowColorInput.value="#00ffff";
+            shadowBlurInput.value=32;
+            shadowXInput.value=0;
+            shadowYInput.value=0;
+            break;
+    }
+
+    sendLyricsUpdate();
+
+}
+
+
+function applyStylePreset() {
+
+  const style = stylePresets[stylePresetInput.value];
+
+  if (!style) return;
+
+  colorInput.value = style.color;
+
+  outlineColorInput.value = style.outlineColor;
+  outlineWidthInput.value = style.outlineWidth;
+
+  shadowPresetInput.value = style.shadowPreset;
+  shadowColorInput.value = style.shadowColor;
+  shadowBlurInput.value = style.shadowBlur;
+  shadowXInput.value = style.shadowX;
+  shadowYInput.value = style.shadowY;
+
+  letterSpacingInput.value = style.letterSpacing;
+  lineHeightInput.value = style.lineHeight;
+
+  sendLyricsUpdate();
+}
+
+
+ipcRenderer.on('lyrics-editor-data', (event, data) => {
+  if (!data) return;
+
+  textInput.value = data.text || '';
+  sizeInput.value = data.size || 72;
+
+  sizeValue.textContent =
+    sizeInput.value;
+
+  colorInput.value = data.color || '#ffffff';
+  fontInput.value = data.font || 'Arial';
+
+  outlineColorInput.value = data.outlineColor || '#000000';
+  outlineWidthInput.value = data.outlineWidth ?? 0;
+
+  alignInput.value = data.align || 'center';
+  
+  shadowColorInput.value = data.shadowColor || '#000000';
+  shadowBlurInput.value = data.shadowBlur ?? 0;
+  shadowXInput.value = data.shadowX ?? 0;
+  shadowYInput.value = data.shadowY ?? 0;
+  shadowPresetInput.value = 'custom';
+
+    letterSpacingInput.value =
+    data.letterSpacing ?? 0;
+
+  lineHeightInput.value =
+    data.lineHeight ?? 1.2;
+
+  sizeValue.textContent =
+    sizeInput.value;
+
+  outlineWidthValue.textContent =
+    outlineWidthInput.value;
+
+  shadowBlurValue.textContent =
+    shadowBlurInput.value;
+
+  shadowXValue.textContent =
+    shadowXInput.value;
+
+  shadowYValue.textContent =
+    shadowYInput.value;
+
+  letterSpacingValue.textContent =
+    letterSpacingInput.value;
+
+  lineHeightValue.textContent =
+    lineHeightInput.value;
+
+});
+
+textInput.addEventListener('input', sendLyricsUpdate);
+sizeInput.addEventListener('input', sendLyricsUpdate);
+colorInput.addEventListener('input', sendLyricsUpdate);
+fontInput.addEventListener('change', sendLyricsUpdate);
+fontInput.addEventListener('input', sendLyricsUpdate);
+outlineColorInput.addEventListener('input', sendLyricsUpdate);
+outlineWidthInput.addEventListener('input', sendLyricsUpdate);
+alignInput.addEventListener('change', sendLyricsUpdate);
+
+shadowColorInput.addEventListener('input', sendLyricsUpdate);
+shadowBlurInput.addEventListener('input', sendLyricsUpdate);
+shadowXInput.addEventListener('input', sendLyricsUpdate);
+shadowYInput.addEventListener('input', sendLyricsUpdate);
+
+shadowPresetInput.addEventListener(
+    'change',
+    applyShadowPreset
+);
+
+stylePresetInput.addEventListener(
+    'change',
+    applyStylePreset
+);
+
+letterSpacingInput.addEventListener(
+    'input',
+    sendLyricsUpdate
+);
+lineHeightInput.addEventListener('input', sendLyricsUpdate);
+
+console.log('Lyrics Editor Loaded');
+</script>
+</body>
+</html>

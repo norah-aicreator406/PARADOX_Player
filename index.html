@@ -5,6 +5,86 @@
 <title>PARADOX Player</title>
 
 <style>
+
+#studioHeader{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:flex-end;
+
+padding:8px 0 14px;
+
+}
+
+.studioTitle{
+
+font-size:34px;
+
+font-weight:800;
+
+letter-spacing:-0.03em;
+
+}
+
+.studioSubtitle{
+
+margin-top:4px;
+
+font-size:13px;
+
+color:#8b8b8b;
+
+letter-spacing:.08em;
+
+text-transform:uppercase;
+
+}
+
+.studioProjectInfo{
+
+display:flex;
+
+gap:26px;
+
+}
+
+.projectInfoItem{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:flex-end;
+
+}
+
+.projectInfoItem span{
+
+font-size:11px;
+
+color:#888;
+
+text-transform:uppercase;
+
+letter-spacing:.08em;
+
+}
+
+.projectInfoItem strong{
+
+margin-top:4px;
+
+font-size:16px;
+
+font-weight:700;
+
+color:#fff;
+
+}
+
+
 body {
   margin: 0;
   background: #111;
@@ -516,65 +596,810 @@ audio {
   box-shadow: 0 0 8px rgba(0,255,204,0.25);
 }
 
+#layerPanel {
+  margin-top: 10px;
+  padding: 10px;
+  background: #181818;
+  border: 1px solid #333;
+  border-radius: 12px;
+}
+
+.layerPanelTitle {
+  font-size: 13px;
+  font-weight: bold;
+  color: #00ffcc;
+  margin-bottom: 8px;
+}
+
+.layerItem {
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: #252525;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.layerItem.active {
+  outline: 1px solid #00ffcc;
+  background: #16302b;
+}
+
+
+.controlSection{
+
+margin-top:18px;
+padding:14px;
+
+background:#181818;
+
+border-radius:10px;
+
+border:1px solid #303030;
+
+}
+
+.controlSection h3{
+
+margin:0 0 10px;
+
+font-size:15px;
+
+}
+
+#layerList{
+
+display:flex;
+
+flex-direction:column;
+
+gap:8px;
+
+margin-bottom:10px;
+
+}
+
+.layerItem{
+
+padding:10px;
+
+background:#252525;
+
+border-radius:8px;
+
+cursor:pointer;
+
+transition:.2s;
+
+}
+
+.layerItem:hover{
+
+background:#333;
+
+}
+
+.layerItem.active{
+
+outline:2px solid #00ffc3;
+
+}
+
+#addLayerButton{
+
+width:100%;
+
+padding:8px;
+
+margin-bottom:12px;
+
+}
+
+#settingsPanel {
+  display: none;
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #181818;
+  border: 1px solid #333;
+}
+
+#settingsPanel.show {
+  display: block;
+}
+
+
+
+/* ===== Clean Settings Sidebar ===== */
+#settingsPanel.settingsSidebar {
+  display: block;
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 360px;
+  max-width: calc(100vw - 24px);
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  z-index: 5000;
+  background: #141414;
+  border-left: 1px solid #333;
+  box-shadow: -24px 0 60px rgba(0,0,0,0.55);
+  transform: translateX(105%);
+  transition: transform 0.22s ease;
+  overflow: hidden;
+}
+
+#settingsPanel.settingsSidebar.show {
+  transform: translateX(0);
+}
+
+.settingsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid #2b2b2b;
+  background: #1d1d1d;
+}
+
+.settingsTitle {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #00ffcc;
+}
+
+.settingsSubTitle {
+  margin-top: 2px;
+  font-size: 11px;
+  color: #888;
+}
+
+.settingsClose {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50%;
+  background: #333;
+  color: #fff;
+  font-size: 20px;
+}
+
+.settingsTabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 10px;
+  border-bottom: 1px solid #2b2b2b;
+  background: #171717;
+}
+
+.settingsTab {
+  padding: 8px 4px;
+  border-radius: 999px;
+  background: #292929;
+  color: #bbb;
+  font-size: 12px;
+}
+
+.settingsTab.active {
+  background: rgba(0,255,204,0.18);
+  color: #00ffcc;
+  outline: 1px solid rgba(0,255,204,0.6);
+}
+
+.settingsContent {
+  height: calc(100vh - 106px);
+  overflow-y: auto;
+  padding: 14px;
+}
+
+.settingsPage {
+  display: none;
+}
+
+.settingsPage.active {
+  display: block;
+}
+
+.settingsPage h3 {
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #2d2d2d;
+  font-size: 14px;
+  color: #fff;
+}
+
+.settingsRow {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 12px !important;
+  color: #ccc;
+  font-size: 13px;
+}
+
+.settingsRow.vertical {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.settingsRow select,
+.settingsRow input[type="text"],
+#templateSelect,
+#backgroundSelect,
+#overlaySelect {
+  width: 100%;
+  box-sizing: border-box;
+  background: #101010;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.settingsButtonGroup {
+  display: flex;
+  gap: 6px;
+}
+
+.layerPanelClean {
+  margin: 0 0 12px !important;
+  padding: 10px !important;
+  background: #1c1c1c !important;
+  border: 1px solid #333 !important;
+  border-radius: 12px !important;
+}
+
+#layerList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.layerItem {
+  padding: 10px;
+  background: #252525;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.15s;
+  font-size: 13px;
+}
+
+.layerItem:hover {
+  background: #333;
+}
+
+.layerItem.active {
+  outline: 2px solid #00ffc3;
+  background: #16302b;
+}
+
+#addLayerButton {
+  width: 100%;
+  background: #0984e3;
+  color: #fff;
+}
+
+.effectGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.effectGrid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #ccc;
+  font-size: 13px;
+}
+
+.effectGrid input[type="range"],
+#overlayOpacity {
+  width: 100%;
+}
+
+.comingSoonBox {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #202020;
+  border: 1px dashed #444;
+  color: #888;
+  font-size: 13px;
+}
+
+#deleteLayerButton {
+  width: 100%;
+  margin-top: 8px;
+  background: #d63031;
+  color: #fff;
+}
+
+
+.layerItem button {
+  background: #333;
+  color: #fff;
+  padding: 4px 7px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.layerItem.dragging {
+  opacity: 0.45;
+  transform: scale(0.98);
+}
+
+.layerItem.drag-over {
+  outline: 2px solid #00ffcc;
+  background: #203a35;
+}
+
+#lyricsTextInput {
+  width: 100%;
+  box-sizing: border-box;
+  background: #101010;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  resize: vertical;
+}
+
+
+#playerPanel {
+  margin-top: 10px;
+  padding: 16px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #202020, #181818);
+  border: 1px solid #303030;
+  box-shadow: 0 18px 45px rgba(0,0,0,0.28);
+}
+
+.nowPlayingBlock {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #111;
+  border: 1px solid #2c2c2c;
+}
+
+.nowPlayingCaption {
+  margin-bottom: 6px;
+  font-size: 11px;
+  color: #00ffcc;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+}
+
+#nowPlaying {
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#playerButtons {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.buttonGroup{
+
+display:flex;
+flex-direction:column;
+gap:6px;
+
+padding:10px 12px;
+
+background:#161616;
+
+border:1px solid #2d2d2d;
+
+border-radius:14px;
+
+}
+
+.buttonGroupTitle{
+
+font-size:11px;
+
+font-weight:700;
+
+letter-spacing:.08em;
+
+text-transform:uppercase;
+
+color:#8c8c8c;
+
+}
+
+.buttonRow{
+
+display:flex;
+
+gap:8px;
+
+flex-wrap:wrap;
+
+}
+
+#studioWorkspace{
+
+display:grid;
+
+grid-template-columns:1fr 340px;
+
+gap:20px;
+
+margin-top:20px;
+
+align-items:start;
+
+}
+
+#studioInspector{
+
+background:#181818;
+
+border:1px solid #303030;
+
+border-radius:18px;
+
+padding:18px;
+
+min-height:600px;
+
+}
+
+.inspectorHeader{
+
+font-size:18px;
+
+font-weight:700;
+
+margin-bottom:16px;
+
+}
+
+.inspectorEmpty{
+
+color:#888;
+
+font-size:14px;
+
+line-height:1.8;
+
+}
+
+
+.inspectorSection {
+  margin-top: 18px;
+}
+
+.inspectorSectionTitle {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #00ffcc;
+  text-transform: uppercase;
+}
+
+.inspectorSectionDesc {
+  margin-top: 4px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: #888;
+}
+
+.themeCardList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.themeCard {
+  width: 100%;
+  padding: 14px;
+  text-align: left;
+  border-radius: 14px;
+  background: #1c1c1c;
+  border: 1px solid #333;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.18s;
+}
+
+.themeCard:hover {
+  border-color: rgba(0, 255, 204, 0.6);
+  background: #232323;
+}
+
+.themeCard.active {
+  border-color: #00ffcc;
+  background: #16302b;
+  box-shadow: 0 0 18px rgba(0, 255, 204, 0.16);
+}
+
+.themeCardName {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.themeCardDesc {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #9a9a9a;
+}
+
+
+
 </style>
 </head>
 
 <body>
 
 <div id="fixedHeader">
-  <h1>PARADOX PLAYER</h1>
+  <div id="studioHeader">
+
+  <div class="studioTitleArea">
+
+    <div class="studioTitle">
+      NORAH Studio
+    </div>
+
+    <div class="studioSubtitle">
+      Music Creator Workspace
+    </div>
+
+  </div>
+
+  <div class="studioProjectInfo">
+
+    <div class="projectInfoItem">
+  <span>アーティスト</span>
+  <strong id="artistCountLabel">0</strong>
+</div>
+
+<div class="projectInfoItem">
+  <span>曲</span>
+  <strong id="songCountLabel">0</strong>
+</div>
+
+<div class="projectInfoItem">
+  <span>予約</span>
+  <strong id="queueCountLabel">0 / 5</strong>
+</div>
+
+  </div>
+
+</div>
 
   <div id="playerPanel">
-    <div id="nowPlayingLabel">再生中</div>
-    <div id="nowPlaying">再生待機中</div>
 
-    <div id="playerButtons">
+  <div class="nowPlayingBlock">
+    <div class="nowPlayingCaption">NOW PLAYING</div>
+    <div id="nowPlaying">再生待機中</div>
+  </div>
+
+  <div id="playerButtons">
+
+  <div class="buttonGroup">
+    <div class="buttonGroupTitle">再生</div>
+
+    <div class="buttonRow">
       <button class="nav" onclick="playPrevious()">⏮ 前</button>
       <button class="stop" onclick="stopAudio()">⏹ 停止</button>
       <button class="nav" onclick="playNext()">⏭ 次</button>
-      <button class="copy" onclick="copyCurrent()">📋 再生中をコピー</button>
-      <button class="nav" onclick="openVisualizer()">外出し画面</button>
-      <button class="nav" onclick="openQueueModal()">予約リスト</button>
-      <button class="nav" onclick="toggleRandomPanel()">🎲 ランダム予約</button>
-      <button class="reload" onclick="loadSongs()">曲リスト更新</button>
-      
     </div>
+  </div>
 
-<div id="backgroundControl">
-  <span>背景：</span>
-  <select id="backgroundSelect" onchange="changeVisualizerBackground()">
-    <option value="">背景なし</option>
-  </select>
+  <div class="buttonGroup">
+    <div class="buttonGroupTitle">キュー</div>
+
+    <div class="buttonRow">
+      <button class="copy" onclick="copyCurrent()">📋 コピー</button>
+      <button class="nav" onclick="openQueueModal()">📃 予約</button>
+      <button class="nav" onclick="toggleRandomPanel()">🎲 ランダム</button>
+    </div>
+  </div>
+
+  <div class="buttonGroup">
+    <div class="buttonGroupTitle">出力</div>
+
+    <div class="buttonRow">
+      <button class="nav" onclick="openVisualizer()">🖥 外出し</button>
+    </div>
+  </div>
+
+  <div class="buttonGroup">
+    <div class="buttonGroupTitle">管理</div>
+
+    <div class="buttonRow">
+      <button class="nav" onclick="toggleSettingsPanel()">⚙ 設定</button>
+      <button class="reload" onclick="loadSongs()">🔄 更新</button>
+    </div>
+  </div>
+
 </div>
 
-<div id="visualizerSwitchControl">
-  <span>ビジュアライザー：</span>
-  <label class="switch">
-    <input type="checkbox" id="visualizerToggle" checked onchange="toggleVisualizerEnabled()">
-    <span class="slider"></span>
-  </label>
-  <span id="visualizerToggleLabel">ON</span>
+<aside id="settingsPanel" class="settingsSidebar">
+  <div class="settingsHeader">
+    <div>
+      <div class="settingsTitle">⚙ SETTINGS</div>
+      <div class="settingsSubTitle">Visualizer Control</div>
+    </div>
+    <button class="settingsClose" onclick="closeSettingsPanel()">×</button>
+  </div>
+
+  <div class="settingsTabs">
+    <button class="settingsTab active" data-tab="basic" onclick="switchSettingsTab('basic')">基本</button>
+    <button class="settingsTab" data-tab="layers" onclick="switchSettingsTab('layers')">レイヤー</button>
+    <button class="settingsTab" data-tab="effects" onclick="switchSettingsTab('effects')">エフェクト</button>
+    <button class="settingsTab" data-tab="template" onclick="switchSettingsTab('template')">テンプレ</button>
+  </div>
+
+  <div class="settingsContent">
+    <section class="settingsPage active" data-page="basic">
+      <h3>基本設定</h3>
+
+      <div class="settingsRow" id="visualizerSwitchControl">
+        <span>ビジュアライザー</span>
+        <label class="switch">
+          <input type="checkbox" id="visualizerToggle" checked onchange="toggleVisualizerEnabled()">
+          <span class="slider"></span>
+        </label>
+        <span id="visualizerToggleLabel">ON</span>
+      </div>
+
+      <div class="settingsRow" id="aspectRatioControl">
+        <span>比率</span>
+        <div class="settingsButtonGroup">
+          <button onclick="changeVisualizerAspectRatio('9:16')">9:16</button>
+          <button onclick="changeVisualizerAspectRatio('16:9')">16:9</button>
+        </div>
+      </div>
+
+      <div class="settingsRow vertical" id="brandNameControl">
+        <span>表示名</span>
+        <input
+          type="text"
+          id="brandNameInput"
+          placeholder="PARADOX VISUALIZER"
+          oninput="changeVisualizerBrandName()"
+        >
+      </div>
+
+      <h3>背景</h3>
+      <div class="settingsRow vertical" id="backgroundControl">
+        <span>背景画像</span>
+        <select id="backgroundSelect" onchange="changeVisualizerBackground()">
+          <option value="">背景なし</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="settingsPage" data-page="layers">
+      <h3>画像レイヤー</h3>
+
+      <div id="layerPanel" class="layerPanelClean">
+        <div id="layerList"></div>
+        <button id="addLayerButton" onclick="addOverlayLayer()">＋ レイヤー追加</button>
+        <button id="addLyricsLayerButton" onclick="addLyricsLayer()">＋ Lyrics Layer</button>
+        <button id="deleteLayerButton" onclick="deleteSelectedOverlayLayer()">選択中レイヤーを削除</button>
+      </div>
+
+      <div class="settingsRow vertical" id="overlayControl">
+        <span>選択中レイヤー画像</span>
+        <select id="overlaySelect" onchange="changeOverlayImage()">
+          <option value="">なし</option>
+        </select>
+      </div>
+
+      <div class="settingsRow vertical" id="overlayLayerControl">
+        <span>不透明度</span>
+        <input
+          type="range"
+          id="overlayOpacity"
+          min="0"
+          max="100"
+          value="100"
+          oninput="changeOverlayLayerSettings()"
+        >
+      </div>
+
+      <div class="settingsRow vertical" id="lyricsTextControl">
+  <span>Lyrics Text</span>
+
+  <textarea
+    id="lyricsTextInput"
+    rows="3"
+    placeholder="歌詞テキスト"
+    oninput="changeLyricsText()"
+  ></textarea>
 </div>
 
-<div id="brandNameControl">
-  <span>表示名：</span>
+<div class="settingsRow vertical" id="lyricsSizeControl">
+  <span>Lyrics Size</span>
+
   <input
-    type="text"
-    id="brandNameInput"
-    placeholder="PARADOX VISUALIZER"
-    oninput="changeVisualizerBrandName()"
+    type="range"
+    id="lyricsSizeInput"
+    min="24"
+    max="160"
+    value="72"
+    oninput="changeLyricsSize()"
   >
 </div>
 
-<div id="templateControl">
-  <span>テンプレート：</span>
-  <select id="templateSelect" onchange="changeVisualizerTemplate()">
-    <option value="standard">Standard</option>
-  </select>
-</div>
+      <div id="overlayControl2" style="display:none;">
+        <select id="overlaySelect2" onchange="changeOverlayImage2()">
+          <option value="">なし</option>
+        </select>
+      </div>
+    </section>
 
-    <audio id="audio" controls></audio>
-    <div id="randomPanel">
+    <section class="settingsPage" data-page="effects">
+      <h3>エフェクト</h3>
+
+      <div id="effectControl" class="effectGrid">
+        <label>
+          <span><input type="checkbox" id="spectrumEnabled" checked onchange="changeEffectSettings()"> スペクトラム</span>
+          <input type="range" min="0" max="100" value="100" oninput="changeEffectSettings()">
+        </label>
+
+        <label>
+          <span><input type="checkbox" id="particlesEnabled" checked onchange="changeEffectSettings()"> パーティクル</span>
+          <input type="range" min="0" max="100" value="100" oninput="changeEffectSettings()">
+        </label>
+
+        <label>
+          <span><input type="checkbox" id="auroraEnabled" checked onchange="changeEffectSettings()"> オーロラ</span>
+          <input type="range" min="0" max="100" value="100" oninput="changeEffectSettings()">
+        </label>
+
+        <label>
+          <span><input type="checkbox" id="glowEnabled" checked onchange="changeEffectSettings()"> グロー</span>
+          <input type="range" min="0" max="100" value="100" oninput="changeEffectSettings()">
+        </label>
+
+
+      </div>
+    </section>
+
+    <section class="settingsPage" data-page="template">
+      <h3>テンプレート</h3>
+
+      <div class="settingsRow vertical" id="templateControl">
+        <span>テンプレート</span>
+        <select id="templateSelect" onchange="changeVisualizerTemplate()">
+          <option value="standard">Standard</option>
+        </select>
+      </div>
+
+      <div class="comingSoonBox">
+        GLSL / リリック / テンプレート保存はここに追加予定
+      </div>
+    </section>
+  </div>
+</aside>
+
+
+<audio id="audio" controls></audio>
+
+<div id="randomPanel">
   <div class="randomTitle">ランダム予約：除外するアーティスト</div>
   <div id="randomArtistList"></div>
 
@@ -583,975 +1408,70 @@ audio {
     <button class="stop" onclick="clearRandomExclusions()">除外解除</button>
   </div>
 </div>
+
+<input
+  id="searchInput"
+  type="text"
+  placeholder="曲名・アーティスト名で検索"
+  oninput="renderSongs(currentIndex)"
+>
+
+<div class="tabs" id="tabs"></div>
+
+</div>
+
+<div id="studioWorkspace">
+
+  <div id="libraryArea">
+    <div id="songs"></div>
   </div>
 
-  <input
-    id="searchInput"
-    type="text"
-    placeholder="曲名・アーティスト名で検索"
-    oninput="renderSongs(currentIndex)"
-  >
-  <div class="tabs" id="tabs"></div>
+  <aside id="studioInspector">
+
+  <div class="inspectorHeader">
+    インスペクター
+  </div>
+
+  <section class="inspectorSection">
+    <div class="inspectorSectionTitle">Visual Theme</div>
+    <div class="inspectorSectionDesc">配信画面の世界観を選択</div>
+
+    <div id="visualThemeCards" class="themeCardList">
+
+      <button class="themeCard active" data-theme="none" onclick="selectVisualTheme('none')">
+        <span class="themeCardName">None</span>
+        <span class="themeCardDesc">標準表示</span>
+      </button>
+
+      <button class="themeCard" data-theme="bubbleOcean" onclick="selectVisualTheme('bubbleOcean')">
+        <span class="themeCardName">Bubble Ocean</span>
+        <span class="themeCardDesc">海・泡・水中光</span>
+      </button>
+
+      <button class="themeCard" data-theme="deepGalaxy" onclick="selectVisualTheme('deepGalaxy')">
+        <span class="themeCardName">Deep Galaxy</span>
+        <span class="themeCardDesc">銀河・星雲・星</span>
+      </button>
+
+      <button class="themeCard" data-theme="aurora" onclick="selectVisualTheme('aurora')">
+        <span class="themeCardName">Aurora</span>
+        <span class="themeCardDesc">光の波・オーロラ</span>
+      </button>
+
+    </div>
+  </section>
+
+</aside>
+
 </div>
 
 
-<div id="songs"></div>
 
-<option value="neon-circle">Neon Circle</option>
 
-<script>
-const { ipcRenderer } = require('electron');
+<script src="./themes/themeManager.js"></script>
+<script src="./index.js"></script>
+<script src="./js/layerManager.js"></script>
 
-let data = [];
-let currentIndex = 0;
-let currentSong = null;
-let queue = [];
-let audioContext = null;
-let analyser = null;
-let sourceNode = null;
-let analyserDataArray = null;
-let visualizerAnimationId = null;
-let currentFilteredSongs = [];
-let currentFilteredSongIndex = -1;
-const MAX_QUEUE = 5;
-const RECENT_PLAYED_LIMIT = 10;
-
-const audio = document.getElementById('audio');
-
-audio.addEventListener('ended', () => {
-  if (queue.length === 0) return;
-
-  const nextSong = queue.shift();
-
-  renderQueue();
-  renderSongs(currentIndex);
-
-  playSong(nextSong, -1);
-});
-
-ipcRenderer.on('visualizer-video-ended', () => {
-  if (queue.length === 0) return;
-
-  const nextSong = queue.shift();
-
-  renderQueue();
-  renderSongs(currentIndex);
-
-  playSong(nextSong, -1);
-});
-
-let isDraggingQueue = false;
-let queueOffsetX = 0;
-let queueOffsetY = 0;
-
-window.addEventListener('DOMContentLoaded', () => {
-  const queueWindow = document.getElementById('queueFloatingWindow');
-  const queueHeader = document.getElementById('queueFloatingHeader');
-
-  if (queueWindow && queueHeader) {
-    queueHeader.addEventListener('mousedown', (event) => {
-      isDraggingQueue = true;
-      queueOffsetX = event.clientX - queueWindow.offsetLeft;
-      queueOffsetY = event.clientY - queueWindow.offsetTop;
-    });
-
-    document.addEventListener('mousemove', (event) => {
-      if (!isDraggingQueue) return;
-
-      queueWindow.style.left = `${event.clientX - queueOffsetX}px`;
-      queueWindow.style.top = `${event.clientY - queueOffsetY}px`;
-    });
-
-    document.addEventListener('mouseup', () => {
-      isDraggingQueue = false;
-    });
-  }
-
-  loadSongs();
-});
-
-async function loadSongs() {
-  try {
-    document.getElementById('nowPlaying').textContent = 'musicフォルダ読込中...';
-
-    data = await ipcRenderer.invoke('get-songs');
-
-    applySavedArtistOrder();
-
-    currentIndex = 0;
-    currentSong = null;
-    currentFilteredSongIndex = -1;
-    currentFilteredSongs = [];
-
-    renderTabs();
-    renderSongs(0);
-    renderQueue();
-    renderRandomPanel();
-    loadBackgrounds();
-    loadVisualizerEnabledSetting();
-    loadVisualizerBrandNameSetting();
-    loadVisualizerTemplateSetting();
-
-    document.getElementById('nowPlaying').textContent = '再生待機中';
-  } catch (error) {
-    alert('musicフォルダを読み込めませんでした: ' + error.message);
-    document.getElementById('nowPlaying').textContent = '読込失敗';
-  }
-}
-
-function renderTabs() {
-  const tabs = document.getElementById('tabs');
-  tabs.innerHTML = '';
-
-  data.forEach((item, index) => {
-    const button = document.createElement('button');
-    button.className = 'tab' + (index === currentIndex ? ' active' : '');
-    button.textContent = `${item.artist} (${item.songs.length})`;
-
-    button.draggable = true;
-    button.dataset.index = index;
-
-    button.onclick = () => {
-      currentIndex = index;
-      renderTabs();
-      renderSongs(index);
-    };
-
-    button.addEventListener('dragstart', (event) => {
-      event.dataTransfer.setData('text/plain', index);
-      button.classList.add('dragging');
-    });
-
-    button.addEventListener('dragend', () => {
-      button.classList.remove('dragging');
-    });
-
-    button.addEventListener('dragover', (event) => {
-  event.preventDefault();
-  button.classList.add('drag-over');
-});
-
-button.addEventListener('dragleave', () => {
-  button.classList.remove('drag-over');
-});
-
-    button.addEventListener('drop', (event) => {
-      event.preventDefault();
-      button.classList.remove('drag-over');
-
-      const fromIndex = Number(event.dataTransfer.getData('text/plain'));
-      const toIndex = index;
-
-      if (fromIndex === toIndex) return;
-
-      moveArtistTab(fromIndex, toIndex);
-    });
-
-    tabs.appendChild(button);
-  });
-}
-function moveArtistTab(fromIndex, toIndex) {
-  const movedItem = data.splice(fromIndex, 1)[0];
-  data.splice(toIndex, 0, movedItem);
-
-  if (currentIndex === fromIndex) {
-    currentIndex = toIndex;
-  } else if (fromIndex < currentIndex && toIndex >= currentIndex) {
-    currentIndex--;
-  } else if (fromIndex > currentIndex && toIndex <= currentIndex) {
-    currentIndex++;
-  }
-
-  saveArtistOrder();
-
-  renderTabs();
-  renderSongs(currentIndex);
-}
-
-function saveArtistOrder() {
-  const artistOrder = data.map(item => item.artist);
-  localStorage.setItem('paradoxArtistOrder', JSON.stringify(artistOrder));
-}
-
-function applySavedArtistOrder() {
-  const saved = localStorage.getItem('paradoxArtistOrder');
-
-  if (!saved) return;
-
-  try {
-    const artistOrder = JSON.parse(saved);
-
-    data.sort((a, b) => {
-      const indexA = artistOrder.indexOf(a.artist);
-      const indexB = artistOrder.indexOf(b.artist);
-
-      if (indexA !== -1 && indexB !== -1) {
-        return indexA - indexB;
-      }
-
-      if (indexA !== -1) return -1;
-      if (indexB !== -1) return 1;
-
-      return a.artist.localeCompare(b.artist, 'ja');
-    });
-  } catch (error) {
-    console.warn('タブ順の読み込みに失敗しました:', error);
-  }
-}
-
-function renderSongs(index) {
-  const container = document.getElementById('songs');
-  container.innerHTML = '';
-
-  if (!data[index]) {
-    container.innerHTML = '<p>musicフォルダ内に曲がありません。</p>';
-    currentFilteredSongs = [];
-    return;
-  }
-
-  const keyword = document
-    .getElementById('searchInput')
-    .value
-    .trim()
-    .toLowerCase();
-
-  if (keyword) {
-    currentFilteredSongs = [];
-
-    data.forEach(artistData => {
-      artistData.songs.forEach(song => {
-        const text = `${song.title} ${song.artist}`.toLowerCase();
-
-        if (text.includes(keyword)) {
-          currentFilteredSongs.push(song);
-        }
-      });
-    });
-  } else {
-    currentFilteredSongs = data[index].songs;
-  }
-
-  if (currentFilteredSongs.length === 0) {
-    container.innerHTML = '<p>該当する曲がありません。</p>';
-    return;
-  }
-
-  currentFilteredSongs.forEach((song, songIndex) => {
-    const text = `♫${song.title} - ${song.artist}`;
-
-    const card = document.createElement('div');
-    card.className = 'song';
-
-    if (
-      currentSong &&
-      currentSong.title === song.title &&
-      currentSong.artist === song.artist
-    ) {
-      card.classList.add('playing');
-      currentFilteredSongIndex = songIndex;
-    }
-
-    const title = document.createElement('div');
-    title.className = 'title';
-    title.textContent = `${song.mediaType === 'video' ? '🎬 ' : ''}${text}`;
-
-    const buttons = document.createElement('div');
-    buttons.className = 'buttons';
-
-    const playBtn = document.createElement('button');
-    playBtn.className = 'play';
-    playBtn.textContent = '▶ 再生';
-
-    playBtn.onclick = () => {
-      playSong(song, songIndex);
-    };
-
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'copy';
-    copyBtn.textContent = '📋 コピー';
-
-    copyBtn.onclick = async () => {
-      await ipcRenderer.invoke('copy-text', text);
-      copyBtn.textContent = 'コピーしました';
-      setTimeout(() => copyBtn.textContent = '📋 コピー', 1000);
-    };
-
-    const reserveBtn = document.createElement('button');
-    reserveBtn.className = 'nav';
-    reserveBtn.textContent = '➕ 予約';
-
-    reserveBtn.onclick = () => {
-      addToQueue(song);
-    };
-
-    buttons.appendChild(playBtn);
-    buttons.appendChild(copyBtn);
-    buttons.appendChild(reserveBtn);
-
-    card.appendChild(title);
-    card.appendChild(buttons);
-    container.appendChild(card);
-  });
-}
-
-async function playSong(song, songIndex) {
-  const text = `♫${song.title} - ${song.artist}`;
-
-  if (!song.fileUrl) {
-    alert('ファイルのURLが取得できませんでした。');
-    return;
-  }
-
-  currentSong = song;
-  currentFilteredSongIndex = songIndex;
-
-  addRecentPlayedSong(song);
-
-  document.getElementById('nowPlaying').textContent = text;
-
-  if (song.mediaType === 'video') {
-  stopVisualizerLevelLoop();
-
-  audio.pause();
-  audio.removeAttribute('src');
-  audio.load();
-
-  await ipcRenderer.invoke('send-song-to-visualizer', song);
-  await ipcRenderer.invoke('copy-text', text);
-
-  renderSongs(currentIndex);
-  return;
-}
-
-  await ipcRenderer.invoke('stop-visualizer-video');
-
-  audio.src = song.fileUrl;
-
-setupAudioAnalyzer();
-
-if (audioContext.state === 'suspended') {
-  await audioContext.resume();
-}
-
-audio.play().catch(error => {
-  alert('再生できませんでした: ' + error.message);
-});
-
-startVisualizerLevelLoop();
-
-  await ipcRenderer.invoke('send-song-to-visualizer', song);
-  await ipcRenderer.invoke('send-background-to-visualizer', currentBackground);
-  await ipcRenderer.invoke('copy-text', text);
-
-  renderSongs(currentIndex);
-}
-
-function setupAudioAnalyzer() {
-  if (audioContext && analyser) return;
-
-  audioContext = new AudioContext();
-
-  analyser = audioContext.createAnalyser();
-  analyser.fftSize = 256;
-
-  analyserDataArray = new Uint8Array(analyser.frequencyBinCount);
-
-  sourceNode = audioContext.createMediaElementSource(audio);
-  sourceNode.connect(analyser);
-  analyser.connect(audioContext.destination);
-}
-
-function averageRange(array, start, end) {
-  const safeStart = Math.max(0, start);
-  const safeEnd = Math.min(array.length, end);
-
-  if (safeEnd <= safeStart) return 0;
-
-  let sum = 0;
-
-  for (let i = safeStart; i < safeEnd; i++) {
-    sum += array[i];
-  }
-
-  return sum / (safeEnd - safeStart);
-}
-
-function normalizeAudioValue(value, sensitivity = 220, curve = 0.75) {
-  const normalized = Math.max(0, Math.min(1, value / sensitivity));
-
-  return Math.pow(normalized, curve);
-}
-
-function createVisualizerData(array) {
-  const bassRaw = averageRange(array, 1, 8);
-  const midRaw = averageRange(array, 8, 42);
-  const highRaw = averageRange(array, 42, 115);
-  const masterRaw = averageRange(array, 1, 115);
-
-  const bass = normalizeAudioValue(bassRaw, 230, 0.85);
-const mid = normalizeAudioValue(midRaw, 215, 0.82);
-const high = normalizeAudioValue(highRaw, 205, 0.78);
-const master = normalizeAudioValue(masterRaw, 225, 0.86);
-
-  const barCount = 30;
-  const bars = [];
-
-  for (let i = 0; i < barCount; i++) {
-    let start;
-    let end;
-    let sensitivity;
-    let boost;
-
-    if (i < 6) {
-  // 左：低音 6本。強くなりすぎるのでかなり抑える
-  const localIndex = i;
-  start = 1 + localIndex * 2;
-  end = start + 3;
-  sensitivity = 250;
-  boost = 0.82;
-} else if (i < 20) {
-  // 中央：中音 14本
-  const localIndex = i - 6;
-  start = 8 + localIndex * 2;
-  end = start + 4;
-  sensitivity = 225;
-  boost = 0.92;
-} else {
-  // 右：高音 10本。少し跳ねやすくする
-  const localIndex = i - 20;
-  start = 42 + localIndex * 5;
-  end = start + 8;
-  sensitivity = 210;
-  boost = 1.05;
-}
-
-    const raw = averageRange(array, start, end);
-const variation = 0.72 + (Math.sin(i * 1.7) + 1) * 0.16;
-
-// 値を少し圧縮して、サビで全部マックスにならないようにする
-let value = normalizeAudioValue(raw * boost * variation, sensitivity, 0.9);
-
-// 帯域ごとの最大値をあえて少し制限する
-if (i < 6) {
-  value = Math.min(value, 0.82);
-} else if (i < 20) {
-  value = Math.min(value, 0.88);
-} else {
-  value = Math.min(value, 0.94);
-}
-
-bars.push(value);
-  }
-
-  return {
-    bass,
-    mid,
-    high,
-    master,
-    bars
-  };
-}
-
-function startVisualizerLevelLoop() {
-  if (!analyser || !analyserDataArray) return;
-
-  if (visualizerAnimationId) {
-    cancelAnimationFrame(visualizerAnimationId);
-  }
-
-  const update = () => {
-    analyser.getByteFrequencyData(analyserDataArray);
-
-    if (visualizerEnabled) {
-  const visualizerData = createVisualizerData(analyserDataArray);
-  ipcRenderer.invoke('send-visualizer-level', visualizerData);
-}
-
-    visualizerAnimationId = requestAnimationFrame(update);
-  };
-
-  update();
-}
-
-function stopVisualizerLevelLoop() {
-  if (visualizerAnimationId) {
-    cancelAnimationFrame(visualizerAnimationId);
-    visualizerAnimationId = null;
-  }
-
-  ipcRenderer.invoke('send-visualizer-level', 0);
-}
-
-async function stopAudio() {
-  audio.pause();
-  audio.currentTime = 0;
-
-  stopVisualizerLevelLoop();
-
-  await ipcRenderer.invoke('stop-visualizer-video');
-}
-
-function playPrevious() {
-  if (currentFilteredSongs.length === 0) return;
-
-  const prevIndex =
-    currentFilteredSongIndex > 0
-      ? currentFilteredSongIndex - 1
-      : currentFilteredSongs.length - 1;
-
-  playSong(currentFilteredSongs[prevIndex], prevIndex);
-}
-
-function playNext() {
-  if (currentFilteredSongs.length === 0) return;
-
-  const nextIndex =
-    currentFilteredSongIndex < currentFilteredSongs.length - 1
-      ? currentFilteredSongIndex + 1
-      : 0;
-
-  playSong(currentFilteredSongs[nextIndex], nextIndex);
-}
-
-async function copyCurrent() {
-  if (!currentSong) {
-    alert('まだ曲が再生されていません。');
-    return;
-  }
-
-  const text = `♫${currentSong.title} - ${currentSong.artist}`;
-  await ipcRenderer.invoke('copy-text', text);
-}
-
-async function openVisualizer() {
-  await ipcRenderer.invoke('open-visualizer-window');
-
-  await ipcRenderer.invoke('send-visualizer-enabled', visualizerEnabled);
-  await ipcRenderer.invoke('send-visualizer-brand-name', visualizerBrandName);
-  await ipcRenderer.invoke('send-visualizer-template', visualizerTemplate);
-
-  if (currentSong) {
-    await ipcRenderer.invoke('send-song-to-visualizer', currentSong);
-  }
-
-  if (currentBackground) {
-    await ipcRenderer.invoke('send-background-to-visualizer', currentBackground);
-  }
-}
-
-let currentBackground = null;
-let visualizerEnabled = true;
-let visualizerBrandName = 'PARADOX VISUALIZER';
-let visualizerTemplate = 'standard';
-
-async function loadBackgrounds() {
-  const select = document.getElementById('backgroundSelect');
-  if (!select) return;
-
-  const backgrounds = await ipcRenderer.invoke('get-backgrounds');
-
-  select.innerHTML = '<option value="">背景なし</option>';
-
-  backgrounds.forEach(background => {
-    const option = document.createElement('option');
-    option.value = background.fileUrl;
-    option.textContent = background.name;
-
-    select.appendChild(option);
-  });
-
-  applySavedBackground(backgrounds);
-}
-
-function applySavedBackground(backgrounds) {
-  const saved = localStorage.getItem('paradoxVisualizerBackground');
-  if (!saved) return;
-
-  try {
-    const savedBackground = JSON.parse(saved);
-
-    const matchedBackground = backgrounds.find(background => {
-      return background.fileUrl === savedBackground.fileUrl;
-    });
-
-    if (!matchedBackground) {
-      localStorage.removeItem('paradoxVisualizerBackground');
-      currentBackground = null;
-      return;
-    }
-
-    const select = document.getElementById('backgroundSelect');
-    select.value = matchedBackground.fileUrl;
-
-    currentBackground = {
-      fileUrl: matchedBackground.fileUrl,
-      name: matchedBackground.name
-    };
-  } catch (error) {
-    localStorage.removeItem('paradoxVisualizerBackground');
-    currentBackground = null;
-  }
-}
-
-async function changeVisualizerBackground() {
-  const select = document.getElementById('backgroundSelect');
-  if (!select) return;
-
-  const fileUrl = select.value;
-  const name = select.options[select.selectedIndex]?.textContent || '';
-
-  currentBackground = fileUrl
-    ? { fileUrl, name }
-    : null;
-
-  if (currentBackground) {
-    localStorage.setItem('paradoxVisualizerBackground', JSON.stringify(currentBackground));
-  } else {
-    localStorage.removeItem('paradoxVisualizerBackground');
-  }
-
-  await ipcRenderer.invoke('send-background-to-visualizer', currentBackground);
-}
-
-function loadVisualizerEnabledSetting() {
-  const saved = localStorage.getItem('paradoxVisualizerEnabled');
-
-  if (saved === null) {
-    visualizerEnabled = true;
-  } else {
-    visualizerEnabled = saved === 'true';
-  }
-
-  const toggle = document.getElementById('visualizerToggle');
-  const label = document.getElementById('visualizerToggleLabel');
-
-  if (toggle) toggle.checked = visualizerEnabled;
-  if (label) label.textContent = visualizerEnabled ? 'ON' : 'OFF';
-}
-
-async function toggleVisualizerEnabled() {
-  const toggle = document.getElementById('visualizerToggle');
-  const label = document.getElementById('visualizerToggleLabel');
-
-  visualizerEnabled = toggle ? toggle.checked : true;
-
-  localStorage.setItem('paradoxVisualizerEnabled', String(visualizerEnabled));
-
-  if (label) {
-    label.textContent = visualizerEnabled ? 'ON' : 'OFF';
-  }
-
-  await ipcRenderer.invoke('send-visualizer-enabled', visualizerEnabled);
-
-  if (!visualizerEnabled) {
-    await ipcRenderer.invoke('send-visualizer-level', {
-      bass: 0,
-      mid: 0,
-      high: 0,
-      master: 0,
-      bars: []
-    });
-  }
-}
-
-function loadVisualizerBrandNameSetting() {
-  const saved = localStorage.getItem('paradoxVisualizerBrandName');
-
-  visualizerBrandName = saved || 'PARADOX VISUALIZER';
-
-  const input = document.getElementById('brandNameInput');
-
-  if (input) {
-    input.value = saved || '';
-    input.placeholder = 'PARADOX VISUALIZER';
-  }
-}
-
-async function changeVisualizerBrandName() {
-  const input = document.getElementById('brandNameInput');
-
-  const value = input ? input.value.trim() : '';
-  visualizerBrandName = value || 'PARADOX VISUALIZER';
-
-  if (value) {
-    localStorage.setItem('paradoxVisualizerBrandName', value);
-  } else {
-    localStorage.removeItem('paradoxVisualizerBrandName');
-  }
-
-  await ipcRenderer.invoke('send-visualizer-brand-name', visualizerBrandName);
-}
-
-function loadVisualizerTemplateSetting() {
-  const saved = localStorage.getItem('paradoxVisualizerTemplate');
-
-  visualizerTemplate = saved || 'standard';
-
-  const select = document.getElementById('templateSelect');
-
-  if (select) {
-    select.value = visualizerTemplate;
-  }
-}
-
-async function changeVisualizerTemplate() {
-  const select = document.getElementById('templateSelect');
-
-  visualizerTemplate = select ? select.value : 'standard';
-
-  localStorage.setItem('paradoxVisualizerTemplate', visualizerTemplate);
-
-  await ipcRenderer.invoke('send-visualizer-template', visualizerTemplate);
-}
-
-function addToQueue(song) {
-  if (queue.length >= MAX_QUEUE) {
-  alert(`予約キューは最大${MAX_QUEUE}曲までです。`);
-  return;
-}
-
-  const exists = queue.some(
-    item => item.artist === song.artist && item.title === song.title
-  );
-
-  if (exists) {
-    alert('この曲はすでに予約されています。');
-    return;
-  }
-
-  queue.push(song);
-  renderQueue();
-  renderSongs(currentIndex);
-  openQueueModal();
-}
-
-function removeFromQueue(index) {
-  queue.splice(index, 1);
-  renderQueue();
-  renderSongs(currentIndex);
-}
-
-function renderQueue() {
-  const queueList = document.getElementById('queueList');
-  queueList.innerHTML = '';
-
-  for (let i = 0; i < MAX_QUEUE; i++) {
-    const item = queue[i];
-
-    const row = document.createElement('div');
-    row.className = 'queueItem';
-
-    const label = document.createElement('div');
-
-    if (item) {
-      label.textContent = `${i + 1}. ♫${item.title} - ${item.artist}`;
-      label.className = 'queueItemText';
-
-      label.onclick = () => {
-        const selectedSong = queue.splice(i, 1)[0];
-        renderQueue();
-        playSong(selectedSong, -1);
-      };
-    } else {
-      label.textContent = `${i + 1}. 空き`;
-      label.style.color = '#666';
-    }
-
-    row.appendChild(label);
-
-    if (item) {
-      const removeBtn = document.createElement('button');
-      removeBtn.className = 'queueRemove';
-      removeBtn.textContent = '解除';
-      removeBtn.onclick = () => removeFromQueue(i);
-
-      row.appendChild(removeBtn);
-    }
-
-    queueList.appendChild(row);
-  }
-}
-
-function toggleRandomPanel() {
-  const panel = document.getElementById('randomPanel');
-  panel.classList.toggle('show');
-  renderRandomPanel();
-}
-
-function renderRandomPanel() {
-  const list = document.getElementById('randomArtistList');
-  if (!list) return;
-
-  list.innerHTML = '';
-
-  const excludedArtists = getExcludedArtists();
-
-  data.forEach(artistData => {
-    const label = document.createElement('label');
-    label.className = 'randomArtistItem';
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.checked = excludedArtists.includes(artistData.artist);
-
-    checkbox.onchange = () => {
-      const currentExcluded = getExcludedArtists();
-
-      let nextExcluded;
-
-      if (checkbox.checked) {
-        nextExcluded = [...new Set([...currentExcluded, artistData.artist])];
-      } else {
-        nextExcluded = currentExcluded.filter(artist => artist !== artistData.artist);
-      }
-
-      localStorage.setItem('paradoxRandomExcludedArtists', JSON.stringify(nextExcluded));
-    };
-
-    const name = document.createElement('span');
-    name.textContent = `${artistData.artist} (${artistData.songs.length})`;
-
-    label.appendChild(checkbox);
-    label.appendChild(name);
-
-    list.appendChild(label);
-  });
-}
-
-function getExcludedArtists() {
-  const saved = localStorage.getItem('paradoxRandomExcludedArtists');
-
-  if (!saved) return [];
-
-  try {
-    return JSON.parse(saved);
-  } catch (error) {
-    return [];
-  }
-}
-
-function clearRandomExclusions() {
-  localStorage.removeItem('paradoxRandomExcludedArtists');
-  renderRandomPanel();
-}
-
-function randomReserve() {
-  const remainingSlots = MAX_QUEUE - queue.length;
-
-  if (remainingSlots <= 0) {
-    alert(`予約キューはすでに最大${MAX_QUEUE}曲です。`);
-    return;
-  }
-
-  const excludedArtists = getExcludedArtists();
-  const alreadyQueuedArtists = queue.map(song => song.artist);
-  const recentPlayedSongs = getRecentPlayedSongs();
-
-  const candidateArtists = data
-    .filter(artistData => {
-      if (excludedArtists.includes(artistData.artist)) return false;
-      if (alreadyQueuedArtists.includes(artistData.artist)) return false;
-      if (!artistData.songs || artistData.songs.length === 0) return false;
-
-      return true;
-    })
-    .map(artistData => {
-      const availableSongs = artistData.songs.filter(song => {
-        return !recentPlayedSongs.includes(getSongKey(song));
-      });
-
-      return {
-        artist: artistData.artist,
-        songs: availableSongs
-      };
-    })
-    .filter(artistData => artistData.songs.length > 0);
-
-  if (candidateArtists.length === 0) {
-    alert(`ランダム予約できる曲がありません。直近${RECENT_PLAYED_LIMIT}曲に含まれる曲は除外されています。`);
-    return;
-  }
-
-  const shuffledArtists = shuffleArray(candidateArtists);
-  const selectedArtists = shuffledArtists.slice(0, remainingSlots);
-
-  selectedArtists.forEach(artistData => {
-    const randomSong = getRandomSong(artistData.songs);
-    queue.push(randomSong);
-  });
-
-  renderQueue();
-  renderSongs(currentIndex);
-  openQueueModal();
-
-  alert(`${selectedArtists.length}曲をランダム予約しました。`);
-}
-
-function getSongKey(song) {
-  return `${song.artist}|||${song.title}`;
-}
-
-function getRecentPlayedSongs() {
-  const saved = localStorage.getItem('paradoxRecentPlayedSongs');
-
-  if (!saved) return [];
-
-  try {
-    return JSON.parse(saved);
-  } catch (error) {
-    return [];
-  }
-}
-
-function addRecentPlayedSong(song) {
-  const key = getSongKey(song);
-
-  let recent = getRecentPlayedSongs();
-
-  recent = recent.filter(item => item !== key);
-  recent.unshift(key);
-
-  recent = recent.slice(0, RECENT_PLAYED_LIMIT);
-
-  localStorage.setItem('paradoxRecentPlayedSongs', JSON.stringify(recent));
-}
-
-function getRandomSong(songs) {
-  const index = Math.floor(Math.random() * songs.length);
-  return songs[index];
-}
-
-function shuffleArray(array) {
-  const copied = [...array];
-
-  for (let i = copied.length - 1; i > 0; i--) {
-    const randomIndex = Math.floor(Math.random() * (i + 1));
-    const temporary = copied[i];
-
-    copied[i] = copied[randomIndex];
-    copied[randomIndex] = temporary;
-  }
-
-  return copied;
-}
-
-function openQueueModal() {
-  const win = document.getElementById('queueFloatingWindow');
-
-  if (!win) {
-    alert('queueFloatingWindow が見つかりません');
-    return;
-  }
-
-  win.classList.add('show');
-  renderQueue();
-}
-
-function closeQueueWindow() {
-  document.getElementById('queueFloatingWindow').classList.remove('show');
-}
-
-</script>
 
 <div id="queueFloatingWindow">
   <div id="queueFloatingHeader">
