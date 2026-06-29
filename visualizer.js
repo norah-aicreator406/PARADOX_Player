@@ -12,9 +12,8 @@ let latestVisualizerData = {
   bars: []
 };
 
-let backgroundImage = null;
 
-function loadThemeBackground(src) {
+function setBackgroundLayer(src) {
   const bgImage = document.getElementById('bgImage');
 
   if (!bgImage) {
@@ -24,19 +23,19 @@ function loadThemeBackground(src) {
 
   if (!src) {
     bgImage.style.display = 'none';
-    bgImage.src = '';
+    bgImage.removeAttribute('src');
     return;
   }
 
   bgImage.onload = () => {
-    console.log('背景画像読み込み成功:', src);
+    console.log('背景読み込み成功:', src);
     bgImage.style.display = 'block';
   };
 
   bgImage.onerror = () => {
-    console.error('背景画像読み込み失敗:', src);
+    console.error('背景読み込み失敗:', src);
     bgImage.style.display = 'none';
-    bgImage.src = '';
+    bgImage.removeAttribute('src');
   };
 
   bgImage.src = src;
@@ -119,6 +118,7 @@ function playSongChangeAnimation(callback) {
 }
 
 ipcRenderer.on('visualizer-song', (event, song) => {
+  console.log('[Visualizer] song received:', song);
   document.getElementById('title').textContent = song.title || '';
   document.getElementById('artist').textContent = song.artist || '';
 
@@ -129,6 +129,7 @@ ipcRenderer.on('visualizer-song', (event, song) => {
     coverImage.src = song.coverUrl;
     coverFrame.style.display = 'block';
   } else {
+    console.log('coverUrlなし');
     coverImage.src = '';
     coverFrame.style.display = 'none';
   }
@@ -168,21 +169,18 @@ ipcRenderer.on('visualizer-song', (event, song) => {
 });
 
 ipcRenderer.on('visualizer-background', (event, background) => {
-  const bgImage = document.getElementById('bgImage');
   const bgVideo = document.getElementById('bgVideo');
 
-  if (bgVideo.style.display === 'block') {
+  if (bgVideo && bgVideo.style.display === 'block') {
     return;
   }
 
   if (!background || !background.fileUrl) {
-    bgImage.style.display = 'none';
-    bgImage.src = '';
+    setBackgroundLayer(null);
     return;
   }
 
-  bgImage.src = background.fileUrl;
-  bgImage.style.display = 'block';
+  setBackgroundLayer(background.fileUrl);
 });
 
 const bgVideo = document.getElementById('bgVideo');
@@ -468,6 +466,7 @@ function clampLevel(value) {
 }
 
 ipcRenderer.on('visualizer-level', (event, visualizerData) => {
+  console.log('[Visualizer] level received:', visualizerData);
   const stage = document.getElementById('stage');
   const bars = document.querySelectorAll('.bar');
 
@@ -483,6 +482,16 @@ ipcRenderer.on('visualizer-level', (event, visualizerData) => {
     bars.forEach(bar => {
       bar.style.setProperty('--bar-level', level);
     });
+
+    latestVisualizerData = {
+  bass: level,
+  mid: level,
+  high: level,
+  master: level,
+  bars: []
+};
+
+updateCoverMotion(level, level);
 
     return;
   }
@@ -1089,58 +1098,58 @@ return Math.max(0.03, Math.min(1, varied));
 
 
 
+
+
 function drawCircleSpectrum() {
   const width = window.innerWidth;
   const height = window.innerHeight;
 
   spectrumCtx.clearRect(0, 0, width, height);
 
-  // ① 背景画像：一番下
-  
-
   if (!visualizerEnabled) {
     requestAnimationFrame(drawCircleSpectrum);
     return;
   }
 
-drawAurora(width, height);
-drawGodRays(width, height);
+  drawAurora(width, height);
+  drawGodRays(width, height);
 
-if (window.NORAH_PARTICLE_ENGINE) {
-  window.NORAH_PARTICLE_ENGINE.drawBubbles(
-    spectrumCtx,
-    width,
-    height,
-    latestVisualizerData
-  );
+  if (window.NORAH_PARTICLE_ENGINE) {
+    window.NORAH_PARTICLE_ENGINE.drawBubbles(
+      spectrumCtx,
+      width,
+      height,
+      latestVisualizerData
+    );
 
-  window.NORAH_PARTICLE_ENGINE.drawStarDust(
-    spectrumCtx,
-    width,
-    height,
-    latestVisualizerData
-  );
+    window.NORAH_PARTICLE_ENGINE.drawStarDust(
+      spectrumCtx,
+      width,
+      height,
+      latestVisualizerData
+    );
 
-  window.NORAH_PARTICLE_ENGINE.drawShootingStars(
-    spectrumCtx,
-    width,
-    height,
-    latestVisualizerData
-  );
+    window.NORAH_PARTICLE_ENGINE.drawShootingStars(
+      spectrumCtx,
+      width,
+      height,
+      latestVisualizerData
+    );
 
-  window.NORAH_PARTICLE_ENGINE.drawAuroraDust(
-    spectrumCtx,
-    width,
-    height,
-    latestVisualizerData
-  );
-}
+    window.NORAH_PARTICLE_ENGINE.drawAuroraDust(
+      spectrumCtx,
+      width,
+      height,
+      latestVisualizerData
+    );
+  }
 
-drawGlowFlash(width, height);
-drawCoverNeonRing(width, height);
+  drawGlowFlash(width, height);
+  drawCoverNeonRing(width, height);
+  drawNeonParticles(width, height);
 
-drawNeonParticles(width, height);
   const spectrumPower = effectSettings.spectrum;
+
   if (spectrumPower <= 0) {
     requestAnimationFrame(drawCircleSpectrum);
     return;
@@ -1148,7 +1157,6 @@ drawNeonParticles(width, height);
 
   const bars = latestVisualizerData.bars || [];
   const bass = latestVisualizerData.bass || 0;
-  const mid = latestVisualizerData.mid || 0;
   const high = latestVisualizerData.high || 0;
   const master = latestVisualizerData.master || 0;
 
@@ -1156,32 +1164,31 @@ drawNeonParticles(width, height);
   const centerY = height * 0.39;
 
   const isWide = width > height;
-const baseRadius = isWide ? 150 : 125;
-const maxBarLength = isWide ? 72 : 42;
-const bassBoost = isWide ? 18 : 10;
-const barCount = 64;
-const rotation = Date.now() * 0.00008;
+  const baseRadius = isWide ? 150 : 125;
+  const maxBarLength = isWide ? 72 : 42;
+  const bassBoost = isWide ? 18 : 10;
+  const barCount = 64;
+  const rotation = Date.now() * 0.00008;
 
   for (let i = 0; i < barCount; i++) {
     const angle = (Math.PI * 2 * i) / barCount - Math.PI / 2 + rotation;
-
     const level = getSmoothBarLevel(bars, i, barCount, master);
-
     const pulse = Math.sin(Date.now() * 0.002 + i * 0.35) * 0.18;
 
-const finalLevel = Math.max(
-  0,
-  Math.min(
-    1,
-    Math.pow(level, 0.82) + pulse * high * 0.45
-  )
-);
-
-// 初期化
-const drawLevel = finalLevel;
+    const drawLevel = Math.max(
+      0,
+      Math.min(
+        1,
+        Math.pow(level, 0.82) + pulse * high * 0.45
+      )
+    );
 
     const innerRadius = baseRadius + 10;
-    const outerRadius = innerRadius + 18 + drawLevel * maxBarLength * spectrumPower + bass * bassBoost;
+    const outerRadius =
+      innerRadius +
+      18 +
+      drawLevel * maxBarLength * spectrumPower +
+      bass * bassBoost;
 
     const x1 = centerX + Math.cos(angle) * innerRadius;
     const y1 = centerY + Math.sin(angle) * innerRadius;
@@ -1192,33 +1199,32 @@ const drawLevel = finalLevel;
     const alpha = 0.22 + drawLevel * 0.72;
 
     const spectrumTheme =
-  window.NORAH_VISUAL_STATE?.spectrumTheme || "default";
+      window.NORAH_VISUAL_STATE?.spectrumTheme || "default";
 
-let color;
+    let color;
 
-if (spectrumTheme === "ocean") {
-  if (hueShift < 0.5) {
-    color = `rgba(80, 220, 255, ${alpha})`;
-  } else {
-    color = `rgba(0, 130, 255, ${alpha})`;
-  }
-} else if (spectrumTheme === "galaxy") {
-  if (hueShift < 0.34) {
-    color = `rgba(130, 120, 255, ${alpha})`;
-  } else if (hueShift < 0.68) {
-    color = `rgba(190, 80, 255, ${alpha})`;
-  } else {
-    color = `rgba(255, 120, 220, ${alpha})`;
-  }
-} else {
-  if (hueShift < 0.34) {
-    color = `rgba(124, 251, 255, ${alpha})`;
-  } else if (hueShift < 0.68) {
-    color = `rgba(47, 123, 255, ${alpha})`;
-  } else {
-    color = `rgba(255, 79, 216, ${alpha})`;
-  }
-}
+    if (spectrumTheme === "ocean") {
+      color =
+        hueShift < 0.5
+          ? `rgba(80, 220, 255, ${alpha})`
+          : `rgba(0, 130, 255, ${alpha})`;
+    } else if (spectrumTheme === "galaxy") {
+      if (hueShift < 0.34) {
+        color = `rgba(130, 120, 255, ${alpha})`;
+      } else if (hueShift < 0.68) {
+        color = `rgba(190, 80, 255, ${alpha})`;
+      } else {
+        color = `rgba(255, 120, 220, ${alpha})`;
+      }
+    } else {
+      if (hueShift < 0.34) {
+        color = `rgba(124, 251, 255, ${alpha})`;
+      } else if (hueShift < 0.68) {
+        color = `rgba(47, 123, 255, ${alpha})`;
+      } else {
+        color = `rgba(255, 79, 216, ${alpha})`;
+      }
+    }
 
     spectrumCtx.beginPath();
     spectrumCtx.moveTo(x1, y1);
@@ -1420,7 +1426,9 @@ function applyVisualTheme(theme) {
 
   if (window.NORAH_PARTICLE_ENGINE) {
   window.NORAH_PARTICLE_ENGINE.setPreset(
-    theme.particles.preset
+    theme.particles.enabled
+      ? theme.particles.preset
+      : "none"
   );
 }
 
@@ -1438,23 +1446,34 @@ function applyVisualTheme(theme) {
     window.NORAH_VISUAL_STATE.spectrumTheme =
   theme.spectrum.color;
 
-  //--------------------------------------------------
+//--------------------------------------------------
 // Background
 //--------------------------------------------------
 
-if (theme.background?.type === "image") {
-
-    loadThemeBackground(
-        theme.background.src
-    );
-
+if (theme.background?.type === 'image') {
+  setBackgroundLayer(theme.background.src);
 } else {
+  setBackgroundLayer(null);
+}
 
-    backgroundImage = null;
+//--------------------------------------------------
+// Aurora Motion
+//--------------------------------------------------
+
+const bgImage = document.getElementById("bgImage");
+
+if (bgImage) {
+
+    bgImage.classList.remove("theme-aurora");
+
+    if (theme.id === "aurora") {
+        bgImage.classList.add("theme-aurora");
+    }
 
 }
 
 }
+
 
 ipcRenderer.on('visual-theme', (event, theme) => {
   console.log('[Visualizer] visual-theme received:', theme);

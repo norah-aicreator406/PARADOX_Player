@@ -96,7 +96,7 @@ window.ThemeManager = {
   },
   background: {
   type: "image",
-  src: "./themes/aurora/aurora-bg.jpg",
+  src: "./themes/aurora/aurora-bg.png",
   opacity: 1
 }
 

@@ -501,6 +501,8 @@ bars.push(value);
 }
 
 function startVisualizerLevelLoop() {
+
+  
   if (!analyser || !analyserDataArray) return;
 
   if (visualizerAnimationId) {
@@ -510,10 +512,8 @@ function startVisualizerLevelLoop() {
   const update = () => {
     analyser.getByteFrequencyData(analyserDataArray);
 
-    if (visualizerEnabled) {
-  const visualizerData = createVisualizerData(analyserDataArray);
-  ipcRenderer.invoke('send-visualizer-level', visualizerData);
-}
+   const visualizerData = createVisualizerData(analyserDataArray);
+ipcRenderer.invoke('send-visualizer-level', visualizerData);
 
     visualizerAnimationId = requestAnimationFrame(update);
   };
