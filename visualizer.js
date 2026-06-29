@@ -564,8 +564,8 @@ function createGodRays() {
 }
 
 createGodRays();
-
 createParticles();
+
 
 function setupVideoAnalyzer() {
   const bgVideo = document.getElementById('bgVideo');
@@ -781,6 +781,8 @@ function drawAurora(width, height) {
 }
 
 
+
+
 function drawGlowFlash(width, height) {
   const glowPower = effectSettings.glow;
 if (glowPower <= 0) return;
@@ -836,6 +838,24 @@ function drawCoverNeonRing(width, height) {
 
   spectrumCtx.save();
   spectrumCtx.globalCompositeOperation = 'screen';
+
+  // Aurora Glow Halo
+const haloGradient = spectrumCtx.createRadialGradient(
+  centerX,
+  centerY,
+  radius * 0.72,
+  centerX,
+  centerY,
+  radius * 1.75
+);
+
+haloGradient.addColorStop(0.00, 'rgba(124, 251, 255, 0.00)');
+haloGradient.addColorStop(0.42, 'rgba(124, 251, 255, 0.13)');
+haloGradient.addColorStop(0.68, 'rgba(255, 79, 216, 0.09)');
+haloGradient.addColorStop(1.00, 'rgba(0, 0, 0, 0)');
+
+spectrumCtx.fillStyle = haloGradient;
+spectrumCtx.fillRect(0, 0, width, height);
 
   for (let i = 0; i < 4; i++) {
     const ringRadius = radius + i * 5 + bass * 5;
