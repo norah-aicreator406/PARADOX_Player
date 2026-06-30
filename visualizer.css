@@ -511,7 +511,32 @@ html, body {
   display: none;
 }
 
+#lyricsLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 170px;
+}
 
+#lyricsBlock {
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  color: #ffffff;
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.35),
+    0 0 18px rgba(124, 251, 255, 0.35),
+    0 0 32px rgba(255, 79, 216, 0.20);
+}
+
+.lyricsLine {
+  font-size: clamp(28px, 4.8vw, 64px);
+}
 
 
 

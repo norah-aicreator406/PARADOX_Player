@@ -1116,6 +1116,39 @@ const varied = interpolated * bandVariation + spike - dip;
 return Math.max(0.03, Math.min(1, varied));
 }
 
+function setLyrics(lines) {
+  const lyricsBlock = document.getElementById('lyricsBlock');
+
+  if (!lyricsBlock) {
+    console.error('lyricsBlock が見つかりません');
+    return;
+  }
+
+  lyricsBlock.innerHTML = '';
+
+  const safeLines = Array.isArray(lines) ? lines : [String(lines || '')];
+
+  safeLines.forEach(line => {
+    const div = document.createElement('div');
+    div.className = 'lyricsLine';
+    div.textContent = line;
+    lyricsBlock.appendChild(div);
+  });
+}
+
+function clearLyrics() {
+  setLyrics([]);
+}
+
+function showLyrics() {
+  const lyricsLayer = document.getElementById('lyricsLayer');
+  if (lyricsLayer) lyricsLayer.style.display = 'flex';
+}
+
+function hideLyrics() {
+  const lyricsLayer = document.getElementById('lyricsLayer');
+  if (lyricsLayer) lyricsLayer.style.display = 'none';
+}
 
 
 
