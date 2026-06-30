@@ -120,3 +120,83 @@ Theme
 - 評価
 - テンプレートID
 - AI生成情報
+
+
+# LyricsBlock
+
+LyricsBlockは、時間・表示テキスト・見た目・モーションをまとめた歌詞表示単位。
+
+```text
+LyricsBlock
+├ id
+├ start
+├ end
+├ lines
+├ style
+└ animation
+
+
+{
+  id: "lyric_001",
+  start: 0,
+  end: 5,
+  lines: [
+    "君の声が",
+    "まだ響いてる"
+  ],
+  style: {
+    font: "Noto Sans JP",
+    size: 64,
+    color: "#ffffff",
+    align: "center",
+    outlineWidth: 0,
+    outlineColor: "#000000",
+    shadowColor: "#000000",
+    shadowBlur: 12,
+    shadowX: 0,
+    shadowY: 4
+  },
+  animation: {
+    preset: "fade",
+    duration: 0.5
+  }
+}
+
+
+
+方針
+歌詞は単なるテキストではなく、LyricsBlockとして管理する
+1つのLyricsBlockは、指定時間内に表示される歌詞カード
+複数行に対応する
+styleとanimationは後から拡張可能
+文字単位アニメーションはVer1では扱わない
+
+
+
+## STEP2：次に実装するもの
+
+次は `index.js` 側にテスト用データを作る。
+
+```js
+const testLyricsBlocks = [
+  {
+    id: "lyric_001",
+    start: 0,
+    end: 5,
+    lines: ["君の声が", "まだ響いてる"],
+    animation: {
+      preset: "fade",
+      duration: 0.5
+    }
+  },
+  {
+    id: "lyric_002",
+    start: 5,
+    end: 10,
+    lines: ["夜空へ", "溶けていく"],
+    animation: {
+      preset: "slideUp",
+      duration: 0.5
+    }
+  }
+];

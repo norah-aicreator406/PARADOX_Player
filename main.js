@@ -332,6 +332,13 @@ ipcMain.handle('send-background-to-visualizer', async (event, background) => {
   return true;
 });
 
+ipcMain.handle('send-lyrics-to-visualizer', async (event, lyrics) => {
+  if (!visualizerWindow || visualizerWindow.isDestroyed()) return false;
+
+  visualizerWindow.webContents.send('visualizer-lyrics', lyrics);
+  return true;
+});
+
 ipcMain.handle('send-overlay-to-visualizer', async (event, overlay) => {
   if (!visualizerWindow || visualizerWindow.isDestroyed()) return false;
 

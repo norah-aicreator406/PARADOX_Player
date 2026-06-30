@@ -1448,6 +1448,32 @@ ipcRenderer.on('visualizer-effect-settings', (event, settings) => {
   };
 });
 
+ipcRenderer.on('visualizer-lyrics', (event, lyrics) => {
+  console.log('[Visualizer] lyrics received:', lyrics);
+
+  if (!lyrics) {
+    clearLyrics();
+    return;
+  }
+
+  if (Array.isArray(lyrics)) {
+    setLyrics(lyrics);
+    showLyrics();
+    return;
+  }
+
+  if (typeof lyrics === 'string') {
+    setLyrics(lyrics.split('\n'));
+    showLyrics();
+    return;
+  }
+
+  if (Array.isArray(lyrics.lines)) {
+    setLyrics(lyrics.lines);
+    showLyrics();
+  }
+});
+
 
 let currentVisualTheme = 'none';
 

@@ -16,8 +16,75 @@ const RECENT_PLAYED_LIMIT = 10;
 
 const audio = document.getElementById('audio');
 audio.addEventListener('timeupdate', sendVisualizerTime);
+audio.addEventListener('timeupdate', updateLyricsByTime);
 audio.addEventListener('loadedmetadata', sendVisualizerTime);
 audio.addEventListener('ended', sendVisualizerTime);
+
+const testLyricsBlocks = [
+  {
+    id: "lyric_001",
+    start: 0,
+    end: 5,
+    lines: ["君の声が", "まだ響いてる"],
+    animation: {
+      preset: "fade",
+      duration: 0.5
+    }
+  },
+  {
+    id: "lyric_002",
+    start: 5,
+    end: 10,
+    lines: ["夜空へ", "溶けていく"],
+    animation: {
+      preset: "slideUp",
+      duration: 0.5
+    }
+  },
+  {
+    id: "lyric_003",
+    start: 10,
+    end: 15,
+    lines: ["光の海を", "泳いでいく"],
+    animation: {
+      preset: "fade",
+      duration: 0.5
+    }
+  }
+];
+
+let currentLyricsBlockId = null;
+
+function getCurrentLyricsBlock(currentTime) {
+  return testLyricsBlocks.find(block => {
+    return currentTime >= block.start && currentTime < block.end;
+  }) || null;
+}
+
+function updateLyricsByTime() {
+  const currentBlock = getCurrentLyricsBlock(audio.currentTime);
+
+  if (!currentBlock) {
+    if (currentLyricsBlockId !== null) {
+      currentLyricsBlockId = null;
+      ipcRenderer.invoke('send-lyrics-to-visualizer', null);
+    }
+
+    return;
+  }
+
+  if (currentLyricsBlockId === currentBlock.id) return;
+
+  currentLyricsBlockId = currentBlock.id;
+
+  ipcRenderer.invoke('send-lyrics-to-visualizer', {
+    id: currentBlock.id,
+    lines: currentBlock.lines,
+    animation: currentBlock.animation
+  });
+}
+
+
 
 function formatTime(seconds) {
   if (!Number.isFinite(seconds)) return '00:00';
@@ -386,6 +453,7 @@ audio.play().catch(error => {
 });
 
 startVisualizerLevelLoop();
+
 
   await ipcRenderer.invoke('send-song-to-visualizer', song);
   await ipcRenderer.invoke('send-background-to-visualizer', currentBackground);
@@ -1215,6 +1283,9 @@ ipcRenderer.on('player-overlay-layer-selected', (event, layerIndex) => {
   renderLayerPanel();
   updateSelectedLayerControls();
 });
+
+
+
 
 let currentVisualTheme = 'none';
 
