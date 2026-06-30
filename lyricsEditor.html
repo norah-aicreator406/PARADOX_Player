@@ -3,144 +3,128 @@
 <head>
 <meta charset="UTF-8">
 <title>Lyrics Editor</title>
-<style>
-body {
-  margin: 0;
-  padding: 0;
-  background: #111;
-  color: #fff;
-  font-family: system-ui, sans-serif;
-  overflow: hidden;
-}
-
-h1 {
-  margin-top: 0;
-  color: #00ffcc;
-}
-
-label {
-  display: block;
-  margin-top: 16px;
-  font-size: 13px;
-  color: #ccc;
-}
-
-textarea {
-  width: 100%;
-  box-sizing: border-box;
-  margin-top: 8px;
-  padding: 10px;
-  background: #181818;
-  color: #fff;
-  border: 1px solid #444;
-  border-radius: 10px;
-  font-size: 15px;
-}
-
-select,
-input[type="color"] {
-  width: 100%;
-  height: 38px;
-  box-sizing: border-box;
-  margin-top: 8px;
-  padding: 0 10px;
-  background: #1b1b1b;
-  color: #fff;
-  border: 1px solid #444;
-  border-radius: 10px;
-}
-
-input[type="color"] {
-  padding: 4px;
-  cursor: pointer;
-}
-
-input[type="range"] {
-  width: 100%;
-  margin: 0;
-  cursor: pointer;
-}
-
-.editorHeader {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: #111;
-  padding: 18px 20px 12px;
-  border-bottom: 1px solid #333;
-}
-
-.editorContent {
-  height: calc(100vh - 76px);
-  overflow-y: auto;
-  padding: 0 20px 24px;
-}
-
-
-.editorSection {
-  margin-top: 18px;
-  padding: 16px;
-  background: #171717;
-  border: 1px solid #2f2f2f;
-  border-radius: 14px;
-}
-
-.editorSectionTitle {
-  margin: 0 0 12px;
-  font-size: 13px;
-  color: #00ffcc;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.controlGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.controlFull {
-  grid-column: 1 / -1;
-}
-
-
-.sliderRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 8px;
-  min-height: 38px;
-}
-
-.sliderRow input[type="range"] {
-  flex: 1;
-}
-
-.valueBadge {
-  min-width: 54px;
-  height: 28px;
-  padding: 0 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  background: #0f0f0f;
-  border: 1px solid #333;
-  border-radius: 8px;
-  color: #00ffcc;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-</style>
+<link rel="stylesheet" href="lyricsEditor.css">
 </head>
 
 <body>
+
+<div id="editorApp">
+
+  <header id="editorTopbar">
+    <div>NORAH Studio Editor</div>
+    <div>Save</div>
+  </header>
+
+  <main id="editorWorkspace">
+
+    <aside id="layerPanel">
+     <h3 class="layerTitle">Layers</h3>
+
+<button id="addLayerButton">
+  + レイヤーを追加
+</button>
+
+<div id="addLayerMenu" class="addLayerMenu">
+ 
+  <button data-layer-type="image">画像</button>
+  <button data-layer-type="video">動画</button>
+  <button data-layer-type="lyrics">歌詞</button>
+  <button data-layer-type="particle">パーティクル</button>
+</div>
+
+ <button id="deleteLayerButton">
+  Delete Layer
+</button>
+
+<div id="layerList">
+
+  <div class="layerGroup">
+
+    <div class="layerGroupHeader">
+      ▼ ビジュアル
+    </div>
+
+    <div class="layerItem selected">
+      <div class="layerAccent"></div>
+      <div class="layerInfo">
+        <div class="layerName">背景</div>
+        <div class="layerType">背景</div>
+      </div>
+    </div>
+
+    <div class="layerSubGroup">
+      <div class="layerSubGroupHeader">
+        ▼ 画像
+      </div>
+
+      <div class="layerItem">
+        <div class="layerAccent"></div>
+        <div class="layerInfo">
+          <div class="layerName">画像 1</div>
+          <div class="layerType">画像</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layerSubGroup">
+      <div class="layerSubGroupHeader">
+        ▼ 動画
+      </div>
+    </div>
+
+    <div class="layerSubGroup">
+      <div class="layerSubGroupHeader">
+        ▼ パーティクル
+      </div>
+    </div>
+
+  </div>
+
+  <div class="layerGroup">
+
+    <div class="layerGroupHeader">
+      ▼ 歌詞
+    </div>
+
+    <div class="layerItem">
+      <div class="layerAccent"></div>
+      <div class="layerInfo">
+        <div class="layerName">Verse 1</div>
+        <div class="layerType">歌詞</div>
+      </div>
+    </div>
+
+    <div class="layerItem">
+      <div class="layerAccent"></div>
+      <div class="layerInfo">
+        <div class="layerName">Chorus</div>
+        <div class="layerType">歌詞</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+
+
+    </aside>
+
+    <section id="previewPanel">
+  <div id="editorPreviewStage">
+    <div id="editorPreviewLyrics">
+      Norah
+    </div>
+  </div>
+</section>
+
+  <aside id="inspectorPanel">
   <div class="editorHeader">
+
     <h1>Lyrics Editor</h1>
   </div>
 
-  <div class="editorContent">
+  <div id="lyricsInspector" class="editorContent inspectorContent is-active">
 
     <div class="editorSection">
       <div class="editorSectionTitle">テキスト</div>
@@ -238,7 +222,6 @@ input[type="range"] {
         <div class="controlFull">
           <label>シャドウプリセット</label>
           <select id="shadowPreset">
-            <option value="custom">Custom</option>
             <option value="off">OFF</option>
             <option value="soft">Soft</option>
             <option value="hard">Hard</option>
@@ -367,375 +350,45 @@ input[type="range"] {
 
   </div>
 
-<script>
-const { ipcRenderer } = require('electron');
-const fontGroups = [
-  {
-    label: 'Japanese',
-    fonts: [
-      'Yu Gothic UI',
-      'Yu Gothic',
-      'Meiryo',
-      'MS Gothic',
-      'MS PGothic',
-      'MS UI Gothic',
-      'Yu Mincho',
-      'MS Mincho'
-    ]
-  },
-  {
-    label: 'English',
-    fonts: [
-      'Arial',
-      'Verdana',
-      'Tahoma',
-      'Trebuchet MS',
-      'Georgia',
-      'Times New Roman',
-      'Impact',
-      'Comic Sans MS'
-    ]
-  }
-];
+<div id="backgroundInspector" class="inspectorContent">
+  <div class="editorSection">
+    <div class="editorSectionTitle">背景</div>
+    <p class="emptyInspectorText">背景設定は後で追加します。</p>
+  </div>
+</div>
 
-const stylePresets = {
+<div id="imageInspector" class="inspectorContent">
+  <div class="editorSection">
+    <div class="editorSectionTitle">画像</div>
+    <p class="emptyInspectorText">画像設定は後で追加します。</p>
+  </div>
+</div>
 
-  default: {
-    color: "#ffffff",
-    outlineColor: "#000000",
-    outlineWidth: 0,
-    shadowPreset: "off",
-    shadowColor: "#000000",
-    shadowBlur: 0,
-    shadowX: 0,
-    shadowY: 0,
-    letterSpacing: 0,
-    lineHeight: 1.2
-  },
+<div id="videoInspector" class="inspectorContent">
+  <div class="editorSection">
+    <div class="editorSectionTitle">動画</div>
+    <p class="emptyInspectorText">動画設定は後で追加します。</p>
+  </div>
+</div>
 
-  pop: {
-    color: "#ffffff",
-    outlineColor: "#ff4fc3",
-    outlineWidth: 2,
-    shadowPreset: "soft",
-    shadowColor: "#ff4fc3",
-    shadowBlur: 12,
-    shadowX: 2,
-    shadowY: 2,
-    letterSpacing: 0,
-    lineHeight: 1.2
-  },
+<div id="particleInspector" class="inspectorContent">
+  <div class="editorSection">
+    <div class="editorSectionTitle">パーティクル</div>
+    <p class="emptyInspectorText">パーティクル設定は後で追加します。</p>
+  </div>
+</div>
 
-  rock: {
-    color: "#ffffff",
-    outlineColor: "#000000",
-    outlineWidth: 4,
-    shadowPreset: "hard",
-    shadowColor: "#000000",
-    shadowBlur: 0,
-    shadowX: 6,
-    shadowY: 6,
-    letterSpacing: 0,
-    lineHeight: 1.1
-  },
-
-  metal: {
-    color: "#dcdcdc",
-    outlineColor: "#000000",
-    outlineWidth: 5,
-    shadowPreset: "hard",
-    shadowColor: "#000000",
-    shadowBlur: 0,
-    shadowX: 8,
-    shadowY: 8,
-    letterSpacing: 1,
-    lineHeight: 1.0
-  },
-
-  neon: {
-    color: "#ffffff",
-    outlineColor: "#00ffff",
-    outlineWidth: 2,
-    shadowPreset: "neon",
-    shadowColor: "#00ffff",
-    shadowBlur: 32,
-    shadowX: 0,
-    shadowY: 0,
-    letterSpacing: 1,
-    lineHeight: 1.2
-  },
-
-  cinematic: {
-    color: "#ffffff",
-    outlineColor: "#222222",
-    outlineWidth: 1,
-    shadowPreset: "soft",
-    shadowColor: "#000000",
-    shadowBlur: 16,
-    shadowX: 4,
-    shadowY: 4,
-    letterSpacing: 2,
-    lineHeight: 1.35
-  }
-
-};
-
-
-function setupFontOptions() {
-  fontInput.innerHTML = '';
-
-  fontGroups.forEach((group) => {
-    const optgroup = document.createElement('optgroup');
-    optgroup.label = group.label;
-
-    group.fonts.forEach((fontName) => {
-      const option = document.createElement('option');
-      option.value = fontName;
-      option.textContent = fontName;
-      option.style.fontFamily = fontName;
-
-      optgroup.appendChild(option);
-    });
-
-    fontInput.appendChild(optgroup);
-  });
-}
-
-
-const textInput = document.getElementById('lyricsText');
-const sizeInput = document.getElementById('lyricsSize');
-const colorInput = document.getElementById('lyricsColor');
-const fontInput = document.getElementById('lyricsFont');
-const stylePresetInput =
-    document.getElementById('lyricsStylePreset');
-const outlineColorInput = document.getElementById('lyricsOutlineColor');
-const outlineWidthInput = document.getElementById('lyricsOutlineWidth');
-const alignInput = document.getElementById('lyricsAlign');
-const shadowColorInput = document.getElementById('lyricsShadowColor');
-const shadowBlurInput = document.getElementById('lyricsShadowBlur');
-const shadowXInput = document.getElementById('lyricsShadowX');
-const shadowYInput = document.getElementById('lyricsShadowY');
-const shadowPresetInput =
-    document.getElementById('shadowPreset');
-const letterSpacingInput =
-    document.getElementById('lyricsLetterSpacing');
-const lineHeightInput = document.getElementById('lyricsLineHeight');
-const sizeValue =
-    document.getElementById('lyricsSizeValue');
-const outlineWidthValue =
-    document.getElementById('outlineWidthValue');
-const shadowBlurValue =
-    document.getElementById('shadowBlurValue');
-
-const shadowXValue =
-    document.getElementById('shadowXValue');
-
-const shadowYValue =
-    document.getElementById('shadowYValue');
-
-const letterSpacingValue =
-    document.getElementById('letterSpacingValue');
-
-const lineHeightValue =
-    document.getElementById('lineHeightValue');
-
-setupFontOptions();
-
-
-function sendLyricsUpdate() {
-
-  sizeValue.textContent =
-    sizeInput.value;
-
-  outlineWidthValue.textContent =
-    outlineWidthInput.value;
-
-  shadowBlurValue.textContent =
-    shadowBlurInput.value;
-
-  shadowXValue.textContent =
-    shadowXInput.value;
-
-  shadowYValue.textContent =
-    shadowYInput.value;
-
-  letterSpacingValue.textContent =
-    letterSpacingInput.value;
-
-  lineHeightValue.textContent =
-    lineHeightInput.value;
-
-  ipcRenderer.invoke('update-selected-lyrics-layer', {
-    text: textInput.value,
-    size: Number(sizeInput.value),
-    color: colorInput.value,
-    font: fontInput.value,
-    outlineColor: outlineColorInput.value,
-    outlineWidth: Number(outlineWidthInput.value),
-    align: alignInput.value,
-    shadowColor: shadowColorInput.value,
-    shadowBlur: Number(shadowBlurInput.value),
-    shadowX: Number(shadowXInput.value),
-    shadowY: Number(shadowYInput.value),
-    letterSpacing:
-    Number(letterSpacingInput.value),
-    lineHeight: Number(lineHeightInput.value)
-  });
-}
-
-
-function applyShadowPreset() {
-
-    switch (shadowPresetInput.value) {
-
-        case "off":
-            shadowColorInput.value="#000000";
-            shadowBlurInput.value=0;
-            shadowXInput.value=0;
-            shadowYInput.value=0;
-            break;
-
-        case "soft":
-    shadowColorInput.value = "#000000";
-    shadowBlurInput.value = 22;
-    shadowXInput.value = 6;
-    shadowYInput.value = 6;
-    break;
-
-case "hard":
-    shadowColorInput.value = "#000000";
-    shadowBlurInput.value = 0;
-    shadowXInput.value = 8;
-    shadowYInput.value = 8;
-    break;
-
-        case "glow":
-            shadowColorInput.value="#ffffff";
-            shadowBlurInput.value=24;
-            shadowXInput.value=0;
-            shadowYInput.value=0;
-            break;
-
-        case "neon":
-            shadowColorInput.value="#00ffff";
-            shadowBlurInput.value=32;
-            shadowXInput.value=0;
-            shadowYInput.value=0;
-            break;
-    }
-
-    sendLyricsUpdate();
-
-}
-
-
-function applyStylePreset() {
-
-  const style = stylePresets[stylePresetInput.value];
-
-  if (!style) return;
-
-  colorInput.value = style.color;
-
-  outlineColorInput.value = style.outlineColor;
-  outlineWidthInput.value = style.outlineWidth;
-
-  shadowPresetInput.value = style.shadowPreset;
-  shadowColorInput.value = style.shadowColor;
-  shadowBlurInput.value = style.shadowBlur;
-  shadowXInput.value = style.shadowX;
-  shadowYInput.value = style.shadowY;
-
-  letterSpacingInput.value = style.letterSpacing;
-  lineHeightInput.value = style.lineHeight;
-
-  sendLyricsUpdate();
-}
-
-
-ipcRenderer.on('lyrics-editor-data', (event, data) => {
-  if (!data) return;
-
-  textInput.value = data.text || '';
-  sizeInput.value = data.size || 72;
-
-  sizeValue.textContent =
-    sizeInput.value;
-
-  colorInput.value = data.color || '#ffffff';
-  fontInput.value = data.font || 'Arial';
-
-  outlineColorInput.value = data.outlineColor || '#000000';
-  outlineWidthInput.value = data.outlineWidth ?? 0;
-
-  alignInput.value = data.align || 'center';
   
-  shadowColorInput.value = data.shadowColor || '#000000';
-  shadowBlurInput.value = data.shadowBlur ?? 0;
-  shadowXInput.value = data.shadowX ?? 0;
-  shadowYInput.value = data.shadowY ?? 0;
-  shadowPresetInput.value = 'custom';
+</aside>
 
-    letterSpacingInput.value =
-    data.letterSpacing ?? 0;
+  </main>
 
-  lineHeightInput.value =
-    data.lineHeight ?? 1.2;
+  <section id="timelinePanel">
+    Timeline / Coming Soon
+  </section>
 
-  sizeValue.textContent =
-    sizeInput.value;
+</div>
+<script src="lyricsEditor.js"></script>
 
-  outlineWidthValue.textContent =
-    outlineWidthInput.value;
-
-  shadowBlurValue.textContent =
-    shadowBlurInput.value;
-
-  shadowXValue.textContent =
-    shadowXInput.value;
-
-  shadowYValue.textContent =
-    shadowYInput.value;
-
-  letterSpacingValue.textContent =
-    letterSpacingInput.value;
-
-  lineHeightValue.textContent =
-    lineHeightInput.value;
-
-});
-
-textInput.addEventListener('input', sendLyricsUpdate);
-sizeInput.addEventListener('input', sendLyricsUpdate);
-colorInput.addEventListener('input', sendLyricsUpdate);
-fontInput.addEventListener('change', sendLyricsUpdate);
-fontInput.addEventListener('input', sendLyricsUpdate);
-outlineColorInput.addEventListener('input', sendLyricsUpdate);
-outlineWidthInput.addEventListener('input', sendLyricsUpdate);
-alignInput.addEventListener('change', sendLyricsUpdate);
-
-shadowColorInput.addEventListener('input', sendLyricsUpdate);
-shadowBlurInput.addEventListener('input', sendLyricsUpdate);
-shadowXInput.addEventListener('input', sendLyricsUpdate);
-shadowYInput.addEventListener('input', sendLyricsUpdate);
-
-shadowPresetInput.addEventListener(
-    'change',
-    applyShadowPreset
-);
-
-stylePresetInput.addEventListener(
-    'change',
-    applyStylePreset
-);
-
-letterSpacingInput.addEventListener(
-    'input',
-    sendLyricsUpdate
-);
-lineHeightInput.addEventListener('input', sendLyricsUpdate);
-
-console.log('Lyrics Editor Loaded');
-</script>
 </body>
 </html>

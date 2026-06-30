@@ -150,7 +150,14 @@ window.addEventListener('DOMContentLoaded', () => {
       isDraggingQueue = false;
     });
   }
+  const openVisualEditorButton =
+    document.getElementById('openVisualEditorButton');
 
+  if (openVisualEditorButton) {
+    openVisualEditorButton.addEventListener('click', () => {
+      ipcRenderer.invoke('open-lyrics-editor-window');
+    });
+  }
   loadSongs();
 });
 

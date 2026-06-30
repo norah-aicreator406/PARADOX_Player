@@ -1,0 +1,445 @@
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #111;
+  color: #fff;
+  font-family: system-ui, sans-serif;
+  overflow: hidden;
+}
+
+h1 {
+  margin-top: 0;
+  color: #00ffcc;
+}
+
+label {
+  display: block;
+  margin-top: 16px;
+  font-size: 13px;
+  color: #ccc;
+}
+
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+  padding: 10px;
+  background: #181818;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+select,
+input[type="color"] {
+  width: 100%;
+  height: 38px;
+  box-sizing: border-box;
+  margin-top: 8px;
+  padding: 0 10px;
+  background: #1b1b1b;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 10px;
+}
+
+input[type="color"] {
+  padding: 4px;
+  cursor: pointer;
+}
+
+input[type="range"] {
+  width: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+
+.editorHeader {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #111;
+  padding: 18px 20px 12px;
+  border-bottom: 1px solid #333;
+}
+
+.editorContent {
+  height: calc(100vh - 76px);
+  overflow-y: auto;
+  padding: 0 20px 24px;
+}
+
+
+.editorSection {
+  margin-top: 18px;
+  padding: 16px;
+  background: #171717;
+  border: 1px solid #2f2f2f;
+  border-radius: 14px;
+}
+
+.editorSectionTitle {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #00ffcc;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.controlGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.controlFull {
+  grid-column: 1 / -1;
+}
+
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  min-height: 38px;
+}
+
+.sliderRow input[type="range"] {
+  flex: 1;
+}
+
+.valueBadge {
+  min-width: 54px;
+  height: 28px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  background: #0f0f0f;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #00ffcc;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+
+#editorApp {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: 52px 1fr 150px;
+  background: #0e0f14;
+}
+
+#editorTopbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  background: #161821;
+  border-bottom: 1px solid #2b2f3a;
+}
+
+#editorWorkspace {
+  display: grid;
+  grid-template-columns: 220px 1fr 360px;
+  min-height: 0;
+}
+
+#layerPanel,
+#previewPanel,
+#inspectorPanel,
+#timelinePanel {
+  border-color: #2b2f3a;
+}
+
+#layerPanel {
+  padding: 16px;
+  background: #11131a;
+  border-right: 1px solid #2b2f3a;
+}
+
+#previewPanel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #1b2233, #08090d);
+  border-right: 1px solid #2b2f3a;
+}
+
+#inspectorPanel {
+  background: #101117;
+  overflow: hidden;
+}
+
+#timelinePanel {
+  padding: 14px 18px;
+  background: #11131a;
+  border-top: 1px solid #2b2f3a;
+}
+
+.editorHeader {
+  display: none;
+}
+
+.editorContent {
+  height: 100%;
+  overflow-y: auto;
+  padding: 0 18px 24px;
+}
+
+#editorPreviewStage {
+  width: min(70%, 720px);
+  aspect-ratio: 16 / 9;
+  border: 1px solid #2b2f3a;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at center, rgba(124, 251, 255, 0.18), transparent 40%),
+    linear-gradient(180deg, #101624, #05060a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+#editorPreviewLyrics {
+  color: #ffffff;
+  font-size: 64px;
+  font-weight: 800;
+  text-align: center;
+  text-shadow:
+    0 0 12px rgba(124, 251, 255, 0.45),
+    0 0 28px rgba(255, 79, 216, 0.25);
+}
+
+.layerTitle{
+    margin:0 0 18px;
+    font-size:18px;
+}
+
+#addLayerButton{
+
+    width:100%;
+    height:38px;
+
+    background:#242832;
+
+    color:white;
+
+    border:none;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    margin-bottom:18px;
+
+}
+
+#layerList{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:8px;
+
+}
+
+.layerItem{
+
+    height:58px;
+
+    display:flex;
+
+    align-items:center;
+
+    background:#171a22;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    transition:.18s;
+
+}
+
+.layerItem:hover{
+
+    background:#20242d;
+
+}
+
+.layerAccent{
+
+    width:4px;
+
+    height:100%;
+
+    border-radius:12px 0 0 12px;
+
+    background:transparent;
+
+}
+
+.layerItem.selected .layerAccent{
+
+    background:#5CC8FF;
+
+}
+
+.layerInfo{
+
+    padding-left:14px;
+
+}
+
+.layerName{
+
+    font-size:14px;
+
+    font-weight:600;
+
+}
+
+.layerType{
+
+    margin-top:2px;
+
+    font-size:11px;
+
+    color:#8c95a8;
+
+}
+
+.layerGroup{
+
+    margin-bottom:18px;
+
+}
+
+.layerGroupHeader{
+
+    font-size:12px;
+
+    color:#9da4b5;
+
+    margin-bottom:8px;
+
+    font-weight:600;
+
+    letter-spacing:.5px;
+
+    user-select:none;
+
+}
+
+.layerGroup.collapsed .layerItem {
+  display: none;
+}
+
+.addLayerMenu {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 8px;
+  background: #151821;
+  border-radius: 12px;
+}
+
+.addLayerMenu.is-open {
+  display: flex;
+}
+
+.addLayerMenu button {
+  height: 34px;
+  text-align: left;
+  padding: 0 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #dfe6f3;
+  cursor: pointer;
+}
+
+.addLayerMenu button:hover {
+  background: #242832;
+}
+
+.layerSubGroup{
+
+    margin-left:10px;
+
+    margin-top:10px;
+
+}
+
+.layerSubGroupHeader{
+
+    font-size:11px;
+
+    color:#7e8799;
+
+    margin-bottom:6px;
+
+    user-select:none;
+
+    cursor:pointer;
+
+}
+
+#deleteLayerButton {
+  width: 100%;
+  height: 34px;
+  margin-bottom: 16px;
+  border: none;
+  border-radius: 10px;
+  background: #301a1f;
+  color: #ff8f9f;
+  cursor: pointer;
+}
+
+#deleteLayerButton:hover {
+  background: #44202a;
+}
+
+.layerSubGroup.collapsed .layerItem {
+  display: none;
+}
+
+.inspectorContent {
+  display: none;
+  height: 100%;
+  overflow-y: auto;
+  padding: 0 18px 24px;
+}
+
+.inspectorContent.is-active {
+  display: block;
+}
+
+.emptyInspectorText {
+  margin: 0;
+  color: #8c95a8;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+#layerPanel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+#layerList {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
