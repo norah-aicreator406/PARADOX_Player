@@ -1116,7 +1116,7 @@ const varied = interpolated * bandVariation + spike - dip;
 return Math.max(0.03, Math.min(1, varied));
 }
 
-function setLyrics(lines) {
+function setLyrics(lines, animation = { preset: 'fade', duration: 0.5 }) {
   const lyricsBlock = document.getElementById('lyricsBlock');
 
   if (!lyricsBlock) {
@@ -1134,7 +1134,36 @@ function setLyrics(lines) {
     div.textContent = line;
     lyricsBlock.appendChild(div);
   });
+
+  applyLyricsAnimation(animation);
 }
+function applyLyricsAnimation(animation = {}) {
+  const lyricsBlock = document.getElementById('lyricsBlock');
+  if (!lyricsBlock) return;
+
+  const preset = animation.preset || 'fade';
+  const duration = Number(animation.duration ?? 0.5);
+
+  lyricsBlock.style.setProperty('--lyrics-motion-duration', `${duration}s`);
+
+  lyricsBlock.classList.remove(
+    'lyrics-motion-fade',
+    'lyrics-motion-slide-up',
+    'lyrics-motion-zoom'
+  );
+
+  void lyricsBlock.offsetWidth;
+
+  if (preset === 'slideUp') {
+    lyricsBlock.classList.add('lyrics-motion-slide-up');
+  } else if (preset === 'zoom') {
+    lyricsBlock.classList.add('lyrics-motion-zoom');
+  } else {
+    lyricsBlock.classList.add('lyrics-motion-fade');
+  }
+}
+
+
 
 function clearLyrics() {
   setLyrics([]);
@@ -1469,8 +1498,8 @@ ipcRenderer.on('visualizer-lyrics', (event, lyrics) => {
   }
 
   if (Array.isArray(lyrics.lines)) {
-    setLyrics(lyrics.lines);
-    showLyrics();
+  setLyrics(lyrics.lines, lyrics.animation);
+  showLyrics();
   }
 });
 

@@ -534,9 +534,83 @@ html, body {
     0 0 32px rgba(255, 79, 216, 0.20);
 }
 
+#lyricsBlock.lyrics-motion-fade {
+  animation: lyricsFadeIn var(--lyrics-motion-duration, 0.5s) ease-out;
+}
+
+#lyricsBlock.lyrics-motion-slide-up {
+  animation: lyricsSlideUp var(--lyrics-motion-duration, 0.5s) ease-out;
+}
+
+
+#lyricsBlock.lyrics-motion-zoom {
+  animation: lyricsZoomIn var(--lyrics-motion-duration, 0.5s) ease-out;
+}
+
+@keyframes lyricsFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(4px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes lyricsSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(42px);
+    filter: blur(5px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes lyricsZoomIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.88);
+    filter: blur(5px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+
+
+
 .lyricsLine {
   font-size: clamp(28px, 4.8vw, 64px);
 }
 
+#lyricsBlock.lyrics-motion-fade {
+  animation: lyricsFadeIn 0.5s ease-out;
+}
 
+@keyframes lyricsFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(4px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
 

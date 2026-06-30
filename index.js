@@ -32,14 +32,14 @@ const testLyricsBlocks = [
     }
   },
   {
-    id: "lyric_002",
-    start: 5,
-    end: 10,
-    lines: ["夜空へ", "溶けていく"],
-    animation: {
-      preset: "slideUp",
-      duration: 0.5
-    }
+  id: "lyric_002",
+  start: 5,
+  end: 10,
+  lines: ["夜空へ", "溶けていく"],
+  animation: {
+    preset: "slideUp",
+    duration: 0.5
+  }
   },
   {
     id: "lyric_003",
