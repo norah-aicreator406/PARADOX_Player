@@ -134,6 +134,9 @@ function setupFontOptions() {
 
 
 const textInput = document.getElementById('lyricsText');
+const startTimeInput = document.getElementById('lyricsStartTime');
+const endTimeInput = document.getElementById('lyricsEndTime');
+const animationPresetInput = document.getElementById('lyricsAnimationPreset');
 const sizeInput = document.getElementById('lyricsSize');
 const colorInput = document.getElementById('lyricsColor');
 const fontInput = document.getElementById('lyricsFont');
@@ -196,6 +199,8 @@ function sendLyricsUpdate() {
   lineHeightValue.textContent =
     lineHeightInput.value;
 
+  
+
   ipcRenderer.invoke('update-selected-lyrics-layer', {
     text: textInput.value,
     size: Number(sizeInput.value),
@@ -212,9 +217,35 @@ function sendLyricsUpdate() {
     Number(letterSpacingInput.value),
     lineHeight: Number(lineHeightInput.value)
   });
-  updateEditorPreview();
-}
 
+ const selectedBlock =
+  document.querySelector('.lyricsBlock.selected');
+
+if (selectedBlock) {
+  selectedBlock.dataset.animationPreset = animationPresetInput.value;
+
+  const blockId = selectedBlock.dataset.blockId;
+  const blocks = sectionData[currentSectionName] || [];
+  const blockData = blocks.find(block => block.id === blockId);
+
+  if (blockData) {
+    blockData.text = textInput.value;
+    blockData.start = startTimeInput.value;
+    blockData.end = endTimeInput.value;
+    blockData.animationPreset = animationPresetInput.value;
+  }
+
+  renderSectionBlocks();
+
+  const updatedBlock = document.querySelector(
+    `.lyricsBlock[data-block-id="${blockId}"]`
+  );
+
+  if (updatedBlock) {
+    updatedBlock.classList.add('selected');
+  }
+}
+}
 function updateEditorPreview() {
   const previewLyrics = document.getElementById('editorPreviewLyrics');
   if (!previewLyrics) return;
@@ -355,7 +386,19 @@ ipcRenderer.on('lyrics-editor-data', (event, data) => {
 
 });
 
+let currentSectionName = 'Verse 1';
+
+const sectionData = {
+  'Verse 1': [],
+  'Chorus': []
+};
+
+const EDITOR_STORAGE_KEY = 'norahStudioEditorData';
+
 textInput.addEventListener('input', sendLyricsUpdate);
+animationPresetInput.addEventListener('change', sendLyricsUpdate);
+startTimeInput.addEventListener('input', sendLyricsUpdate);
+endTimeInput.addEventListener('input', sendLyricsUpdate);
 sizeInput.addEventListener('input', sendLyricsUpdate);
 colorInput.addEventListener('input', sendLyricsUpdate);
 fontInput.addEventListener('change', sendLyricsUpdate);
@@ -386,6 +429,106 @@ letterSpacingInput.addEventListener(
 lineHeightInput.addEventListener('input', sendLyricsUpdate);
 
 console.log('Lyrics Editor Loaded');
+
+const saveEditorButton = document.getElementById('saveEditorButton');
+
+function saveEditorData() {
+  localStorage.setItem(
+    EDITOR_STORAGE_KEY,
+    JSON.stringify({
+      currentSectionName,
+      sectionData
+    })
+  );
+
+  console.log('Editor data saved');
+}
+
+function loadEditorData() {
+  const saved = localStorage.getItem(EDITOR_STORAGE_KEY);
+
+  if (!saved) return;
+
+  const data = JSON.parse(saved);
+
+  if (data.sectionData) {
+    Object.keys(sectionData).forEach(key => {
+      delete sectionData[key];
+    });
+
+    Object.assign(sectionData, data.sectionData);
+  }
+
+  if (data.currentSectionName) {
+    currentSectionName = data.currentSectionName;
+  }
+
+  showSection(currentSectionName);
+}
+
+if (saveEditorButton) {
+  saveEditorButton.addEventListener('click', saveEditorData);
+}
+
+
+
+
+
+const timelineResizeHandle =
+  document.getElementById('timelineResizeHandle');
+
+const editorApp =
+  document.getElementById('editorApp');
+
+let isResizingTimeline = false;
+
+if (timelineResizeHandle && editorApp) {
+  timelineResizeHandle.addEventListener('mousedown', () => {
+    isResizingTimeline = true;
+    document.body.style.cursor = 'row-resize';
+  });
+
+  document.addEventListener('mousemove', (event) => {
+    if (!isResizingTimeline) return;
+
+    const windowHeight = window.innerHeight;
+    const newTimelineHeight = windowHeight - event.clientY;
+
+    const clampedHeight =
+      Math.min(Math.max(newTimelineHeight, 180), 560);
+
+    editorApp.style.gridTemplateRows =
+      `52px 1fr 8px ${clampedHeight}px`;
+  });
+
+  document.addEventListener('mouseup', () => {
+    isResizingTimeline = false;
+    document.body.style.cursor = '';
+  });
+}
+const previewStage = document.getElementById('editorPreviewStage');
+const ratioButtons = document.querySelectorAll('.ratioButton');
+
+ratioButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    const ratio = button.dataset.ratio;
+
+    ratioButtons.forEach(item => {
+      item.classList.remove('is-active');
+    });
+
+    button.classList.add('is-active');
+
+    previewStage.classList.remove('ratio-16-9', 'ratio-9-16');
+
+    if (ratio === '9:16') {
+      previewStage.classList.add('ratio-9-16');
+    } else {
+      previewStage.classList.add('ratio-16-9');
+    }
+  });
+});
+
 
 
 const layerGroupHeaders =
@@ -447,6 +590,318 @@ layerSubGroupHeaders.forEach(header => {
 
 
 
+const addLyricsBlockButton =
+  document.getElementById('addLyricsBlockButton');
+
+const lyricsBlockList =
+  document.getElementById('lyricsBlockList');
+
+const duplicateLyricsBlockButton =
+  document.getElementById('duplicateLyricsBlockButton');
+
+const deleteLyricsBlockButton =
+  document.getElementById('deleteLyricsBlockButton');
+
+function selectLyricsBlock(block) {
+  document.querySelectorAll('.lyricsBlock').forEach(item => {
+    item.classList.remove('selected');
+  });
+
+  block.classList.add('selected');
+
+  loadLyricsBlockToInspector(block);
+}
+
+function loadLyricsBlockToInspector(block) {
+  const sentence =
+    block.querySelector('.lyricsSentence')?.textContent.trim() || '';
+
+  const timeText =
+    block.querySelector('.lyricsTime')?.textContent.trim() || '00:00.00 → 00:03.00';
+
+  const [start, end] = timeText.split('→').map(value => value.trim());
+
+  textInput.value = sentence;
+  startTimeInput.value = start || '00:00.00';
+  endTimeInput.value = end || '00:03.00';
+
+  animationPresetInput.value =
+    block.dataset.animationPreset || 'fade';
+
+  updateEditorPreview();
+}
+
+function createLyricsBlock() {
+  const block = document.createElement('div');
+  block.className = 'lyricsBlock';
+  block.dataset.animationPreset = 'fade';
+  block.draggable = true;
+
+  block.innerHTML = `
+  <div class="lyricsBlockTop">
+    <div class="lyricsBlockMotion">
+      Fade
+    </div>
+
+    <div class="lyricsBlockSection">
+      Verse 1
+    </div>
+  </div>
+
+  <div class="lyricsTime">
+    00:00.00 → 00:03.00
+  </div>
+
+  <div class="lyricsSentence">
+    新しい歌詞
+  </div>
+
+  <div class="lyricsBlockMeta">
+    <span>Position X:0 Y:0 Z:0</span>
+
+  </div>
+`;
+
+  block.addEventListener('click', () => {
+  selectLyricsBlock(block);
+});
+
+setupLyricsBlockDrag(block);
+
+return block;
+}
+
+function createLyricsBlockData(text = '新しい歌詞') {
+  return {
+    id: `block_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+    start: '00:00.00',
+    end: '00:03.00',
+    text,
+    animationPreset: 'fade',
+    position: {
+      x: 0,
+      y: 0,
+      z: 0
+    }
+  };
+}
+
+function renderSectionBlocks() {
+  if (!lyricsBlockList) return;
+
+  lyricsBlockList.innerHTML = '';
+
+  const blocks = sectionData[currentSectionName] || [];
+
+  blocks.forEach(blockData => {
+    const block = createLyricsBlockFromData(blockData);
+    lyricsBlockList.appendChild(block);
+  });
+}
+
+function syncCurrentSectionOrderFromDOM() {
+  if (!sectionData[currentSectionName]) return;
+
+  const orderedIds = [...document.querySelectorAll('.lyricsBlock')]
+    .map(block => block.dataset.blockId);
+
+  sectionData[currentSectionName].sort((a, b) => {
+    return orderedIds.indexOf(a.id) - orderedIds.indexOf(b.id);
+  });
+}
+
+function createLyricsBlockFromData(blockData) {
+  const block = document.createElement('div');
+  block.className = 'lyricsBlock';
+  block.draggable = true;
+  block.dataset.blockId = blockData.id;
+  block.dataset.animationPreset = blockData.animationPreset || 'fade';
+
+  block.innerHTML = `
+    <div class="lyricsBlockTop">
+      <div class="lyricsBlockMotion">
+        ${getAnimationLabel(blockData.animationPreset)}
+      </div>
+
+      <div class="lyricsBlockSection">
+        ${currentSectionName}
+      </div>
+    </div>
+
+    <div class="lyricsTime">
+      ${blockData.start} → ${blockData.end}
+    </div>
+
+    <div class="lyricsSentence">
+      ${blockData.text}
+    </div>
+
+    <div class="lyricsBlockMeta">
+      <span>Position X:${blockData.position.x} Y:${blockData.position.y} Z:${blockData.position.z}</span>
+    </div>
+  `;
+
+  block.addEventListener('click', () => {
+    selectLyricsBlock(block);
+  });
+
+  setupLyricsBlockDrag(block);
+
+  return block;
+}
+
+function getAnimationLabel(value) {
+  if (value === 'slideUp') return 'Slide Up';
+  if (value === 'zoom') return 'Zoom';
+  return 'Fade';
+}
+
+
+if (addLyricsBlockButton && lyricsBlockList) {
+  addLyricsBlockButton.addEventListener('click', () => {
+
+    if (!sectionData[currentSectionName]) {
+      sectionData[currentSectionName] = [];
+    }
+
+    const blockData = createLyricsBlockData();
+
+    sectionData[currentSectionName].push(blockData);
+
+    renderSectionBlocks();
+
+    const newBlock = document.querySelector(
+      `.lyricsBlock[data-block-id="${blockData.id}"]`
+    );
+
+    if (newBlock) {
+      selectLyricsBlock(newBlock);
+    }
+
+  });
+}
+
+if (lyricsBlockList) {
+  lyricsBlockList.addEventListener('click', (event) => {
+    const block = event.target.closest('.lyricsBlock');
+
+    if (!block) return;
+
+    selectLyricsBlock(block);
+  });
+}
+
+if (lyricsBlockList) {
+  lyricsBlockList.addEventListener('dragover', (event) => {
+    event.preventDefault();
+
+    const dragging = document.querySelector('.lyricsBlock.dragging');
+    const target = event.target.closest('.lyricsBlock');
+
+    if (!dragging || !target || dragging === target) return;
+
+    document.querySelectorAll('.lyricsBlock').forEach(item => {
+      item.classList.remove('drag-over');
+    });
+
+    target.classList.add('drag-over');
+
+    const rect = target.getBoundingClientRect();
+    const isAfter = event.clientX > rect.left + rect.width / 2;
+
+    if (isAfter) {
+      target.after(dragging);
+    } else {
+      target.before(dragging);
+    }
+  });
+
+  lyricsBlockList.addEventListener('drop', () => {
+  document.querySelectorAll('.lyricsBlock').forEach(item => {
+    item.classList.remove('drag-over');
+  });
+
+  syncCurrentSectionOrderFromDOM();
+});
+}
+
+function setupLyricsBlockDrag(block) {
+  block.draggable = true;
+
+  block.addEventListener('dragstart', () => {
+    block.classList.add('dragging');
+  });
+
+  block.addEventListener('dragend', () => {
+    block.classList.remove('dragging');
+
+    document.querySelectorAll('.lyricsBlock').forEach(item => {
+      item.classList.remove('drag-over');
+    });
+  });
+}
+
+
+
+document.querySelectorAll('.lyricsBlock').forEach(block => {
+  setupLyricsBlockDrag(block);
+});
+
+
+function getSelectedLyricsBlock() {
+  return document.querySelector('.lyricsBlock.selected');
+}
+
+if (duplicateLyricsBlockButton && lyricsBlockList) {
+  duplicateLyricsBlockButton.addEventListener('click', () => {
+    const selectedBlock = getSelectedLyricsBlock();
+    if (!selectedBlock) return;
+
+    const blockId = selectedBlock.dataset.blockId;
+    const blocks = sectionData[currentSectionName] || [];
+    const index = blocks.findIndex(block => block.id === blockId);
+
+    if (index === -1) return;
+
+    const original = blocks[index];
+
+    const copy = {
+      ...original,
+      id: `block_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+      text: `${original.text}`
+    };
+
+    blocks.splice(index + 1, 0, copy);
+
+    renderSectionBlocks();
+
+    const newBlock = document.querySelector(
+      `.lyricsBlock[data-block-id="${copy.id}"]`
+    );
+
+    if (newBlock) {
+      selectLyricsBlock(newBlock);
+    }
+  });
+}
+
+if (deleteLyricsBlockButton) {
+  deleteLyricsBlockButton.addEventListener('click', () => {
+    const selectedBlock = getSelectedLyricsBlock();
+    if (!selectedBlock) return;
+
+    const blockId = selectedBlock.dataset.blockId;
+    const blocks = sectionData[currentSectionName] || [];
+
+    sectionData[currentSectionName] =
+      blocks.filter(block => block.id !== blockId);
+
+    renderSectionBlocks();
+  });
+}
+
+
+
 
 function getLayerGroupByType(type) {
   if (type === 'lyrics') {
@@ -499,6 +954,28 @@ function selectLayerItem(item) {
     item.querySelector('.layerType')?.textContent.trim();
 
   showInspectorByType(type);
+
+  const sectionName = item.dataset.sectionName;
+
+  if (sectionName) {
+    showSection(sectionName);
+  }
+}
+
+function showSection(sectionName) {
+  currentSectionName = sectionName;
+
+  if (!sectionData[currentSectionName]) {
+    sectionData[currentSectionName] = [];
+  }
+
+  const sectionTitle = document.querySelector('.sectionTitle');
+
+  if (sectionTitle) {
+    sectionTitle.textContent = sectionName;
+  }
+
+  renderSectionBlocks();
 }
 
 function showInspectorByType(type) {
@@ -584,3 +1061,4 @@ if (deleteLayerButton) {
   });
 }
 
+loadEditorData();

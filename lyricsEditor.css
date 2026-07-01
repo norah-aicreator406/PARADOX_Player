@@ -33,7 +33,8 @@ textarea {
 }
 
 select,
-input[type="color"] {
+input[type="color"],
+input[type="text"] {
   width: 100%;
   height: 38px;
   box-sizing: border-box;
@@ -166,10 +167,15 @@ input[type="range"] {
 
 #previewPanel {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+
+  gap: 24px;
+
   background: radial-gradient(circle at center, #1b2233, #08090d);
   border-right: 1px solid #2b2f3a;
+  overflow: hidden;
 }
 
 #inspectorPanel {
@@ -442,4 +448,334 @@ input[type="range"] {
   min-height: 0;
   overflow-y: auto;
   padding-right: 4px;
+}
+
+#sectionEditor{
+
+    margin-top:24px;
+
+    background:#151821;
+
+    border-radius:14px;
+
+    padding:18px;
+
+}
+
+.sectionHeader{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:16px;
+
+}
+
+.sectionTitle{
+
+    font-size:18px;
+
+    font-weight:700;
+
+}
+
+#addLyricsBlockButton{
+
+    height:34px;
+
+    padding:0 16px;
+
+    border:none;
+
+    border-radius:8px;
+
+    background:#2b3340;
+
+    color:white;
+
+    cursor:pointer;
+
+}
+
+#lyricsBlockList{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:10px;
+
+}
+
+.lyricsBlock{
+
+    background:#20242d;
+
+    border-radius:10px;
+
+    padding:12px;
+
+    cursor:pointer;
+
+    transition:.15s;
+
+}
+
+.lyricsBlock:hover{
+
+    background:#2a303b;
+
+}
+
+.lyricsBlock.selected{
+
+    outline:2px solid #5CC8FF;
+
+}
+
+.lyricsTime{
+
+    font-size:12px;
+
+    color:#8c95a8;
+
+}
+
+.lyricsSentence{
+
+    margin-top:6px;
+
+    font-size:15px;
+
+}
+
+.sectionActions {
+  display: flex;
+  gap: 8px;
+}
+
+.sectionActions button {
+  height: 34px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  background: #2b3340;
+  color: white;
+  cursor: pointer;
+}
+
+#deleteLyricsBlockButton {
+  background: #301a1f;
+  color: #ff8f9f;
+}
+
+#previewPanel {
+  min-height: 0;
+}
+
+
+#previewRatioControls {
+  display: flex;
+  gap: 8px;
+}
+
+.ratioButton {
+  height: 30px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 8px;
+  background: #242832;
+  color: #cfd6e6;
+  cursor: pointer;
+}
+
+.ratioButton.is-active {
+  background: #5CC8FF;
+  color: #071018;
+}
+
+#editorPreviewStage.ratio-16-9 {
+  width: min(70%, 720px);
+  aspect-ratio: 16 / 9;
+}
+
+#editorPreviewStage.ratio-9-16 {
+  height: min(52vh, 680px);
+  aspect-ratio: 9 / 16;
+  width: auto;
+}
+
+
+#previewPanel {
+  justify-content: center;
+  gap: 14px;
+}
+
+#timelinePanel {
+  padding: 18px 22px;
+  overflow: hidden;
+}
+
+#timelinePanel #sectionEditor {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  margin-top: 0;
+}
+
+#timelinePanel #lyricsBlockList {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  align-content: start;
+  gap: 12px;
+
+  padding: 6px 8px 10px;
+}
+
+#timelinePanel .lyricsBlock {
+  min-height: 128px;
+}
+
+#timelineResizeHandle {
+  height: 8px;
+  background: #0e0f14;
+  border-top: 1px solid #2b2f3a;
+  border-bottom: 1px solid #2b2f3a;
+  cursor: row-resize;
+}
+
+#timelineResizeHandle:hover {
+  background: #1b2233;
+}
+
+#editorApp {
+  grid-template-rows: 52px 1fr 8px 260px;
+}
+
+.lyricsBlock {
+  position: relative;
+  min-height: 118px;
+  background: linear-gradient(180deg, #20242d, #171a22);
+  border-radius: 14px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: 0.16s;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+  overflow: hidden;
+}
+
+.lyricsBlock::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: #5CC8FF;
+  opacity: 0.55;
+}
+
+.lyricsBlock:hover {
+  background: linear-gradient(180deg, #262b36, #1c2029);
+  transform: translateY(-1px);
+}
+
+.lyricsBlock.selected {
+  outline: none;
+  border-color: rgba(92, 200, 255, 0.95);
+  box-shadow:
+    0 0 0 1px rgba(92, 200, 255, 0.65),
+    0 0 22px rgba(92, 200, 255, 0.24),
+    0 10px 24px rgba(0,0,0,0.22);
+}
+
+.lyricsBlockTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.lyricsBlockMotion {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #9be7ff;
+  text-transform: uppercase;
+}
+
+.lyricsBlockSection {
+  font-size: 11px;
+  color: #8c95a8;
+}
+
+.lyricsTime {
+  font-size: 12px;
+  color: #b7c0d3;
+  font-variant-numeric: tabular-nums;
+}
+
+.lyricsSentence {
+  margin-top: 10px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: #ffffff;
+}
+
+.lyricsBlockMeta {
+  margin-top: 12px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #7e8799;
+  font-size: 11px;
+}
+
+
+#timelinePanel {
+  min-height: 260px;
+}
+
+.lyricsBlock.dragging {
+  opacity: 0.45;
+  transform: scale(0.98);
+}
+
+.lyricsBlock.drag-over {
+  border-color: rgba(92, 200, 255, 0.9);
+}
+
+
+.sectionHeader {
+  justify-content: flex-start;
+  gap: 18px;
+}
+
+.sectionActions {
+  margin-left: 0;
+}
+
+#saveEditorButton {
+  border: none;
+  background: transparent;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#saveEditorButton:hover {
+  color: #5CC8FF;
 }

@@ -131,14 +131,17 @@ function openLyricsEditorWindow() {
   }
 
   lyricsEditorWindow = new BrowserWindow({
-    width: 520,
-    height: 520,
-    backgroundColor: '#111111',
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
-    }
-  });
+  width: 1500,
+  height: 950,
+  minWidth: 1200,
+  minHeight: 760,
+  title: 'NORAH Studio Editor',
+  backgroundColor: '#111111',
+  webPreferences: {
+    nodeIntegration: true,
+    contextIsolation: false
+  }
+});
 
   lyricsEditorWindow.loadFile('lyricsEditor.html');
   lyricsEditorWindow.webContents.once('did-finish-load', () => {

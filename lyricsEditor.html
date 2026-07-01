@@ -12,7 +12,9 @@
 
   <header id="editorTopbar">
     <div>NORAH Studio Editor</div>
-    <div>Save</div>
+    <button id="saveEditorButton">
+  Save
+</button>
   </header>
 
   <main id="editorWorkspace">
@@ -86,7 +88,7 @@
       ▼ 歌詞
     </div>
 
-    <div class="layerItem">
+    <div class="layerItem lyricSectionItem selected" data-section-name="Verse 1">
       <div class="layerAccent"></div>
       <div class="layerInfo">
         <div class="layerName">Verse 1</div>
@@ -94,7 +96,7 @@
       </div>
     </div>
 
-    <div class="layerItem">
+    <div class="layerItem lyricSectionItem" data-section-name="Chorus">
       <div class="layerAccent"></div>
       <div class="layerInfo">
         <div class="layerName">Chorus</div>
@@ -111,11 +113,19 @@
     </aside>
 
     <section id="previewPanel">
-  <div id="editorPreviewStage">
+
+  <div id="previewRatioControls">
+  <button class="ratioButton is-active" data-ratio="16:9">16:9</button>
+  <button class="ratioButton" data-ratio="9:16">9:16</button>
+</div>
+
+  <div id="editorPreviewStage" class="ratio-16-9">
     <div id="editorPreviewLyrics">
       Norah
     </div>
   </div>
+
+
 </section>
 
   <aside id="inspectorPanel">
@@ -131,6 +141,32 @@
 
       <label>歌詞テキスト</label>
       <textarea id="lyricsText" rows="5">NORAH Studio</textarea>
+      <div class="controlGrid">
+
+  <div>
+    <label>開始時間</label>
+    <input id="lyricsStartTime" type="text" value="00:00.00">
+  </div>
+
+  <div>
+    <label>終了時間</label>
+    <input id="lyricsEndTime" type="text" value="00:03.20">
+  </div>
+
+  <div class="controlGrid">
+
+  <div class="controlFull">
+    <label>アニメーション</label>
+    <select id="lyricsAnimationPreset">
+      <option value="fade">Fade</option>
+      <option value="slideUp">Slide Up</option>
+      <option value="zoom">Zoom</option>
+    </select>
+  </div>
+
+</div>
+
+</div>
     </div>
 
     <div class="editorSection">
@@ -383,9 +419,28 @@
 
   </main>
 
+  <div id="timelineResizeHandle"></div>
+
+
   <section id="timelinePanel">
-    Timeline / Coming Soon
-  </section>
+
+  <div id="sectionEditor">
+
+    <div class="sectionHeader">
+      <div class="sectionTitle">
+        Verse 1
+      </div>
+
+      <div class="sectionActions">
+        <button id="addLyricsBlockButton">+ 歌詞ブロック</button>
+        <button id="duplicateLyricsBlockButton">複製</button>
+        <button id="deleteLyricsBlockButton">削除</button>
+      </div>
+    </div>
+    
+<div id="lyricsBlockList"></div>
+
+</section>
 
 </div>
 <script src="lyricsEditor.js"></script>
