@@ -17,6 +17,7 @@ let analyserDataArray = null;
 let visualizerAnimationId = null;
 let currentFilteredSongs = [];
 let currentFilteredSongIndex = -1;
+let pendingRegisterFilePath = null;
 const MAX_QUEUE = 5;
 const RECENT_PLAYED_LIMIT = 10;
 
@@ -200,9 +201,7 @@ document.addEventListener('drop', (event) => {
     return;
   }
 
-  const song = addSongFromFile(filePath);
-
-  console.log('Added song:', song);
+  openSongRegisterWizard(filePath);
 });
 
   renderLibrarySongs();
@@ -277,6 +276,108 @@ function renderLibrarySongs() {
   const library = loadLibrary();
 
   console.log('Library:', library);
+}
+
+
+function getFileNameWithoutExt(filePath) {
+  const normalized = filePath.replace(/\\/g, '/');
+  const fileName = normalized.split('/').pop() || '';
+  return fileName.replace(/\.[^/.]+$/, '');
+}
+
+function openSongRegisterWizard(filePath) {
+  pendingRegisterFilePath = filePath;
+
+  console.log('pendingRegisterFilePath:', pendingRegisterFilePath);
+
+  const overlay = document.getElementById('songRegisterOverlay');
+  const titleInput = document.getElementById('registerSongTitle');
+
+  if (!overlay || !titleInput) return;
+
+  titleInput.value = getFileNameWithoutExt(filePath);
+  overlay.classList.remove('hidden');
+}
+
+const confirmSongRegisterButton =
+  document.getElementById('confirmSongRegisterButton');
+
+const cancelSongRegisterButton =
+  document.getElementById('cancelSongRegisterButton');
+
+if (confirmSongRegisterButton) {
+  confirmSongRegisterButton.addEventListener('click', () => {
+    console.log('register pending path:', pendingRegisterFilePath);
+
+    if (!pendingRegisterFilePath) return;
+
+    if (!pendingRegisterFilePath) return;
+
+    const titleInput = document.getElementById('registerSongTitle');
+    const artistInput = document.getElementById('registerArtistName');
+    const albumInput = document.getElementById('registerAlbumName');
+    const genreInput = document.getElementById('registerGenre');
+    const tagsInput = document.getElementById('registerTags');
+    const favoriteInput = document.getElementById('registerFavorite');
+    const lyricsInput = document.getElementById('registerLyricsText');
+    const artworkInput = document.getElementById('registerArtworkFile');
+
+let artworkPath = '';
+
+if (artworkInput?.files?.length) {
+  artworkPath = webUtils.getPathForFile(artworkInput.files[0]);
+}
+    const errorMessage = document.getElementById('registerErrorMessage');
+
+    const title = titleInput?.value.trim() || '';
+    const artist = artistInput?.value.trim() || '';
+
+    if (!title || !artist) {
+      if (errorMessage) {
+        errorMessage.textContent = '曲名とアーティスト名は必須です。';
+      }
+      return;
+    }
+
+    const song = addSongFromFile(pendingRegisterFilePath, {
+      title,
+      artist,
+      album: albumInput?.value.trim() || '',
+      genre: genreInput?.value.trim() || '',
+      tags: tagsInput?.value
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(Boolean) || [],
+      favorite: favoriteInput?.checked || false,
+      artworkPath,
+      lyricsText: lyricsInput?.value || '',
+      blockMode:
+        document.querySelector('input[name="registerBlockMode"]:checked')?.value || 'blankLine'
+    });
+
+    console.log('Registered song:', song);
+
+    pendingRegisterFilePath = null;
+    errorMessage.textContent = '';
+    document.getElementById('songRegisterOverlay')?.classList.add('hidden');
+
+    renderLibrarySongs();
+  });
+}
+
+if (cancelSongRegisterButton) {
+  cancelSongRegisterButton.addEventListener('click', () => {
+    pendingRegisterFilePath = null;
+
+    const errorMessage =
+      document.getElementById('registerErrorMessage');
+
+    if (errorMessage) {
+      errorMessage.textContent = '';
+    }
+
+    document.getElementById('songRegisterOverlay')?.classList.add('hidden');
+  });
 }
 
 

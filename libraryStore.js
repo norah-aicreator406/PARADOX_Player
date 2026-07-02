@@ -103,16 +103,30 @@ function addSongFromFile(filePath, meta = {}) {
 
   fs.copyFileSync(filePath, copiedAudioPath);
 
-  const song = {
-    id,
-    title: meta.title || path.basename(filePath, ext),
-    artist: meta.artist || '',
-    audioPath: copiedAudioPath,
-    artworkPath: '',
-    tags: meta.tags || [],
-    createdAt: now,
-    updatedAt: now,
-    projectPath: path.join(songDir, 'project.json')
+
+let artworkPath = '';
+
+if (meta.artworkPath) {
+  const artworkExt = path.extname(meta.artworkPath);
+  const artworkFileName = `cover${artworkExt}`;
+  const copiedArtworkPath = path.join(artworkDir, artworkFileName);
+
+  fs.copyFileSync(meta.artworkPath, copiedArtworkPath);
+
+  artworkPath = copiedArtworkPath;
+}
+
+const song = {
+  id,
+  title: meta.title || path.basename(filePath, ext),
+  artist: meta.artist || '',
+  album: meta.album || '',
+  genre: meta.genre || '',
+  tags: meta.tags || [],
+  favorite: meta.favorite || false,
+  audioPath: copiedAudioPath,
+  artworkPath,
+  projectPath: path.join(songDir, 'project.json')
   };
 
   const songs = loadLibrary();

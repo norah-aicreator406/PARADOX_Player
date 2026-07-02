@@ -1145,11 +1145,220 @@ line-height:1.8;
 }
 
 
+.songRegisterOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(5, 7, 12, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.songRegisterOverlay.hidden {
+  display: none;
+}
+
+.songRegisterPanel {
+  width: min(720px, 88vw);
+
+  max-height: 88vh;
+
+  overflow-y: auto;
+
+  background: #141720;
+  border: 1px solid #2b2f3a;
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 24px 80px rgba(0,0,0,.45);
+}
+
+.songRegisterPanel h2 {
+  margin: 0 0 10px;
+  font-size: 24px;
+}
+
+.songRegisterNote {
+  margin: 0 0 22px;
+  color: #9aa3b2;
+  font-size: 13px;
+}
+
+.songRegisterPanel label {
+  display: block;
+  margin: 14px 0 6px;
+  color: #cfd6e6;
+  font-size: 13px;
+}
+
+.songRegisterPanel input,
+.songRegisterPanel textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #2b3340;
+  border-radius: 12px;
+  background: #0f1118;
+  color: white;
+  padding: 12px;
+}
+
+.songRegisterPanel textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.registerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.registerActions button {
+  height: 40px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+#cancelSongRegisterButton {
+  background: #2b3340;
+  color: white;
+}
+
+#confirmSongRegisterButton {
+  background: #5CC8FF;
+  color: #071018;
+  font-weight: 800;
+}
+
+.requiredLabel {
+  color: #ff8f9f;
+  font-size: 11px;
+  margin-left: 6px;
+}
+
+.favoriteOption {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px !important;
+}
+
+.favoriteOption input {
+  width: auto !important;
+}
+
+.registerErrorMessage {
+  margin-top: 14px;
+  color: #ff8f9f;
+  font-size: 13px;
+  min-height: 18px;
+}
+
+.registerBlockMode {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0 18px;
+}
+
+.registerOption {
+  display: grid !important;
+  grid-template-columns: 20px 1fr;
+  column-gap: 8px;
+  row-gap: 4px;
+  align-items: start;
+}
+
+.registerOption input {
+  grid-row: 1 / 3;
+  width: auto !important;
+  margin-top: 3px;
+}
+
+.registerOption span {
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.registerOption small {
+  grid-column: 2;
+  color: #9aa3b2;
+  font-size: 12px;
+}
+
 
 </style>
 </head>
 
 <body>
+
+  <div id="songRegisterOverlay" class="songRegisterOverlay hidden">
+  <div class="songRegisterPanel">
+
+    <h2>曲を登録</h2>
+
+<p class="songRegisterNote">
+  ジャケット・歌詞・タグなどは後からでも登録できます。
+</p>
+
+<label>曲名 <span class="requiredLabel">必須</span></label>
+<input id="registerSongTitle" type="text">
+
+<label>アーティスト名 <span class="requiredLabel">必須</span></label>
+<input id="registerArtistName" type="text">
+
+<label>アルバム</label>
+<input id="registerAlbumName" type="text" placeholder="任意">
+
+<label>ジャンル</label>
+<input id="registerGenre" type="text" placeholder="Rock / Pop / Post Rock など">
+
+<label>タグ</label>
+<input id="registerTags" type="text" placeholder="Post Rock, Emotional, Piano">
+
+<label class="favoriteOption">
+  <input id="registerFavorite" type="checkbox">
+  お気に入り
+</label>
+
+<label>ジャケット</label>
+<input id="registerArtworkFile" type="file" accept="image/*">
+
+<label>歌詞</label>
+<textarea id="registerLyricsText" rows="8" placeholder="[Verse]
+君の声が
+まだ響いてる
+
+[Chorus]
+光になって
+僕を連れていけ"></textarea>
+
+<div class="registerBlockMode">
+  <label class="registerOption">
+    <input type="radio" name="registerBlockMode" value="blankLine" checked>
+    <span>空行ごとにブロック化（おすすめ）</span>
+    <small>段落ごとに1つの歌詞ブロックを作成します。</small>
+  </label>
+
+  <label class="registerOption">
+    <input type="radio" name="registerBlockMode" value="line">
+    <span>1行ごとにブロック化</span>
+    <small>1行ずつ歌詞ブロックを作成します。</small>
+  </label>
+</div>
+
+<div id="registerErrorMessage" class="registerErrorMessage"></div>
+
+<div class="registerActions">
+  <button id="cancelSongRegisterButton">キャンセル</button>
+  <button id="confirmSongRegisterButton">登録</button>
+</div>
+
+  </div>
+</div>
 
 <div id="fixedHeader">
   <div id="studioHeader">
