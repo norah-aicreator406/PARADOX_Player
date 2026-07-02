@@ -37,6 +37,13 @@ function generateSongId() {
   return `song_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
+function sanitizeFileName(name) {
+  return String(name || 'Untitled')
+    .replace(/[\\/:*?"<>|]/g, '_')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function loadLibrary() {
   ensureLibraryFolders();
 
@@ -86,10 +93,14 @@ function addSongFromFile(filePath, meta = {}) {
   ensureLibraryFolders();
 
   const id = generateSongId();
-  const now = new Date().toISOString();
+const now = new Date().toISOString();
 
-  const ext = path.extname(filePath);
-  const songDir = path.join(SONGS_DIR, id);
+const ext = path.extname(filePath);
+const baseTitle = meta.title || path.basename(filePath, ext);
+const safeTitle = sanitizeFileName(baseTitle);
+
+const songDirName = `${safeTitle}_${id}`;
+const songDir = path.join(SONGS_DIR, songDirName);
   const audioDir = path.join(songDir, 'audio');
   const artworkDir = path.join(songDir, 'artwork');
   const assetsDir = path.join(songDir, 'assets');
@@ -98,7 +109,7 @@ function addSongFromFile(filePath, meta = {}) {
   fs.mkdirSync(artworkDir, { recursive: true });
   fs.mkdirSync(assetsDir, { recursive: true });
 
-  const audioFileName = `original${ext}`;
+  const audioFileName = sanitizeFileName(path.basename(filePath));
   const copiedAudioPath = path.join(audioDir, audioFileName);
 
   fs.copyFileSync(filePath, copiedAudioPath);

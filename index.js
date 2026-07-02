@@ -299,6 +299,28 @@ function openSongRegisterWizard(filePath) {
   overlay.classList.remove('hidden');
 }
 
+const backToLibraryButton =
+  document.getElementById('backToLibraryButton');
+
+const openEditorAfterRegisterButton =
+  document.getElementById('openEditorAfterRegisterButton');
+
+if (backToLibraryButton) {
+  backToLibraryButton.addEventListener('click', () => {
+    document.getElementById('songRegisterCompleteOverlay')?.classList.add('hidden');
+  });
+}
+
+if (openEditorAfterRegisterButton) {
+  openEditorAfterRegisterButton.addEventListener('click', () => {
+    document.getElementById('songRegisterCompleteOverlay')?.classList.add('hidden');
+
+    ipcRenderer.invoke('open-lyrics-editor-window');
+  });
+}
+
+
+
 const confirmSongRegisterButton =
   document.getElementById('confirmSongRegisterButton');
 
@@ -357,11 +379,24 @@ if (artworkInput?.files?.length) {
 
     console.log('Registered song:', song);
 
-    pendingRegisterFilePath = null;
-    errorMessage.textContent = '';
-    document.getElementById('songRegisterOverlay')?.classList.add('hidden');
+pendingRegisterFilePath = null;
 
-    renderLibrarySongs();
+if (errorMessage) {
+  errorMessage.textContent = '';
+}
+
+document.getElementById('songRegisterOverlay')?.classList.add('hidden');
+
+const completeOverlay =
+  document.getElementById('songRegisterCompleteOverlay');
+
+if (completeOverlay) {
+  completeOverlay.classList.remove('hidden');
+} else {
+  console.warn('songRegisterCompleteOverlay が見つかりません');
+}
+
+renderLibrarySongs();
   });
 }
 

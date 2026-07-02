@@ -1295,10 +1295,12 @@ line-height:1.8;
 
 <body>
 
-  <div id="songRegisterOverlay" class="songRegisterOverlay hidden">
-  <div class="songRegisterPanel">
+  <body>
 
-    <h2>曲を登録</h2>
+  <div id="songRegisterOverlay" class="songRegisterOverlay hidden">
+    <div class="songRegisterPanel">
+
+      <h2>曲を登録</h2>
 
 <p class="songRegisterNote">
   ジャケット・歌詞・タグなどは後からでも登録できます。
@@ -1311,24 +1313,41 @@ line-height:1.8;
 <input id="registerArtistName" type="text">
 
 <label>アルバム</label>
-<input id="registerAlbumName" type="text" placeholder="任意">
+<input
+  id="registerAlbumName"
+  type="text"
+  placeholder="任意">
 
 <label>ジャンル</label>
-<input id="registerGenre" type="text" placeholder="Rock / Pop / Post Rock など">
+<input
+  id="registerGenre"
+  type="text"
+  placeholder="Rock / Pop / Post Rock など">
 
 <label>タグ</label>
-<input id="registerTags" type="text" placeholder="Post Rock, Emotional, Piano">
+<input
+  id="registerTags"
+  type="text"
+  placeholder="Post Rock, Emotional, Piano">
 
 <label class="favoriteOption">
-  <input id="registerFavorite" type="checkbox">
+  <input
+    id="registerFavorite"
+    type="checkbox">
   お気に入り
 </label>
 
 <label>ジャケット</label>
-<input id="registerArtworkFile" type="file" accept="image/*">
+<input
+  id="registerArtworkFile"
+  type="file"
+  accept="image/*">
 
 <label>歌詞</label>
-<textarea id="registerLyricsText" rows="8" placeholder="[Verse]
+<textarea
+  id="registerLyricsText"
+  rows="8"
+  placeholder="[Verse]
 君の声が
 まだ響いてる
 
@@ -1337,28 +1356,70 @@ line-height:1.8;
 僕を連れていけ"></textarea>
 
 <div class="registerBlockMode">
+
   <label class="registerOption">
-    <input type="radio" name="registerBlockMode" value="blankLine" checked>
+    <input
+      type="radio"
+      name="registerBlockMode"
+      value="blankLine"
+      checked>
+
     <span>空行ごとにブロック化（おすすめ）</span>
-    <small>段落ごとに1つの歌詞ブロックを作成します。</small>
+
+    <small>
+      段落ごとに1つの歌詞ブロックを作成します。
+    </small>
   </label>
 
   <label class="registerOption">
-    <input type="radio" name="registerBlockMode" value="line">
+    <input
+      type="radio"
+      name="registerBlockMode"
+      value="line">
+
     <span>1行ごとにブロック化</span>
-    <small>1行ずつ歌詞ブロックを作成します。</small>
+
+    <small>
+      1行ずつ歌詞ブロックを作成します。
+    </small>
   </label>
+
 </div>
 
-<div id="registerErrorMessage" class="registerErrorMessage"></div>
+<div
+  id="registerErrorMessage"
+  class="registerErrorMessage">
+</div>
 
 <div class="registerActions">
-  <button id="cancelSongRegisterButton">キャンセル</button>
-  <button id="confirmSongRegisterButton">登録</button>
+  <button id="cancelSongRegisterButton">
+    キャンセル
+  </button>
+
+  <button id="confirmSongRegisterButton">
+    ライブラリへ登録
+  </button>
 </div>
 
+    </div>
   </div>
-</div>
+
+  <div id="songRegisterCompleteOverlay" class="songRegisterOverlay hidden">
+    <div class="songRegisterPanel completePanel">
+
+      <h2>ライブラリへ登録しました！</h2>
+
+      <p class="songRegisterNote">
+        次に何をしますか？
+      </p>
+
+      <div class="registerActions">
+        <button id="backToLibraryButton">ライブラリへ戻る</button>
+        <button id="openEditorAfterRegisterButton">エディターを開く</button>
+      </div>
+
+    </div>
+  </div>
 
 <div id="fixedHeader">
   <div id="studioHeader">
