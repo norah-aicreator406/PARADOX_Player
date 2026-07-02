@@ -1062,3 +1062,15 @@ if (deleteLayerButton) {
 }
 
 loadEditorData();
+
+const lyricsImportOverlay =
+  document.getElementById('lyricsImportOverlay');
+
+const importLyricsButton =
+  document.getElementById('importLyricsButton');
+
+if (importLyricsButton && lyricsImportOverlay) {
+  importLyricsButton.addEventListener('click', () => {
+    lyricsImportOverlay.classList.add('is-hidden');
+  });
+}

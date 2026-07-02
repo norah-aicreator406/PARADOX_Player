@@ -8,6 +8,46 @@
 
 <body>
 
+<div id="lyricsImportOverlay" class="importOverlay">
+  <div class="importPanel">
+
+    <div class="importTitle">
+      Lyrics Import
+    </div>
+
+    <label>曲名</label>
+    <input id="importSongTitle" type="text" value="My New Song">
+
+    <label>歌詞</label>
+    <textarea id="importLyricsText" rows="14" placeholder="[Verse]
+君の声が
+まだ響いてる
+
+[Chorus]
+光になって
+僕を連れていけ"></textarea>
+
+    <div class="importOptions">
+  <label class="importOption">
+    <input type="radio" name="importBlockMode" value="blankLine" checked>
+    <span>空行ごとにブロック化（おすすめ）</span>
+    <small>空白の行ごとを1つの歌詞ブロックとして作成します。</small>
+  </label>
+
+  <label class="importOption">
+    <input type="radio" name="importBlockMode" value="line">
+    <span>1行ごとにブロック化</span>
+    <small>1行ずつ歌詞ブロックを作成します。</small>
+  </label>
+</div>
+
+    <button id="importLyricsButton">
+      インポート
+    </button>
+
+  </div>
+</div>
+
 <div id="editorApp">
 
   <header id="editorTopbar">

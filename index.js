@@ -1,4 +1,10 @@
-const { ipcRenderer } = require('electron');
+
+const {
+  loadLibrary,
+  addSongFromFile,
+  ensureLibraryFolders
+} = require('./libraryStore');
+const { ipcRenderer, webUtils } = require('electron');
 
 let data = [];
 let currentIndex = 0;
@@ -158,7 +164,52 @@ window.addEventListener('DOMContentLoaded', () => {
       ipcRenderer.invoke('open-lyrics-editor-window');
     });
   }
+
+  document.addEventListener('dragover', (event) => {
+  event.preventDefault();
+});
+
+document.addEventListener('drop', (event) => {
+  event.preventDefault();
+
+  const files = [...event.dataTransfer.files];
+
+  console.log('Dropped files:', files);
+
+  files.forEach(file => {
+  console.log('file:', file);
+  console.log('file.name:', file.name);
+
+  const filePath = webUtils.getPathForFile(file);
+
+  console.log('filePath:', filePath);
+
+  if (!filePath) {
+    console.warn('filePath が取得できません');
+    return;
+  }
+
+  const isAudio =
+    filePath.toLowerCase().endsWith('.mp3') ||
+    filePath.toLowerCase().endsWith('.wav') ||
+    filePath.toLowerCase().endsWith('.flac') ||
+    filePath.toLowerCase().endsWith('.m4a');
+
+  if (!isAudio) {
+    console.warn('音源ファイルではありません:', filePath);
+    return;
+  }
+
+  const song = addSongFromFile(filePath);
+
+  console.log('Added song:', song);
+});
+
+  renderLibrarySongs();
+});
   loadSongs();
+  ensureLibraryFolders();
+  renderLibrarySongs();
 });
 
 
@@ -220,6 +271,15 @@ currentIndex = 0;
     document.getElementById('nowPlaying').textContent = '読込失敗';
   }
 }
+
+
+function renderLibrarySongs() {
+  const library = loadLibrary();
+
+  console.log('Library:', library);
+}
+
+
 
 function renderTabs() {
   const tabs = document.getElementById('tabs');
