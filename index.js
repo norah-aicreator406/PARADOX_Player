@@ -409,6 +409,26 @@ function renderLibraryTabs() {
       renderLibrarySongs();
     });
 
+    button.addEventListener('contextmenu', (event) => {
+  event.preventDefault();
+
+  const ok = confirm(`「${tab.name}」を削除しますか？`);
+
+  if (!ok) return;
+
+  libraryTabs = libraryTabs.filter(t => t.id !== tab.id);
+
+  saveLibraryTabs();
+
+  activeLibraryFilter = {
+    type: 'all',
+    value: null
+  };
+
+  renderLibraryTabs();
+  renderLibrarySongs();
+});
+
     tabs.appendChild(button);
   });
 
