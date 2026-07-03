@@ -1,8 +1,11 @@
+const { pathToFileURL } = require('url');
+
 
 const {
   loadLibrary,
   addSongFromFile,
-  ensureLibraryFolders
+  ensureLibraryFolders,
+  deleteSong
 } = require('./libraryStore');
 const { ipcRenderer, webUtils } = require('electron');
 
@@ -18,10 +21,70 @@ let visualizerAnimationId = null;
 let currentFilteredSongs = [];
 let currentFilteredSongIndex = -1;
 let pendingRegisterFilePath = null;
+let activeLibraryFilter = {
+  type: 'all',
+  value: null
+};
 const MAX_QUEUE = 5;
 const RECENT_PLAYED_LIMIT = 10;
 
-const audio = document.getElementById('audio');
+let libraryTabs = [];
+
+const LIBRARY_TABS_KEY = 'norahStudioLibraryTabs';
+
+const audio = document.getElementById('audioPlayer');
+const bottomSeekBar = document.getElementById('bottomSeekBar');
+const bottomCurrentTime = document.getElementById('bottomCurrentTime');
+const bottomDuration = document.getElementById('bottomDuration');
+const bottomPlayPauseButton = document.getElementById('bottomPlayPauseButton');
+
+audio.addEventListener('loadedmetadata', () => {
+  if (bottomDuration) {
+    bottomDuration.textContent = formatTime(audio.duration);
+  }
+});
+
+audio.addEventListener('timeupdate', () => {
+  if (bottomCurrentTime) {
+    bottomCurrentTime.textContent = formatTime(audio.currentTime);
+  }
+
+  if (bottomSeekBar && Number.isFinite(audio.duration) && audio.duration > 0) {
+    bottomSeekBar.value = (audio.currentTime / audio.duration) * 100;
+  }
+});
+
+audio.addEventListener('play', () => {
+  if (bottomPlayPauseButton) {
+    bottomPlayPauseButton.textContent = 'Ⅱ';
+  }
+});
+
+audio.addEventListener('pause', () => {
+  if (bottomPlayPauseButton) {
+    bottomPlayPauseButton.textContent = '▶';
+  }
+});
+
+if (bottomSeekBar) {
+  bottomSeekBar.addEventListener('input', () => {
+    if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+
+    audio.currentTime = (Number(bottomSeekBar.value) / 100) * audio.duration;
+  });
+}
+
+if (bottomPlayPauseButton) {
+  bottomPlayPauseButton.addEventListener('click', () => {
+    if (!audio.src) return;
+
+    if (audio.paused) {
+      audio.play();
+    } else {
+      audio.pause();
+    }
+  });
+}
 audio.addEventListener('timeupdate', sendVisualizerTime);
 audio.addEventListener('timeupdate', updateLyricsByTime);
 audio.addEventListener('loadedmetadata', sendVisualizerTime);
@@ -115,7 +178,7 @@ audio.addEventListener('ended', () => {
   const nextSong = queue.shift();
 
   renderQueue();
-  renderSongs(currentIndex);
+  renderLibrarySongs();
 
   playSong(nextSong, -1);
 });
@@ -126,7 +189,7 @@ ipcRenderer.on('visualizer-video-ended', () => {
   const nextSong = queue.shift();
 
   renderQueue();
-  renderSongs(currentIndex);
+  renderLibrarySongs();
 
   playSong(nextSong, -1);
 });
@@ -161,54 +224,53 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('openVisualEditorButton');
 
   if (openVisualEditorButton) {
-    openVisualEditorButton.addEventListener('click', () => {
-      ipcRenderer.invoke('open-lyrics-editor-window');
-    });
-  }
+  openVisualEditorButton.addEventListener('click', () => {
+    ipcRenderer.invoke('open-lyrics-editor-window');
+
+  });
+}
+document.querySelectorAll('input[name="tabCreateType"]').forEach(input => {
+  input.addEventListener('change', updateTabCreateFields);
+});
 
   document.addEventListener('dragover', (event) => {
   event.preventDefault();
+  event.dataTransfer.dropEffect = 'copy';
+
+  console.log('dragover detected');
 });
 
 document.addEventListener('drop', (event) => {
   event.preventDefault();
 
-  const files = [...event.dataTransfer.files];
+  console.log('drop detected');
 
-  console.log('Dropped files:', files);
+  const droppedFiles = [...event.dataTransfer.files];
 
-  files.forEach(file => {
-  console.log('file:', file);
-  console.log('file.name:', file.name);
+  droppedFiles.forEach(file => {
+    const filePath = webUtils.getPathForFile(file);
 
-  const filePath = webUtils.getPathForFile(file);
+    if (!filePath) return;
 
-  console.log('filePath:', filePath);
+    const isAudio =
+      filePath.toLowerCase().endsWith('.mp3') ||
+      filePath.toLowerCase().endsWith('.wav') ||
+      filePath.toLowerCase().endsWith('.flac') ||
+      filePath.toLowerCase().endsWith('.m4a');
 
-  if (!filePath) {
-    console.warn('filePath が取得できません');
-    return;
-  }
+    if (!isAudio) {
+      console.warn('音源ファイルではありません:', filePath);
+      return;
+    }
 
-  const isAudio =
-    filePath.toLowerCase().endsWith('.mp3') ||
-    filePath.toLowerCase().endsWith('.wav') ||
-    filePath.toLowerCase().endsWith('.flac') ||
-    filePath.toLowerCase().endsWith('.m4a');
-
-  if (!isAudio) {
-    console.warn('音源ファイルではありません:', filePath);
-    return;
-  }
-
-  openSongRegisterWizard(filePath);
+    openSongRegisterWizard(filePath);
+  });
 });
 
-  renderLibrarySongs();
-});
-  loadSongs();
-  ensureLibraryFolders();
-  renderLibrarySongs();
+ensureLibraryFolders();
+loadLibraryTabs();
+renderLibraryTabs();
+renderLibrarySongs();
 });
 
 
@@ -272,10 +334,242 @@ currentIndex = 0;
 }
 
 
+function loadLibraryTabs() {
+  const saved = localStorage.getItem(LIBRARY_TABS_KEY);
+
+  if (!saved) {
+    libraryTabs = [
+      {
+        id: 'tab_all',
+        type: 'filter',
+        name: 'すべて',
+        filter: { field: 'all', value: null }
+      }
+    ];
+    saveLibraryTabs();
+    return;
+  }
+
+  try {
+    libraryTabs = JSON.parse(saved);
+  } catch (error) {
+    console.warn('タブ読み込み失敗:', error);
+    libraryTabs = [];
+  }
+}
+
+function saveLibraryTabs() {
+  localStorage.setItem(
+    LIBRARY_TABS_KEY,
+    JSON.stringify(libraryTabs)
+  );
+}
+
+
+
+function renderLibraryTabs() {
+
+console.log('renderLibraryTabs called', libraryTabs);
+
+  const tabs = document.getElementById('libraryFilterTabs');
+  if (!tabs) return;
+
+  tabs.innerHTML = '';
+
+  libraryTabs.forEach(tab => {
+    const button = document.createElement('button');
+    button.className = 'libraryFilterTab';
+    button.textContent = tab.name;
+    button.dataset.tabId = tab.id;
+
+    if (
+      activeLibraryFilter.type === tab.filter?.field &&
+      activeLibraryFilter.value === tab.filter?.value
+    ) {
+      button.classList.add('active');
+    }
+
+    button.addEventListener('click', () => {
+      if (tab.type === 'playlist') {
+  activeLibraryFilter = {
+    type: 'playlist',
+    value: tab.id
+  };
+} else {
+  activeLibraryFilter = {
+    type: tab.filter.field,
+    value: tab.filter.value
+  };
+}
+
+      renderLibraryTabs();
+      renderLibrarySongs();
+    });
+
+    tabs.appendChild(button);
+  });
+
+  const addButton = document.createElement('button');
+addButton.className = 'libraryFilterTab addTabButton';
+addButton.textContent = '+';
+
+addButton.addEventListener('click', () => {
+  console.log('＋ clicked');
+  createFilterTab();
+});
+
+tabs.appendChild(addButton);
+}
+
+
 function renderLibrarySongs() {
   const library = loadLibrary();
+  const songsContainer = document.getElementById('songs');
 
   console.log('Library:', library);
+
+  if (!songsContainer) return;
+
+  songsContainer.innerHTML = '';
+
+  if (!library.length) {
+    songsContainer.innerHTML = `
+      <div class="emptyLibrary">
+        まだ曲が登録されていません。<br>
+        音源ファイルをドラッグ＆ドロップして追加してください。
+      </div>
+    `;
+    return;
+  }
+
+
+  let filteredLibrary = [...library];
+
+if (activeLibraryFilter.type === 'favorite') {
+  filteredLibrary = filteredLibrary.filter(song => song.favorite);
+}
+
+if (activeLibraryFilter.type === 'recent') {
+  filteredLibrary = filteredLibrary
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+if (activeLibraryFilter.type === 'artist') {
+  filteredLibrary = filteredLibrary.filter(song =>
+    song.artist === activeLibraryFilter.value
+  );
+}
+
+if (activeLibraryFilter.type === 'genre') {
+  filteredLibrary = filteredLibrary.filter(song =>
+    song.genre === activeLibraryFilter.value
+  );
+}
+
+if (activeLibraryFilter.type === 'tag') {
+  filteredLibrary = filteredLibrary.filter(song =>
+    song.tags?.includes(activeLibraryFilter.value)
+  );
+}
+
+  filteredLibrary.forEach(song => {
+    const songElement = document.createElement('div');
+    songElement.className = 'librarySongRow';
+
+    songElement.innerHTML = `
+  <div
+    class="librarySongArtwork"
+    style="${song.artworkPath ? `background-image: url('${pathToFileURL(song.artworkPath).href}')` : ''}"
+  ></div>
+
+  <div class="librarySongMain">
+    <div class="librarySongTitle">${song.title || 'Untitled'}</div>
+    <div class="librarySongArtist">${song.artist || '-'}</div>
+  </div>
+
+
+  <div class="librarySongGenre">${song.genre || '-'}</div>
+
+  <button class="libraryPlaylistAddButton" title="プレイリストに追加">
+    ＋
+  </button>
+
+  <button class="libraryReserveButton">
+    予約
+  </button>
+
+  <button class="libraryFavoriteButton">
+    ${song.favorite ? '♥' : '♡'}
+  </button>
+
+  <button class="libraryDeleteButton" title="削除">
+    ×
+  </button>
+`;
+
+const reserveButton = songElement.querySelector('.libraryReserveButton');
+
+if (reserveButton) {
+  reserveButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    addLibrarySongToQueue(song);
+  });
+}
+
+const playlistAddButton =
+  songElement.querySelector('.libraryPlaylistAddButton');
+
+if (playlistAddButton) {
+  playlistAddButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+
+    const playlists = libraryTabs.filter(tab => tab.type === 'playlist');
+
+    if (!playlists.length) {
+      alert('プレイリストタブがありません。先に＋から作成してください。');
+      return;
+    }
+
+    const playlistNames = playlists
+      .map((playlist, index) => `${index + 1}: ${playlist.name}`)
+      .join('\n');
+
+    const selected = window.prompt(
+      `追加先プレイリスト番号を入力してください\n\n${playlistNames}`
+    );
+
+    const selectedIndex = Number(selected) - 1;
+    const selectedPlaylist = playlists[selectedIndex];
+
+    if (!selectedPlaylist) return;
+
+    addSongToPlaylist(song, selectedPlaylist.id);
+  });
+}
+
+
+    songElement.addEventListener('dblclick', () => {
+  playLibrarySong(song);
+});
+
+const deleteButton = songElement.querySelector('.libraryDeleteButton');
+
+if (deleteButton) {
+  deleteButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+
+    const ok = confirm(`「${song.title}」をライブラリから削除しますか？`);
+
+    if (!ok) return;
+
+    deleteSong(song.id);
+    renderLibrarySongs();
+  });
+}
+
+
+    songsContainer.appendChild(songElement);
+  });
 }
 
 
@@ -381,6 +675,7 @@ if (artworkInput?.files?.length) {
 
 pendingRegisterFilePath = null;
 
+
 if (errorMessage) {
   errorMessage.textContent = '';
 }
@@ -483,7 +778,7 @@ function moveArtistTab(fromIndex, toIndex) {
   saveArtistOrder();
 
   renderTabs();
-  renderSongs(currentIndex);
+  renderLibrarySongs();
 }
 
 function saveArtistOrder() {
@@ -612,6 +907,73 @@ function renderSongs(index) {
   });
 }
 
+function updateBottomPlayer(song) {
+  document.getElementById('bottomTitle').textContent =
+    song.title || 'Untitled';
+
+  document.getElementById('bottomArtist').textContent =
+    song.artist || '-';
+
+  const bottomArtwork = document.getElementById('bottomArtwork');
+
+  if (bottomArtwork) {
+    bottomArtwork.style.backgroundImage = song.artworkPath
+      ? `url("${pathToFileURL(song.artworkPath).href}")`
+      : '';
+  }
+}
+
+function playLibrarySong(song) {
+  if (!song.audioPath) {
+    alert('音源ファイルが見つかりません。');
+    return;
+    updateBottomPlayer(song);
+  }
+
+  currentSong = createPlayableLibrarySong(song);
+
+  audio.src = pathToFileURL(song.audioPath).href;
+  audio.load();
+
+  audio.play().catch(error => {
+    alert('再生できませんでした: ' + error.message);
+  });
+
+  document.getElementById('bottomTitle').textContent =
+    song.title || 'Untitled';
+
+  document.getElementById('bottomArtist').textContent =
+    song.artist || '-';
+  
+  const bottomArtwork = document.getElementById('bottomArtwork');
+
+if (bottomArtwork) {
+  bottomArtwork.style.backgroundImage = song.artworkPath
+    ? `url("file://${song.artworkPath.replace(/\\/g, '/')}")`
+    : '';
+}
+
+  renderLibrarySongs();
+}
+
+
+function createPlayableLibrarySong(song) {
+  return {
+    ...song,
+    fileUrl: pathToFileURL(song.audioPath).href,
+    mediaType: 'audio'
+  };
+}
+
+function addLibrarySongToQueue(song) {
+  if (!song.audioPath) {
+    alert('音源ファイルが見つかりません。');
+    return;
+  }
+
+  addToQueue(createPlayableLibrarySong(song));
+}
+
 async function playSong(song, songIndex) {
   const text = `♫${song.title} - ${song.artist}`;
 
@@ -621,6 +983,7 @@ async function playSong(song, songIndex) {
   }
 
   currentSong = song;
+  updateBottomPlayer(song);
   currentFilteredSongIndex = songIndex;
 
   addRecentPlayedSong(song);
@@ -637,12 +1000,16 @@ async function playSong(song, songIndex) {
   await ipcRenderer.invoke('send-song-to-visualizer', song);
   await ipcRenderer.invoke('copy-text', text);
 
-  renderSongs(currentIndex);
+  renderLibrarySongs();
   return;
 }
 
   await ipcRenderer.invoke('stop-visualizer-video');
 
+
+  if (!song.fileUrl && song.audioPath) {
+  song.fileUrl = pathToFileURL(song.audioPath).href;
+}
   audio.src = song.fileUrl;
 
 setupAudioAnalyzer();
@@ -662,7 +1029,7 @@ startVisualizerLevelLoop();
   await ipcRenderer.invoke('send-background-to-visualizer', currentBackground);
   await ipcRenderer.invoke('copy-text', text);
 
-  renderSongs(currentIndex);
+  renderLibrarySongs();
 }
 
 function setupAudioAnalyzer() {
@@ -808,6 +1175,9 @@ async function stopAudio() {
   stopVisualizerLevelLoop();
 
   await ipcRenderer.invoke('stop-visualizer-video');
+if (bottomSeekBar) bottomSeekBar.value = 0;
+if (bottomCurrentTime) bottomCurrentTime.textContent = '0:00';
+if (bottomPlayPauseButton) bottomPlayPauseButton.textContent = '▶';
 }
 
 function playPrevious() {
@@ -866,6 +1236,32 @@ function toggleSettingsPanel() {
 
   panel.classList.toggle('show');
 }
+
+document.querySelectorAll('.inspectorTab').forEach(button => {
+  button.addEventListener('click', () => {
+    const tabName = button.dataset.inspectorTab;
+
+    document.querySelectorAll('.inspectorTab').forEach(item => {
+      item.classList.remove('active');
+    });
+
+    document.querySelectorAll('.inspectorPage').forEach(page => {
+      page.classList.remove('active');
+    });
+
+    button.classList.add('active');
+
+    const targetPage = document.querySelector(
+      `.inspectorPage[data-inspector-page="${tabName}"]`
+    );
+
+    if (targetPage) {
+      targetPage.classList.add('active');
+    }
+  });
+});
+
+
 
 let currentBackground = null;
 let visualizerEnabled = true;
@@ -1147,14 +1543,14 @@ function addToQueue(song) {
 
   queue.push(song);
   renderQueue();
-  renderSongs(currentIndex);
+  renderLibrarySongs();
   openQueueModal();
 }
 
 function removeFromQueue(index) {
   queue.splice(index, 1);
   renderQueue();
-  renderSongs(currentIndex);
+  renderLibrarySongs();
 }
 
 function renderQueue() {
@@ -1309,7 +1705,7 @@ function randomReserve() {
   });
 
   renderQueue();
-  renderSongs(currentIndex);
+  renderLibrarySongs();
   openQueueModal();
 
   alert(`${selectedArtists.length}曲をランダム予約しました。`);
@@ -1521,4 +1917,156 @@ async function sendVisualTheme(theme) {
   const result = await ipcRenderer.invoke('send-visual-theme', theme);
 
   console.log('[Player] send-visual-theme result:', result);
+}
+
+
+
+
+document.querySelectorAll('.sideNavItem[data-filter]').forEach(button => {
+  button.addEventListener('click', () => {
+    document.querySelectorAll('.sideNavItem').forEach(item => {
+      item.classList.remove('active');
+    });
+
+    document.querySelectorAll('.libraryFilterTab').forEach(tab => {
+      tab.classList.remove('active');
+    });
+
+    button.classList.add('active');
+
+    activeLibraryFilter = {
+      type: button.dataset.filter,
+      value: null
+    };
+
+    renderLibrarySongs();
+  });
+});
+
+if (activeLibraryFilter.type === 'stream') {
+  filteredLibrary = filteredLibrary.filter(song =>
+    song.tags?.includes('配信用')
+  );
+}
+
+function createFilterTab() {
+  const overlay = document.getElementById('tabCreateOverlay');
+
+  if (overlay) {
+    overlay.classList.remove('hidden');
+  }
+
+  function createFilterTab() {
+  const overlay = document.getElementById('tabCreateOverlay');
+
+  if (overlay) {
+    overlay.classList.remove('hidden');
+    updateTabCreateFields();
+  }
+}
+}
+
+const cancelTabCreateButton =
+  document.getElementById('cancelTabCreateButton');
+
+const confirmTabCreateButton =
+  document.getElementById('confirmTabCreateButton');
+
+if (cancelTabCreateButton) {
+  cancelTabCreateButton.addEventListener('click', () => {
+    document.getElementById('tabCreateOverlay')?.classList.add('hidden');
+  });
+}
+
+if (confirmTabCreateButton) {
+  confirmTabCreateButton.addEventListener('click', () => {
+    const type =
+      document.querySelector('input[name="tabCreateType"]:checked')?.value || 'filter';
+
+    const nameInput = document.getElementById('tabCreateName');
+    const fieldInput = document.getElementById('tabCreateFilterField');
+    const valueInput = document.getElementById('tabCreateFilterValue');
+    const errorMessage = document.getElementById('tabCreateErrorMessage');
+
+    const name = nameInput?.value.trim() || '';
+    const field = fieldInput?.value || 'artist';
+    const value = valueInput?.value.trim() || '';
+
+    if (!name) {
+      if (errorMessage) errorMessage.textContent = 'タブ名を入力してください。';
+      return;
+    }
+
+    if (type === 'filter' && field !== 'favorite' && !value) {
+      if (errorMessage) errorMessage.textContent = '条件を入力してください。';
+      return;
+    }
+
+    const newTab =
+      type === 'playlist'
+        ? {
+            id: `tab_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+            type: 'playlist',
+            name,
+            songIds: []
+          }
+        : {
+            id: `tab_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+            type: 'filter',
+            name,
+            filter: {
+              field,
+              value: field === 'favorite' ? null : value
+            }
+          };
+
+    libraryTabs.push(newTab);
+    saveLibraryTabs();
+
+    if (errorMessage) errorMessage.textContent = '';
+    if (nameInput) nameInput.value = '';
+    if (valueInput) valueInput.value = '';
+
+    document.getElementById('tabCreateOverlay')?.classList.add('hidden');
+
+    renderLibraryTabs();
+  });
+}
+
+function updateTabCreateFields() {
+  const type =
+    document.querySelector('input[name="tabCreateType"]:checked')?.value || 'filter';
+
+  const filterOptions = document.getElementById('filterTabOptions');
+
+  if (!filterOptions) return;
+
+  filterOptions.style.display = type === 'filter' ? 'block' : 'none';
+}
+const playlistNote = document.getElementById('playlistTabNote');
+
+if (playlistNote) {
+  playlistNote.classList.toggle('hidden', type !== 'playlist');
+}
+
+function addSongToPlaylist(song, playlistId) {
+  const playlist = libraryTabs.find(tab =>
+    tab.type === 'playlist' && tab.id === playlistId
+  );
+
+  if (!playlist) return;
+
+  if (!playlist.songIds) {
+    playlist.songIds = [];
+  }
+
+  if (playlist.songIds.includes(song.id)) {
+    alert('この曲はすでに追加されています。');
+    return;
+  }
+
+  playlist.songIds.push(song.id);
+
+  saveLibraryTabs();
+  alert(`「${playlist.name}」に追加しました。`);
 }

@@ -6,6 +6,31 @@
 
 <style>
 
+  :root {
+  --bg: #090b10;
+  --panel: #15171d;
+  --panel-soft: rgba(255,255,255,0.045);
+  --panel-strong: rgba(255,255,255,0.075);
+
+  --border: rgba(255,255,255,0.10);
+  --border-soft: rgba(255,255,255,0.07);
+
+  --accent: #13f1d3;
+  --accent-soft: rgba(19,241,211,0.14);
+
+  --text: #ffffff;
+  --text-muted: #a6adbb;
+
+  --danger: #ef4444;
+
+  --radius-panel: 24px;
+  --radius-card: 18px;
+  --radius-button: 14px;
+
+  --shadow-panel: 0 24px 80px rgba(0,0,0,0.35);
+  --transition: 0.18s ease;
+}
+
 #studioHeader{
 
 display:flex;
@@ -87,10 +112,15 @@ color:#fff;
 
 body {
   margin: 0;
-  background: #111;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(80, 60, 160, 0.18), transparent 32%),
+    radial-gradient(circle at 85% 15%, rgba(0, 255, 204, 0.08), transparent 28%),
+    #08090d;
   color: #fff;
   font-family: system-ui, sans-serif;
-  padding: 0 24px 24px;
+  padding: 24px 24px 118px;
+  box-sizing: border-box;
 }
 
 h1 {
@@ -99,20 +129,22 @@ h1 {
 }
 
 #fixedHeader {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  background: rgba(17, 17, 17, 0.96);
-  backdrop-filter: blur(10px);
-  padding: 18px 0 14px;
-  border-bottom: 1px solid #333;
+  position: relative;
+  top: auto;
+  z-index: 1;
+  background: transparent;
+  backdrop-filter: none;
+  padding: 0;
+  border-bottom: none;
 }
 
 #playerPanel {
-  margin-top: 8px;
-  padding: 10px;
-  border-radius: 12px;
-  background: #222;
+  margin-top: 22px;
+  padding: 20px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025));
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.35);
 }
 
 #nowPlayingLabel {
@@ -338,16 +370,30 @@ h1 {
 }
 
 .song {
-  background: #1f1f1f;
-  border-radius: 16px;
-  padding: 16px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: center;
+
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 18px;
+  padding: 16px 18px;
   margin-bottom: 12px;
+  transition: 0.16s;
+}
+
+.song:hover {
+  background: rgba(255,255,255,0.075);
+  border-color: rgba(0,255,204,0.26);
+  transform: translateY(-1px);
 }
 
 .song.playing {
-  border: 2px solid #00ffcc;
-  background: #162622;
+  border-color: rgba(0,255,204,0.75);
+  background: rgba(0,255,204,0.08);
 }
+
 
 .title {
   font-size: 20px;
@@ -360,37 +406,68 @@ h1 {
 }
 
 button {
-  border: none;
-  border-radius: 8px;
-  padding: 8px 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-button);
+  padding: 10px 16px;
+  min-height: 42px;
+
+  background: rgba(255,255,255,0.07);
+  color: var(--text);
+
   font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
+
+  transition: var(--transition);
+}
+
+button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(19,241,211,0.45);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.22);
+}
+
+button:active {
+  transform: translateY(0);
 }
 
 .play {
-  background: #00b894;
-  color: #fff;
+  background: rgba(255,255,255,0.075);
+  color: var(--text);
 }
 
 .copy {
-  background: #6c5ce7;
-  color: #fff;
+  background: rgba(255,255,255,0.075);
+  color: var(--text);
 }
 
 .stop {
-  background: #d63031;
-  color: #fff;
+  background: rgba(255,255,255,0.075);
+  color: var(--text);
 }
 
 .nav {
-  background: #0984e3;
-  color: #fff;
+  background: rgba(255,255,255,0.075);
+  color: var(--text);
 }
 
 .reload {
-  background: #636e72;
-  color: #fff;
+  background: rgba(255,255,255,0.075);
+  color: var(--text);
 }
+
+.play {
+  background: linear-gradient(135deg, var(--accent), #5cc8ff);
+  color: #06100f;
+  border-color: rgba(19,241,211,0.55);
+}
+
+.stop {
+  background: rgba(239,68,68,0.18);
+  color: #ffb4b4;
+  border-color: rgba(239,68,68,0.35);
+}
+
 
 audio {
   width: 100%;
@@ -994,34 +1071,23 @@ margin-bottom:12px;
   flex-wrap: wrap;
 }
 
-.buttonGroup{
+.buttonGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 
-display:flex;
-flex-direction:column;
-gap:6px;
-
-padding:10px 12px;
-
-background:#161616;
-
-border:1px solid #2d2d2d;
-
-border-radius:14px;
-
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
 }
 
-.buttonGroupTitle{
-
-font-size:11px;
-
-font-weight:700;
-
-letter-spacing:.08em;
-
-text-transform:uppercase;
-
-color:#8c8c8c;
-
+.buttonGroupTitle {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
 .buttonRow{
@@ -1034,32 +1100,21 @@ flex-wrap:wrap;
 
 }
 
-#studioWorkspace{
-
-display:grid;
-
-grid-template-columns:1fr 340px;
-
-gap:20px;
-
-margin-top:20px;
-
-align-items:start;
-
+#studioWorkspace {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 360px;
+  gap: 24px;
+  margin-top: 24px;
+  align-items: start;
 }
 
 #studioInspector{
-
-background:#181818;
-
-border:1px solid #303030;
-
-border-radius:18px;
-
-padding:18px;
-
-min-height:600px;
-
+  background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 24px;
+  padding: 22px;
+  min-height: 560px;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.28);
 }
 
 .inspectorHeader{
@@ -1148,11 +1203,15 @@ line-height:1.8;
 .songRegisterOverlay {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 10000;
   background: rgba(5, 7, 12, 0.88);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+#songRegisterCompleteOverlay {
+  z-index: 10001;
 }
 
 .songRegisterOverlay.hidden {
@@ -1290,10 +1349,465 @@ line-height:1.8;
 }
 
 
+#bottomPlayerBar {
+  position: fixed;
+  left: 24px;
+  right: 24px;
+  bottom: 18px;
+  height: 112px;
+  z-index: 1000;
+
+  display: grid;
+  grid-template-columns: 300px minmax(420px, 1fr) 340px;
+  align-items: center;
+  gap: 18px;
+
+  padding: 14px 22px;
+  box-sizing: border-box;
+
+  background: rgba(12, 14, 20, 0.94);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 24px;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.42);
+}
+
+.bottomNowPlaying {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+#bottomArtwork {
+  width: 58px;
+  height: 58px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #222, #111);
+  border: 1px solid rgba(255,255,255,0.10);
+  flex: 0 0 auto;
+}
+
+.bottomTrackText {
+  min-width: 0;
+}
+
+#bottomTitle {
+  font-size: 15px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#bottomArtist {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.bottomCenter {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: 48px 24px;
+  align-items: center;
+  justify-items: center;
+  gap: 6px;
+}
+
+.bottomMainControls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.bottomRightTools {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+.bottomIconButton {
+  width: auto;
+  min-width: 38px;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.bottomIconButton:hover {
+  border-color: rgba(19,241,211,0.45);
+  background: rgba(19,241,211,0.10);
+}
+
+.bottomPlayButton {
+  width: 54px;
+  height: 54px;
+  min-height: 54px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 20px;
+}
+
+#bottomPlayerBar audio {
+  display: none;
+}
+
+.bottomProgress {
+  width: min(720px, 100%);
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+#bottomSeekBar {
+  width: 100%;
+  min-width: 0;
+  accent-color: var(--accent);
+}
+
+#playerButtons {
+  display: none;
+}
+
+.bottomRightTools button {
+  height: 38px;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+#libraryArea {
+  min-height: 560px;
+  padding: 18px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.28);
+}
+
+
+.inspectorTabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.inspectorTab {
+  min-height: 36px;
+  padding: 0 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.inspectorTab.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: rgba(19,241,211,0.55);
+}
+
+.inspectorPage {
+  display: none;
+}
+
+.inspectorPage.active {
+  display: block;
+}
+
+.songInfoBox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.songInfoArtwork {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #252525, #111);
+  border: 1px solid var(--border-soft);
+}
+
+.songInfoTitle {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.songInfoArtist {
+  color: var(--text-muted);
+}
+
+
+#librarySidebar {
+  min-height: 560px;
+  padding: 18px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.28);
+}
+
+.sideNavSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.sideNavTitle {
+  margin: 18px 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: .08em;
+}
+
+.sideNavItem {
+  width: 100%;
+  text-align: left;
+  justify-content: flex-start;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.sideNavItem:hover {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+}
+
+.sideNavItem.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: rgba(19,241,211,0.45);
+}
+
+.sideDropHint {
+  margin-top: 24px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px dashed rgba(255,255,255,0.18);
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.nowPlayingBlock {
+  display: none;
+}
+
+
+.emptyLibrary {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-muted);
+  line-height: 1.8;
+}
+
+.librarySongRow {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 140px 44px;
+  align-items: center;
+  gap: 14px;
+
+  min-height: 72px;
+  padding: 10px 14px;
+  border-radius: 16px;
+
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.06);
+
+  margin-bottom: 10px;
+  transition: var(--transition);
+}
+
+.librarySongRow:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(19,241,211,0.25);
+}
+
+.librarySongArtwork {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2a2a2a, #111);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+.librarySongMain {
+  min-width: 0;
+}
+
+.librarySongTitle {
+  font-size: 15px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.librarySongArtist {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.librarySongGenre {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.libraryFavoriteButton {
+  width: 38px;
+  height: 38px;
+  min-height: 38px;
+  padding: 0;
+  border-radius: 12px;
+}
+
+#playerPanel {
+  display: none;
+}
+
+
+#bottomPlayerBar {
+  pointer-events: auto;
+  z-index: 1000;
+}
+
+#libraryArea,
+#studioWorkspace,
+body {
+  -webkit-user-drag: none;
+}
+
+
+.librarySongRow {
+  grid-template-columns: 52px minmax(0, 1fr) 120px 42px 64px 42px 42px;
+}
+
+.libraryPlaylistAddButton {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  border-radius: 10px;
+  font-size: 18px;
+}
+
+
+.libraryReserveButton {
+  height: 36px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.libraryDeleteButton {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ff9ca3;
+  border-color: rgba(239, 68, 68, 0.25);
+  font-size: 20px;
+  opacity: 0;
+}
+
+.librarySongRow:hover .libraryDeleteButton {
+  opacity: 1;
+}
+
+.librarySongArtwork,
+#bottomArtwork,
+.songInfoArtwork {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+
+#libraryFilterTabs {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 16px;
+  padding-bottom: 0;
+  margin-top: 18px;
+  padding-top: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+#libraryFilterTabs::-webkit-scrollbar {
+  display: none;
+}
+
+.libraryFilterTab {
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 12px;
+  white-space: nowrap;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  background: rgba(255,255,255,0.035);
+  color: var(--text-muted);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.libraryFilterTab.active {
+  background: rgba(19,241,211,0.14);
+  color: var(--accent);
+  border-color: rgba(19,241,211,0.45);
+}
+
+.tabCreatePanel {
+  width: min(560px, 88vw);
+}
+
+.tabTypeSelector {
+  display: flex;
+  gap: 10px;
+  margin: 8px 0 14px;
+}
+
+.tabTypeOption {
+  flex: 1;
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+}
+
+.tabTypeOption input {
+  width: auto !important;
+}
+
+
 </style>
 </head>
-
-<body>
 
   <body>
 
@@ -1420,6 +1934,58 @@ line-height:1.8;
 
     </div>
   </div>
+
+  <div id="tabCreateOverlay" class="songRegisterOverlay hidden">
+  <div class="songRegisterPanel tabCreatePanel">
+
+    <h2>タブを追加</h2>
+
+    <p class="songRegisterNote">
+      よく使うフィルターやプレイリストを上部タブに保存できます。
+    </p>
+
+    <label>タブの種類</label>
+    <div class="tabTypeSelector">
+      <label class="tabTypeOption">
+        <input type="radio" name="tabCreateType" value="filter" checked>
+        フィルタータブ
+      </label>
+
+      <label class="tabTypeOption">
+        <input type="radio" name="tabCreateType" value="playlist">
+        プレイリストタブ
+      </label>
+    </div>
+
+    <label>タブ名</label>
+    <input id="tabCreateName" type="text" placeholder="例：Norah / 今日の配信">
+
+    <p id="playlistTabNote" class="songRegisterNote hidden">
+  プレイリストタブは、作成後に曲一覧の「＋」から曲を追加できます。
+</p>
+
+    <div id="filterTabOptions">
+      <label>フィルター種類</label>
+      <select id="tabCreateFilterField">
+        <option value="artist">アーティスト</option>
+        <option value="genre">ジャンル</option>
+        <option value="tag">タグ</option>
+        <option value="favorite">お気に入り</option>
+      </select>
+
+      <label>条件</label>
+      <input id="tabCreateFilterValue" type="text" placeholder="例：norah / Rock / 配信用">
+    </div>
+
+    <div id="tabCreateErrorMessage" class="registerErrorMessage"></div>
+
+    <div class="registerActions">
+      <button id="cancelTabCreateButton">キャンセル</button>
+      <button id="confirmTabCreateButton">作成</button>
+    </div>
+
+  </div>
+</div>
 
 <div id="fixedHeader">
   <div id="studioHeader">
@@ -1670,7 +2236,7 @@ line-height:1.8;
 </aside>
 
 
-<audio id="audio" controls></audio>
+
 
 <div id="randomPanel">
   <div class="randomTitle">ランダム予約：除外するアーティスト</div>
@@ -1682,20 +2248,71 @@ line-height:1.8;
   </div>
 </div>
 
-<input
+
+
+<div class="tabs" id="tabs"></div>
+
+</div>
+</div>
+
+<div id="studioWorkspace">
+
+  <aside id="librarySidebar">
+
+    <div class="sideNavSection">
+      <button class="sideNavItem active" data-filter="all">ライブラリ</button>
+      <button class="sideNavItem" data-filter="recent">最近追加した曲</button>
+      <button class="sideNavItem" data-filter="favorite">お気に入り</button>
+    </div>
+
+    <div class="sideNavTitle">自動タグ</div>
+
+    <div class="sideNavSection">
+      <button class="sideNavItem">すべての曲</button>
+      <button class="sideNavItem">アーティスト</button>
+      <button class="sideNavItem">ジャンル</button>
+    </div>
+
+  
+
+    <div class="sideDropHint">
+      ファイルをドラッグ＆ドロップして追加
+    </div>
+
+  </aside>
+
+  <div id="libraryArea">
+
+  <input
   id="searchInput"
   type="text"
   placeholder="曲名・アーティスト名で検索"
   oninput="renderSongs(currentIndex)"
 >
 
-<div class="tabs" id="tabs"></div>
 
+<div id="libraryFilterTabs">
+  <button class="libraryFilterTab active" data-filter="all">
+    すべて
+  </button>
+
+  <button class="libraryFilterTab" data-filter="favorite">
+    お気に入り
+  </button>
+
+  <button class="libraryFilterTab" data-filter="recent">
+    最近追加
+  </button>
+
+  <button class="libraryFilterTab" data-filter="tiktok">
+    TikTok投稿候補
+  </button>
+
+  <button class="libraryFilterTab" data-filter="mv">
+    MV制作中
+  </button>
 </div>
 
-<div id="studioWorkspace">
-
-  <div id="libraryArea">
     <div id="songs"></div>
   </div>
 
@@ -1704,8 +2321,67 @@ line-height:1.8;
   <div class="inspectorHeader">
     インスペクター
   </div>
+  <div class="inspectorTabs">
+  <button class="inspectorTab active" data-inspector-tab="songInfo">
+    曲情報
+  </button>
 
-  <section class="inspectorSection">
+  <button class="inspectorTab" data-inspector-tab="effects">
+    エフェクト
+  </button>
+
+  <button class="inspectorTab" data-inspector-tab="theme">
+    テーマ
+  </button>
+</div>
+
+
+<section class="inspectorSection inspectorPage" data-inspector-page="songInfo">
+  <div class="inspectorSectionTitle">Song Info</div>
+  <div class="inspectorSectionDesc">選択中の曲情報</div>
+
+  <div class="songInfoBox">
+    <div class="songInfoArtwork"></div>
+
+    <div class="songInfoTitle">未選択</div>
+    <div class="songInfoArtist">-</div>
+
+    <button>曲名をコピー</button>
+    <button>曲名＋アーティストをコピー</button>
+    <button>Editorを開く</button>
+  </div>
+</section>
+
+<section class="inspectorSection inspectorPage" data-inspector-page="effects">
+  <div class="inspectorSectionTitle">Effects</div>
+  <div class="inspectorSectionDesc">配信画面の演出を調整</div>
+
+  <div class="effectGrid">
+    <label>
+      <span><input type="checkbox" checked> スペクトラム</span>
+      <input type="range" min="0" max="100" value="70">
+    </label>
+
+    <label>
+      <span><input type="checkbox" checked> パーティクル</span>
+      <input type="range" min="0" max="100" value="70">
+    </label>
+
+    <label>
+      <span><input type="checkbox"> オーロラ</span>
+      <input type="range" min="0" max="100" value="0">
+    </label>
+
+    <label>
+      <span><input type="checkbox" checked> グロー</span>
+      <input type="range" min="0" max="100" value="50">
+    </label>
+  </div>
+</section>
+
+
+
+  <section class="inspectorSection inspectorPage active" data-inspector-page="theme">
     <div class="inspectorSectionTitle">Visual Theme</div>
     <div class="inspectorSectionDesc">配信画面の世界観を選択</div>
 
@@ -1738,13 +2414,45 @@ line-height:1.8;
 
 </div>
 
+<div id="bottomPlayerBar">
 
+  <div class="bottomNowPlaying">
+    <div id="bottomArtwork"></div>
 
+    <div class="bottomTrackText">
+      <div id="bottomTitle">再生待機中</div>
+      <div id="bottomArtist">-</div>
+    </div>
 
-<script src="./themes/themeManager.js"></script>
-<script src="./index.js"></script>
-<script src="./js/layerManager.js"></script>
+    <button class="bottomIconButton" title="お気に入り">♡</button>
+  </div>
 
+  <div class="bottomCenter">
+  <div class="bottomMainControls">
+    <button class="bottomIconButton" title="シャッフル">Shuffle</button>
+    <button class="bottomIconButton" onclick="playPrevious()" title="前へ">‹</button>
+    <button class="bottomPlayButton" id="bottomPlayPauseButton" title="再生">▶</button>
+    <button class="bottomIconButton" onclick="playNext()" title="次へ">›</button>
+    <button class="bottomIconButton" onclick="stopAudio()" title="停止">■</button>
+  </div>
+
+  <audio id="audioPlayer"></audio>
+
+  <div class="bottomProgress">
+    <span id="bottomCurrentTime">0:00</span>
+    <input id="bottomSeekBar" type="range" min="0" max="100" value="0">
+    <span id="bottomDuration">0:00</span>
+  </div>
+</div>
+
+  <div class="bottomRightTools">
+  <button onclick="copyCurrent()" title="コピー">コピー</button>
+  <button onclick="openQueueModal()" title="予約">予約</button>
+  <button onclick="openVisualizer()" title="外出し">外出し</button>
+  <button id="openVisualEditorButton" title="Editor">Editor</button>
+</div>
+
+</div>
 
 <div id="queueFloatingWindow">
   <div id="queueFloatingHeader">
@@ -1754,6 +2462,14 @@ line-height:1.8;
 
   <div id="queueList"></div>
 </div>
+
+
+<script src="./themes/themeManager.js"></script>
+<script src="./index.js"></script>
+<script src="./js/layerManager.js"></script>
+
+
+
 
 </body>
 </html>

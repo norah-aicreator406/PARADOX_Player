@@ -167,8 +167,14 @@ function findMatchingVideoFile(artistDir, title) {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: 1600,
+    height: 900,
+
+    minWidth: 1400,
+    minHeight: 850,
+
+    show: false,
+
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -176,6 +182,11 @@ function createWindow() {
   });
 
   mainWindow.loadFile('index.html');
+
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.maximize(); // 起動時に最大化
+    mainWindow.show();
+  });
 }
 
 function openVisualizerWindow() {
