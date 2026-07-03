@@ -21,6 +21,7 @@ let visualizerAnimationId = null;
 let currentFilteredSongs = [];
 let currentFilteredSongIndex = -1;
 let pendingRegisterFilePath = null;
+let pendingPlaylistSongId = null;
 let activeLibraryFilter = {
   type: 'all',
   value: null
@@ -561,7 +562,9 @@ if (playlistAddButton) {
   playlistAddButton.addEventListener('click', (event) => {
     event.stopPropagation();
 
-    alert('プレイリスト追加は次のステップで実装します。');
+    console.log('playlist + clicked:', song.id);
+
+    openPlaylistSelectOverlay(song.id);
   });
 }
 
@@ -2061,6 +2064,85 @@ if (confirmTabCreateButton) {
 
     renderLibraryTabs();
     renderLibrarySongs();
+  });
+}
+
+
+
+function openPlaylistSelectOverlay(songId) {
+  pendingPlaylistSongId = songId;
+
+  const overlay = document.getElementById('playlistSelectOverlay');
+  const list = document.getElementById('playlistSelectList');
+
+  console.log('playlist overlay:', overlay);
+  console.log('playlist list:', list);
+
+  if (!overlay || !list) {
+    alert('playlistSelectOverlay または playlistSelectList が見つかりません');
+    return;
+  }
+
+  const playlists = libraryTabs.filter(tab => tab.type === 'playlist');
+
+  list.innerHTML = '';
+
+  if (!playlists.length) {
+    list.innerHTML = `
+      <div class="emptyLibrary">
+        プレイリストタブがありません。<br>
+        先に＋からプレイリストタブを作成してください。
+      </div>
+    `;
+  } else {
+    playlists.forEach(playlist => {
+      const button = document.createElement('button');
+      button.className = 'playlistSelectItem';
+      button.textContent = playlist.name;
+
+      button.addEventListener('click', () => {
+        addSongToPlaylistById(pendingPlaylistSongId, playlist.id);
+        overlay.classList.add('hidden');
+        pendingPlaylistSongId = null;
+      });
+
+      list.appendChild(button);
+    });
+  }
+
+  overlay.classList.remove('hidden');
+}
+
+function addSongToPlaylistById(songId, playlistId) {
+  const playlist = libraryTabs.find(tab =>
+    tab.type === 'playlist' && tab.id === playlistId
+  );
+
+  if (!playlist) return;
+
+  if (!playlist.songIds) playlist.songIds = [];
+
+  if (playlist.songIds.includes(songId)) {
+    alert('この曲はすでに追加されています。');
+    return;
+  }
+
+  playlist.songIds.push(songId);
+  saveLibraryTabs();
+
+  alert(`「${playlist.name}」に追加しました。`);
+
+  renderLibraryTabs();
+  renderLibrarySongs();
+}
+
+const cancelPlaylistSelectButton =
+  document.getElementById('cancelPlaylistSelectButton');
+
+if (cancelPlaylistSelectButton) {
+  cancelPlaylistSelectButton.addEventListener('click', () => {
+    pendingPlaylistSongId = null;
+    document.getElementById('playlistSelectOverlay')?.classList.add('hidden');
   });
 }
 

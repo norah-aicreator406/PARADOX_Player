@@ -1806,6 +1806,34 @@ body {
 }
 
 
+#playlistSelectList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.playlistSelectItem {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  min-height: 48px;
+  border-radius: 14px;
+}
+
+
+#playlistSelectOverlay {
+  z-index: 10002;
+}
+
+#playlistSelectOverlay.hidden {
+  display: none;
+}
+
+#playlistSelectOverlay:not(.hidden) {
+  display: flex;
+}
+
+
 </style>
 </head>
 
@@ -1961,8 +1989,8 @@ body {
     <input id="tabCreateName" type="text" placeholder="例：Norah / 今日の配信">
 
     <p id="playlistTabNote" class="songRegisterNote hidden">
-  プレイリストタブは、作成後に曲一覧の「＋」から曲を追加できます。
-</p>
+      プレイリストタブは、作成後に曲一覧の「＋」から曲を追加できます。
+    </p>
 
     <div id="filterTabOptions">
       <label>フィルター種類</label>
@@ -1982,6 +2010,24 @@ body {
     <div class="registerActions">
       <button id="cancelTabCreateButton">キャンセル</button>
       <button id="confirmTabCreateButton">作成</button>
+    </div>
+
+  </div>
+</div>
+
+<div id="playlistSelectOverlay" class="songRegisterOverlay hidden">
+  <div class="songRegisterPanel tabCreatePanel">
+
+    <h2>プレイリストに追加</h2>
+
+    <p class="songRegisterNote">
+      追加先のプレイリストを選択してください。
+    </p>
+
+    <div id="playlistSelectList"></div>
+
+    <div class="registerActions">
+      <button id="cancelPlaylistSelectButton">キャンセル</button>
     </div>
 
   </div>
