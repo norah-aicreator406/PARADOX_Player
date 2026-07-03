@@ -523,27 +523,7 @@ if (playlistAddButton) {
   playlistAddButton.addEventListener('click', (event) => {
     event.stopPropagation();
 
-    const playlists = libraryTabs.filter(tab => tab.type === 'playlist');
-
-    if (!playlists.length) {
-      alert('プレイリストタブがありません。先に＋から作成してください。');
-      return;
-    }
-
-    const playlistNames = playlists
-      .map((playlist, index) => `${index + 1}: ${playlist.name}`)
-      .join('\n');
-
-    const selected = window.prompt(
-      `追加先プレイリスト番号を入力してください\n\n${playlistNames}`
-    );
-
-    const selectedIndex = Number(selected) - 1;
-    const selectedPlaylist = playlists[selectedIndex];
-
-    if (!selectedPlaylist) return;
-
-    addSongToPlaylist(song, selectedPlaylist.id);
+    alert('プレイリスト追加は次のステップで実装します。');
   });
 }
 
@@ -1943,28 +1923,12 @@ document.querySelectorAll('.sideNavItem[data-filter]').forEach(button => {
   });
 });
 
-if (activeLibraryFilter.type === 'stream') {
-  filteredLibrary = filteredLibrary.filter(song =>
-    song.tags?.includes('配信用')
-  );
-}
 
 function createFilterTab() {
-  const overlay = document.getElementById('tabCreateOverlay');
-
-  if (overlay) {
-    overlay.classList.remove('hidden');
-  }
-
-  function createFilterTab() {
-  const overlay = document.getElementById('tabCreateOverlay');
-
-  if (overlay) {
-    overlay.classList.remove('hidden');
-    updateTabCreateFields();
-  }
+  alert('タブ追加機能は次のステップで実装します。');
 }
-}
+
+
 
 const cancelTabCreateButton =
   document.getElementById('cancelTabCreateButton');
@@ -2038,16 +2002,17 @@ function updateTabCreateFields() {
     document.querySelector('input[name="tabCreateType"]:checked')?.value || 'filter';
 
   const filterOptions = document.getElementById('filterTabOptions');
+  const playlistNote = document.getElementById('playlistTabNote');
 
-  if (!filterOptions) return;
+  if (filterOptions) {
+    filterOptions.style.display = type === 'filter' ? 'block' : 'none';
+  }
 
-  filterOptions.style.display = type === 'filter' ? 'block' : 'none';
+  if (playlistNote) {
+    playlistNote.classList.toggle('hidden', type !== 'playlist');
+  }
 }
-const playlistNote = document.getElementById('playlistTabNote');
 
-if (playlistNote) {
-  playlistNote.classList.toggle('hidden', type !== 'playlist');
-}
 
 function addSongToPlaylist(song, playlistId) {
   const playlist = libraryTabs.find(tab =>
