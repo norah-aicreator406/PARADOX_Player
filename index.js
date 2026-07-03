@@ -368,8 +368,7 @@ function saveLibraryTabs() {
 
 
 function renderLibraryTabs() {
-
-console.log('renderLibraryTabs called', libraryTabs);
+  console.log('renderLibraryTabs called', libraryTabs);
 
   const tabs = document.getElementById('libraryFilterTabs');
   if (!tabs) return;
@@ -382,25 +381,29 @@ console.log('renderLibraryTabs called', libraryTabs);
     button.textContent = tab.name;
     button.dataset.tabId = tab.id;
 
-    if (
-      activeLibraryFilter.type === tab.filter?.field &&
-      activeLibraryFilter.value === tab.filter?.value
-    ) {
+    const isActive =
+      tab.type === 'playlist'
+        ? activeLibraryFilter.type === 'playlist' &&
+          activeLibraryFilter.value === tab.id
+        : activeLibraryFilter.type === tab.filter?.field &&
+          activeLibraryFilter.value === tab.filter?.value;
+
+    if (isActive) {
       button.classList.add('active');
     }
 
     button.addEventListener('click', () => {
       if (tab.type === 'playlist') {
-  activeLibraryFilter = {
-    type: 'playlist',
-    value: tab.id
-  };
-} else {
-  activeLibraryFilter = {
-    type: tab.filter.field,
-    value: tab.filter.value
-  };
-}
+        activeLibraryFilter = {
+          type: 'playlist',
+          value: tab.id
+        };
+      } else {
+        activeLibraryFilter = {
+          type: tab.filter.field,
+          value: tab.filter.value
+        };
+      }
 
       renderLibraryTabs();
       renderLibrarySongs();
@@ -410,15 +413,15 @@ console.log('renderLibraryTabs called', libraryTabs);
   });
 
   const addButton = document.createElement('button');
-addButton.className = 'libraryFilterTab addTabButton';
-addButton.textContent = '+';
+  addButton.className = 'libraryFilterTab addTabButton';
+  addButton.textContent = '+';
 
-addButton.addEventListener('click', () => {
-  console.log('＋ clicked');
-  createFilterTab();
-});
+  addButton.addEventListener('click', () => {
+    console.log('＋ clicked');
+    createFilterTab();
+  });
 
-tabs.appendChild(addButton);
+  tabs.appendChild(addButton);
 }
 
 
@@ -471,6 +474,21 @@ if (activeLibraryFilter.type === 'tag') {
     song.tags?.includes(activeLibraryFilter.value)
   );
 }
+
+
+if (activeLibraryFilter.type === 'playlist') {
+  const playlist = libraryTabs.find(tab =>
+    tab.type === 'playlist' &&
+    tab.id === activeLibraryFilter.value
+  );
+
+  const songIds = playlist?.songIds || [];
+
+  filteredLibrary = filteredLibrary.filter(song =>
+    songIds.includes(song.id)
+  );
+}
+
 
   filteredLibrary.forEach(song => {
     const songElement = document.createElement('div');
@@ -1925,22 +1943,40 @@ document.querySelectorAll('.sideNavItem[data-filter]').forEach(button => {
 
 
 function createFilterTab() {
-  alert('タブ追加機能は次のステップで実装します。');
+  const overlay = document.getElementById('tabCreateOverlay');
+  if (!overlay) return;
+
+  overlay.classList.remove('hidden');
+  updateTabCreateFields();
 }
 
+function updateTabCreateFields() {
+  const type =
+    document.querySelector('input[name="tabCreateType"]:checked')?.value || 'filter';
 
+  const filterOptions = document.getElementById('filterTabOptions');
+  const playlistNote = document.getElementById('playlistTabNote');
+
+  if (filterOptions) {
+    filterOptions.style.display = type === 'filter' ? 'block' : 'none';
+  }
+
+  if (playlistNote) {
+    playlistNote.classList.toggle('hidden', type !== 'playlist');
+  }
+}
 
 const cancelTabCreateButton =
   document.getElementById('cancelTabCreateButton');
-
-const confirmTabCreateButton =
-  document.getElementById('confirmTabCreateButton');
 
 if (cancelTabCreateButton) {
   cancelTabCreateButton.addEventListener('click', () => {
     document.getElementById('tabCreateOverlay')?.classList.add('hidden');
   });
 }
+
+const confirmTabCreateButton =
+  document.getElementById('confirmTabCreateButton');
 
 if (confirmTabCreateButton) {
   confirmTabCreateButton.addEventListener('click', () => {
@@ -1962,30 +1998,40 @@ if (confirmTabCreateButton) {
     }
 
     if (type === 'filter' && field !== 'favorite' && !value) {
-      if (errorMessage) errorMessage.textContent = '条件を入力してください。';
-      return;
-    }
-
+  if (errorMessage) errorMessage.textContent = '条件を入力してください。';
+  return;
+}
     const newTab =
-      type === 'playlist'
-        ? {
-            id: `tab_${Date.now()}_${Math.random().toString(16).slice(2)}`,
-            type: 'playlist',
-            name,
-            songIds: []
-          }
-        : {
-            id: `tab_${Date.now()}_${Math.random().toString(16).slice(2)}`,
-            type: 'filter',
-            name,
-            filter: {
-              field,
-              value: field === 'favorite' ? null : value
-            }
-          };
+  type === 'playlist'
+    ? {
+        id: `tab_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+        type: 'playlist',
+        name,
+        songIds: []
+      }
+    : {
+        id: `tab_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+        type: 'filter',
+        name,
+        filter: {
+          field,
+          value: field === 'favorite' ? null : value
+        }
+      };
 
     libraryTabs.push(newTab);
     saveLibraryTabs();
+
+    activeLibraryFilter =
+  newTab.type === 'playlist'
+    ? {
+        type: 'playlist',
+        value: newTab.id
+      }
+    : {
+        type: newTab.filter.field,
+        value: newTab.filter.value
+      };
 
     if (errorMessage) errorMessage.textContent = '';
     if (nameInput) nameInput.value = '';
@@ -1994,23 +2040,8 @@ if (confirmTabCreateButton) {
     document.getElementById('tabCreateOverlay')?.classList.add('hidden');
 
     renderLibraryTabs();
+    renderLibrarySongs();
   });
-}
-
-function updateTabCreateFields() {
-  const type =
-    document.querySelector('input[name="tabCreateType"]:checked')?.value || 'filter';
-
-  const filterOptions = document.getElementById('filterTabOptions');
-  const playlistNote = document.getElementById('playlistTabNote');
-
-  if (filterOptions) {
-    filterOptions.style.display = type === 'filter' ? 'block' : 'none';
-  }
-
-  if (playlistNote) {
-    playlistNote.classList.toggle('hidden', type !== 'playlist');
-  }
 }
 
 
