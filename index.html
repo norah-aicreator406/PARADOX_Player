@@ -2387,14 +2387,54 @@ body {
   <div class="inspectorSectionDesc">選択中の曲情報</div>
 
   <div class="songInfoBox">
+
     <div class="songInfoArtwork"></div>
 
     <div class="songInfoTitle">未選択</div>
     <div class="songInfoArtist">-</div>
 
-    <button>曲名をコピー</button>
-    <button>曲名＋アーティストをコピー</button>
-    <button>Editorを開く</button>
+    <label>曲名</label>
+    <input id="editSongTitle" type="text">
+
+    <label>アーティスト</label>
+    <input id="editSongArtist" type="text">
+
+    <label>アルバム</label>
+    <input id="editSongAlbum" type="text">
+
+    <label>ジャンル</label>
+    <input id="editSongGenre" type="text">
+
+    <label>タグ</label>
+    <input
+      id="editSongTags"
+      type="text"
+      placeholder="rock, live, favorite"
+    >
+
+    <label class="favoriteOption">
+      <input id="editSongFavorite" type="checkbox">
+      お気に入り
+    </label>
+
+    <button onclick="saveSongInspectorEdit()">
+      保存
+    </button>
+
+    <hr>
+
+    <button onclick="copySelectedSongTitle()">
+      曲名をコピー
+    </button>
+
+    <button onclick="copySelectedSongFullName()">
+      曲名＋アーティストをコピー
+    </button>
+
+    <button id="openSongEditorButton">
+      Editorを開く
+    </button>
+
   </div>
 </section>
 

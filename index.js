@@ -5,7 +5,8 @@ const {
   loadLibrary,
   addSongFromFile,
   ensureLibraryFolders,
-  deleteSong
+  deleteSong,
+  updateSong
 } = require('./libraryStore');
 const { ipcRenderer, webUtils } = require('electron');
 
@@ -24,6 +25,7 @@ let pendingRegisterFilePath = null;
 let pendingPlaylistSongId = null;
 let currentPlaybackList = [];
 let currentPlaybackIndex = -1;
+let selectedLibrarySong = null;
 let activeLibraryFilter = {
 
   type: 'all',
@@ -576,6 +578,11 @@ if (playlistAddButton) {
 
    songElement.addEventListener('dblclick', () => {
   playLibrarySong(song, songIndex);
+
+   songElement.addEventListener('click', () => {
+  updateSongInspector(song);
+});
+
 });
 
 const deleteButton = songElement.querySelector('.libraryDeleteButton');
@@ -949,6 +956,43 @@ function updateBottomPlayer(song) {
   }
 }
 
+function updateSongInspector(song) {
+  selectedLibrarySong = song;
+
+  const artwork = document.querySelector('.songInfoArtwork');
+  const title = document.querySelector('.songInfoTitle');
+  const artist = document.querySelector('.songInfoArtist');
+
+  if (artwork) {
+    artwork.style.backgroundImage = song.artworkPath
+      ? `url("${pathToFileURL(song.artworkPath).href}")`
+      : '';
+  }
+
+  if (title) title.textContent = song.title || 'Untitled';
+  if (artist) {
+    artist.textContent = [
+      song.artist || '-',
+      song.genre || '',
+      song.tags?.length ? song.tags.join(', ') : ''
+    ].filter(Boolean).join(' / ');
+  }
+
+  const titleInput = document.getElementById('editSongTitle');
+  const artistInput = document.getElementById('editSongArtist');
+  const albumInput = document.getElementById('editSongAlbum');
+  const genreInput = document.getElementById('editSongGenre');
+  const tagsInput = document.getElementById('editSongTags');
+  const favoriteInput = document.getElementById('editSongFavorite');
+
+  if (titleInput) titleInput.value = song.title || '';
+  if (artistInput) artistInput.value = song.artist || '';
+  if (albumInput) albumInput.value = song.album || '';
+  if (genreInput) genreInput.value = song.genre || '';
+  if (tagsInput) tagsInput.value = song.tags?.join(', ') || '';
+  if (favoriteInput) favoriteInput.checked = !!song.favorite;
+}
+
 async function playLibrarySong(song, songIndex = -1) {
   const playableSong = createPlayableLibrarySong(song);
 
@@ -989,6 +1033,7 @@ async function playLibrarySong(song, songIndex = -1) {
   await sendOverlayLayersToVisualizer();
 
   renderLibrarySongs();
+  updateSongInspector(playableSong);
 }
 
 
@@ -2186,4 +2231,65 @@ function addSongToPlaylist(song, playlistId) {
 
   saveLibraryTabs();
   alert(`「${playlist.name}」に追加しました。`);
+}
+
+
+function saveSongInspectorEdit() {
+  if (!selectedLibrarySong) {
+    alert('曲が選択されていません。');
+    return;
+  }
+
+  const title = document.getElementById('editSongTitle')?.value.trim() || '';
+  const artist = document.getElementById('editSongArtist')?.value.trim() || '';
+
+  if (!title || !artist) {
+    alert('曲名とアーティスト名は必須です。');
+    return;
+  }
+
+  const updatedSong = updateSong(selectedLibrarySong.id, {
+    title,
+    artist,
+    album: document.getElementById('editSongAlbum')?.value.trim() || '',
+    genre: document.getElementById('editSongGenre')?.value.trim() || '',
+    tags:
+      document.getElementById('editSongTags')?.value
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(Boolean) || [],
+    favorite: document.getElementById('editSongFavorite')?.checked || false
+  });
+
+  if (!updatedSong) {
+    alert('保存に失敗しました。');
+    return;
+  }
+
+  selectedLibrarySong = updatedSong;
+
+  if (currentSong?.id === updatedSong.id) {
+    currentSong = createPlayableLibrarySong(updatedSong);
+    updateBottomPlayer(currentSong);
+    ipcRenderer.invoke('send-song-to-visualizer', currentSong);
+  }
+
+  renderLibrarySongs();
+  updateSongInspector(updatedSong);
+
+  alert('曲情報を保存しました。');
+}
+
+async function copySelectedSongTitle() {
+  if (!selectedLibrarySong) return;
+  await ipcRenderer.invoke('copy-text', selectedLibrarySong.title || '');
+}
+
+async function copySelectedSongFullName() {
+  if (!selectedLibrarySong) return;
+
+  await ipcRenderer.invoke(
+    'copy-text',
+    `${selectedLibrarySong.title || ''} - ${selectedLibrarySong.artist || ''}`
+  );
 }
