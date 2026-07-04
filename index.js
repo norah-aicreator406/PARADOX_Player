@@ -1041,6 +1041,8 @@ function updateSongInspector(song) {
   if (genreInput) genreInput.value = song.genre || '';
   if (tagsInput) tagsInput.value = song.tags?.join(', ') || '';
   if (favoriteInput) favoriteInput.checked = !!song.favorite;
+
+  loadEffectSettingsFromProject(song);
 }
 
 async function playLibrarySong(song, songIndex = -1) {
@@ -2332,6 +2334,8 @@ if (artworkInput?.files?.length) {
   updateSongInspector(finalUpdatedSong);
 
   alert('曲情報を保存しました。');
+
+  saveCurrentEffectSettingsToProject(finalUpdatedSong);
 }
 
 async function copySelectedSongTitle() {
@@ -2396,4 +2400,70 @@ async function sendEffectSettingsToVisualizer() {
     'paradoxEffectSettings',
     JSON.stringify(settings)
   );
+
+  saveCurrentEffectSettingsToProject();
+}
+
+function saveCurrentEffectSettingsToProject(song = selectedLibrarySong) {
+  if (!song?.projectPath || !fs.existsSync(song.projectPath)) return;
+
+  const project = JSON.parse(fs.readFileSync(song.projectPath, 'utf-8'));
+
+  if (!project.project) project.project = {};
+
+  project.project.effects = collectEffectSettings();
+  project.updatedAt = new Date().toISOString();
+
+  fs.writeFileSync(
+    song.projectPath,
+    JSON.stringify(project, null, 2),
+    'utf-8'
+  );
+
+  console.log('Effect settings saved to project:', project.project.effects);
+}
+
+
+function applyEffectSettingsToInspector(settings = {}) {
+  const values = {
+    spectrum: settings.spectrum ?? 1,
+    particles: settings.particles ?? 1,
+    aurora: settings.aurora ?? 1,
+    glow: settings.glow ?? 1
+  };
+
+  setEffectControl('inspectorSpectrumEnabled', 'inspectorSpectrumStrength', values.spectrum);
+  setEffectControl('inspectorParticlesEnabled', 'inspectorParticlesStrength', values.particles);
+  setEffectControl('inspectorAuroraEnabled', 'inspectorAuroraStrength', values.aurora);
+  setEffectControl('inspectorGlowEnabled', 'inspectorGlowStrength', values.glow);
+
+  sendEffectSettingsToVisualizer();
+}
+
+function setEffectControl(enabledId, strengthId, value) {
+  const enabled = document.getElementById(enabledId);
+  const strength = document.getElementById(strengthId);
+
+  if (!enabled || !strength) return;
+
+  enabled.checked = Number(value) > 0;
+  strength.value = String(Number(value) || 0);
+}
+
+
+function loadEffectSettingsFromProject(song) {
+  if (!song?.projectPath || !fs.existsSync(song.projectPath)) {
+    applyEffectSettingsToInspector();
+    return;
+  }
+
+  try {
+    const project = JSON.parse(fs.readFileSync(song.projectPath, 'utf-8'));
+    const settings = project?.project?.effects;
+
+    applyEffectSettingsToInspector(settings || {});
+  } catch (error) {
+    console.warn('Effect settings load failed:', error);
+    applyEffectSettingsToInspector();
+  }
 }
