@@ -22,7 +22,10 @@ let currentFilteredSongs = [];
 let currentFilteredSongIndex = -1;
 let pendingRegisterFilePath = null;
 let pendingPlaylistSongId = null;
+let currentPlaybackList = [];
+let currentPlaybackIndex = -1;
 let activeLibraryFilter = {
+
   type: 'all',
   value: null
 };
@@ -510,8 +513,10 @@ if (activeLibraryFilter.type === 'playlist') {
   );
 }
 
-
-  filteredLibrary.forEach(song => {
+currentPlaybackList = filteredLibrary.map(song =>
+  createPlayableLibrarySong(song)
+);
+  filteredLibrary.forEach((song, songIndex) => {
     const songElement = document.createElement('div');
     songElement.className = 'librarySongRow';
 
@@ -569,8 +574,8 @@ if (playlistAddButton) {
 }
 
 
-    songElement.addEventListener('dblclick', () => {
-  playLibrarySong(song);
+   songElement.addEventListener('dblclick', () => {
+  playLibrarySong(song, songIndex);
 });
 
 const deleteButton = songElement.querySelector('.libraryDeleteButton');
@@ -944,8 +949,13 @@ function updateBottomPlayer(song) {
   }
 }
 
-async function playLibrarySong(song) {
+async function playLibrarySong(song, songIndex = -1) {
   const playableSong = createPlayableLibrarySong(song);
+
+  currentPlaybackIndex =
+  songIndex >= 0
+    ? songIndex
+    : currentPlaybackList.findIndex(item => item.id === song.id);
 
   console.log('★★★★★ playLibrarySong START ★★★★★');
   console.log(playableSong);
@@ -1209,25 +1219,27 @@ if (bottomPlayPauseButton) bottomPlayPauseButton.textContent = '▶';
 }
 
 function playPrevious() {
-  if (currentFilteredSongs.length === 0) return;
+  if (!currentPlaybackList.length) return;
 
   const prevIndex =
-    currentFilteredSongIndex > 0
-      ? currentFilteredSongIndex - 1
-      : currentFilteredSongs.length - 1;
+    currentPlaybackIndex > 0
+      ? currentPlaybackIndex - 1
+      : currentPlaybackList.length - 1;
 
-  playSong(currentFilteredSongs[prevIndex], prevIndex);
+  currentPlaybackIndex = prevIndex;
+  playSong(currentPlaybackList[prevIndex], prevIndex);
 }
 
 function playNext() {
-  if (currentFilteredSongs.length === 0) return;
+  if (!currentPlaybackList.length) return;
 
   const nextIndex =
-    currentFilteredSongIndex < currentFilteredSongs.length - 1
-      ? currentFilteredSongIndex + 1
+    currentPlaybackIndex < currentPlaybackList.length - 1
+      ? currentPlaybackIndex + 1
       : 0;
 
-  playSong(currentFilteredSongs[nextIndex], nextIndex);
+  currentPlaybackIndex = nextIndex;
+  playSong(currentPlaybackList[nextIndex], nextIndex);
 }
 
 async function copyCurrent() {
