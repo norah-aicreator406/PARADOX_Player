@@ -944,35 +944,34 @@ function updateBottomPlayer(song) {
   }
 }
 
-function playLibrarySong(song) {
-  if (!song.audioPath) {
-    alert('音源ファイルが見つかりません。');
-    return;
-    updateBottomPlayer(song);
-  }
+async function playLibrarySong(song) {
+  const playableSong = createPlayableLibrarySong(song);
 
-  currentSong = createPlayableLibrarySong(song);
+  currentSong = playableSong;
+  updateBottomPlayer(playableSong);
 
-  audio.src = pathToFileURL(song.audioPath).href;
+  audio.src = playableSong.fileUrl;
   audio.load();
+
+  setupAudioAnalyzer();
+
+  if (audioContext.state === 'suspended') {
+    await audioContext.resume();
+  }
 
   audio.play().catch(error => {
     alert('再生できませんでした: ' + error.message);
   });
 
-  document.getElementById('bottomTitle').textContent =
-    song.title || 'Untitled';
+  startVisualizerLevelLoop();
 
-  document.getElementById('bottomArtist').textContent =
-    song.artist || '-';
-  
-  const bottomArtwork = document.getElementById('bottomArtwork');
+  await ipcRenderer.invoke('send-song-to-visualizer', playableSong);
 
-if (bottomArtwork) {
-  bottomArtwork.style.backgroundImage = song.artworkPath
-    ? `url("file://${song.artworkPath.replace(/\\/g, '/')}")`
-    : '';
-}
+  if (currentBackground) {
+    await ipcRenderer.invoke('send-background-to-visualizer', currentBackground);
+  }
+
+  await sendOverlayLayersToVisualizer();
 
   renderLibrarySongs();
 }
@@ -982,6 +981,9 @@ function createPlayableLibrarySong(song) {
   return {
     ...song,
     fileUrl: pathToFileURL(song.audioPath).href,
+    artworkUrl: song.artworkPath
+      ? pathToFileURL(song.artworkPath).href
+      : '',
     mediaType: 'audio'
   };
 }
