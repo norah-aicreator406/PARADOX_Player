@@ -228,14 +228,24 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
   const openVisualEditorButton =
-    document.getElementById('openVisualEditorButton');
+  document.getElementById('openVisualEditorButton');
 
-  if (openVisualEditorButton) {
+if (openVisualEditorButton) {
   openVisualEditorButton.addEventListener('click', () => {
-    ipcRenderer.invoke('open-lyrics-editor-window');
-
+    openSelectedSongEditor();
   });
 }
+
+const openBottomEditorButton =
+  document.getElementById('openBottomEditorButton');
+
+if (openBottomEditorButton) {
+  openBottomEditorButton.addEventListener('click', () => {
+    openSelectedSongEditor();
+  });
+}
+
+
 document.querySelectorAll('input[name="tabCreateType"]').forEach(input => {
   input.addEventListener('change', updateTabCreateFields);
 });
@@ -2309,4 +2319,35 @@ async function copySelectedSongFullName() {
     'copy-text',
     `${selectedLibrarySong.title || ''} - ${selectedLibrarySong.artist || ''}`
   );
+}
+
+const openSongEditorButton =
+  document.getElementById('openSongEditorButton');
+
+if (openSongEditorButton) {
+  openSongEditorButton.addEventListener('click', () => {
+    console.log('Editor button clicked');
+    openSelectedSongEditor();
+  });
+}
+
+async function openSelectedSongEditor() {
+  console.log('openSelectedSongEditor called');
+  console.log('selectedLibrarySong:', selectedLibrarySong);
+
+  if (!selectedLibrarySong) {
+    alert('曲が選択されていません。');
+    return;
+  }
+
+  await ipcRenderer.invoke('open-lyrics-editor-window', {
+    songId: selectedLibrarySong.id,
+    title: selectedLibrarySong.title,
+    artist: selectedLibrarySong.artist,
+    audioPath: selectedLibrarySong.audioPath,
+    artworkPath: selectedLibrarySong.artworkPath,
+    projectPath: selectedLibrarySong.projectPath
+  });
+
+  console.log('open-lyrics-editor-window invoked');
 }
