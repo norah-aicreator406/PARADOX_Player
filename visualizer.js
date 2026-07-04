@@ -1484,6 +1484,8 @@ ipcRenderer.on('visualizer-template', (event, templateName) => {
 });
 
 ipcRenderer.on('visualizer-effect-settings', (event, settings) => {
+  console.log('[Visualizer] effect settings received:', settings);
+
   if (!settings || typeof settings !== 'object') return;
 
   effectSettings = {
@@ -1492,6 +1494,8 @@ ipcRenderer.on('visualizer-effect-settings', (event, settings) => {
     aurora: Number(settings.aurora ?? 1),
     glow: Number(settings.glow ?? 1)
   };
+
+  console.log('[Visualizer] effectSettings applied:', effectSettings);
 });
 
 ipcRenderer.on('visualizer-lyrics', (event, lyrics) => {

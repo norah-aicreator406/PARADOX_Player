@@ -2283,33 +2283,44 @@ body {
       </div>
     </section>
 
-    <section class="settingsPage" data-page="effects">
+     <section class="settingsPage" data-page="effects">
       <h3>エフェクト</h3>
 
       <div id="effectControl" class="effectGrid">
-        <label>
-          <span><input type="checkbox" id="spectrumEnabled" checked onchange="changeEffectSettings()"> スペクトラム</span>
-          <input type="range" min="0" max="100" value="100" oninput="changeEffectSettings()">
-        </label>
+  <label>
+    <span>
+      <input id="effectSpectrumEnabled" type="checkbox" checked>
+      スペクトラム
+    </span>
+    <input id="effectSpectrumStrength" type="range" min="0" max="1" step="0.01" value="1">
+  </label>
 
-        <label>
-          <span><input type="checkbox" id="particlesEnabled" checked onchange="changeEffectSettings()"> パーティクル</span>
-          <input type="range" min="0" max="100" value="100" oninput="changeEffectSettings()">
-        </label>
+  <label>
+    <span>
+      <input id="effectParticlesEnabled" type="checkbox" checked>
+      パーティクル
+    </span>
+    <input id="effectParticlesStrength" type="range" min="0" max="1" step="0.01" value="1">
+  </label>
 
-        <label>
-          <span><input type="checkbox" id="auroraEnabled" checked onchange="changeEffectSettings()"> オーロラ</span>
-          <input type="range" min="0" max="100" value="100" oninput="changeEffectSettings()">
-        </label>
+  <label>
+    <span>
+      <input id="effectAuroraEnabled" type="checkbox" checked>
+      オーロラ
+    </span>
+    <input id="effectAuroraStrength" type="range" min="0" max="1" step="0.01" value="1">
+  </label>
 
-        <label>
-          <span><input type="checkbox" id="glowEnabled" checked onchange="changeEffectSettings()"> グロー</span>
-          <input type="range" min="0" max="100" value="100" oninput="changeEffectSettings()">
-        </label>
-
-
-      </div>
+  <label>
+    <span>
+      <input id="effectGlowEnabled" type="checkbox" checked>
+      グロー
+    </span>
+    <input id="effectGlowStrength" type="range" min="0" max="1" step="0.01" value="1">
+  </label>
+</div>
     </section>
+
 
     <section class="settingsPage" data-page="template">
       <h3>テンプレート</h3>
@@ -2491,28 +2502,28 @@ body {
 </section>
 
 <section class="inspectorSection inspectorPage" data-inspector-page="effects">
-  <div class="inspectorSectionTitle">Effects</div>
+  <div class="inspectorSectionTitle">エフェクト</div>
   <div class="inspectorSectionDesc">配信画面の演出を調整</div>
 
   <div class="effectGrid">
     <label>
-      <span><input type="checkbox" checked> スペクトラム</span>
-      <input type="range" min="0" max="100" value="70">
+      <span><input id="inspectorSpectrumEnabled" type="checkbox" checked> スペクトラム</span>
+      <input id="inspectorSpectrumStrength" type="range" min="0" max="1" step="0.01" value="0.7">
     </label>
 
     <label>
-      <span><input type="checkbox" checked> パーティクル</span>
-      <input type="range" min="0" max="100" value="70">
+      <span><input id="inspectorParticlesEnabled" type="checkbox" checked> パーティクル</span>
+      <input id="inspectorParticlesStrength" type="range" min="0" max="1" step="0.01" value="0.7">
     </label>
 
     <label>
-      <span><input type="checkbox"> オーロラ</span>
-      <input type="range" min="0" max="100" value="0">
+      <span><input id="inspectorAuroraEnabled" type="checkbox"> オーロラ</span>
+      <input id="inspectorAuroraStrength" type="range" min="0" max="1" step="0.01" value="0">
     </label>
 
     <label>
-      <span><input type="checkbox" checked> グロー</span>
-      <input type="range" min="0" max="100" value="50">
+      <span><input id="inspectorGlowEnabled" type="checkbox" checked> グロー</span>
+      <input id="inspectorGlowStrength" type="range" min="0" max="1" step="0.01" value="0.5">
     </label>
   </div>
 </section>

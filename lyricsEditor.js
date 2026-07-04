@@ -1,3 +1,4 @@
+const fs = require('fs');
 
 const { ipcRenderer } = require('electron');
 const fontGroups = [
@@ -338,52 +339,34 @@ function applyStylePreset() {
 ipcRenderer.on('lyrics-editor-data', (event, data) => {
   if (!data) return;
 
-  textInput.value = data.text || '';
-  sizeInput.value = data.size || 72;
+  currentEditorSong = data;
+  currentProjectPath = data.projectPath || null;
 
-  sizeValue.textContent =
-    sizeInput.value;
+  if (currentProjectPath && fs.existsSync(currentProjectPath)) {
+    const project = JSON.parse(fs.readFileSync(currentProjectPath, 'utf-8'));
 
-  colorInput.value = data.color || '#ffffff';
-  fontInput.value = data.font || 'Arial';
+    const savedSections =
+      project?.project?.lyrics?.sections || {};
 
-  outlineColorInput.value = data.outlineColor || '#000000';
-  outlineWidthInput.value = data.outlineWidth ?? 0;
+    Object.keys(sectionData).forEach(key => {
+      delete sectionData[key];
+    });
 
-  alignInput.value = data.align || 'center';
-  
-  shadowColorInput.value = data.shadowColor || '#000000';
-  shadowBlurInput.value = data.shadowBlur ?? 0;
-  shadowXInput.value = data.shadowX ?? 0;
-  shadowYInput.value = data.shadowY ?? 0;
+    Object.assign(sectionData, savedSections);
 
-    letterSpacingInput.value =
-    data.letterSpacing ?? 0;
+    const sectionNames = Object.keys(sectionData);
 
-  lineHeightInput.value =
-    data.lineHeight ?? 1.2;
+    if (sectionNames.length > 0) {
+      currentSectionName = sectionNames[0];
+    } else {
+      currentSectionName = 'Verse 1';
+      sectionData[currentSectionName] = [];
+    }
 
-  sizeValue.textContent =
-    sizeInput.value;
+    showSection(currentSectionName);
+  }
 
-  outlineWidthValue.textContent =
-    outlineWidthInput.value;
-
-  shadowBlurValue.textContent =
-    shadowBlurInput.value;
-
-  shadowXValue.textContent =
-    shadowXInput.value;
-
-  shadowYValue.textContent =
-    shadowYInput.value;
-
-  letterSpacingValue.textContent =
-    letterSpacingInput.value;
-
-  lineHeightValue.textContent =
-    lineHeightInput.value;
-
+  document.title = `Lyrics Editor - ${data.title || ''}`;
 });
 
 let currentSectionName = 'Verse 1';
@@ -392,6 +375,9 @@ const sectionData = {
   'Verse 1': [],
   'Chorus': []
 };
+
+let currentEditorSong = null;
+let currentProjectPath = null;
 
 const EDITOR_STORAGE_KEY = 'norahStudioEditorData';
 
@@ -433,6 +419,26 @@ console.log('Lyrics Editor Loaded');
 const saveEditorButton = document.getElementById('saveEditorButton');
 
 function saveEditorData() {
+  if (currentProjectPath && fs.existsSync(currentProjectPath)) {
+    const project = JSON.parse(fs.readFileSync(currentProjectPath, 'utf-8'));
+
+    if (!project.project) project.project = {};
+    if (!project.project.lyrics) project.project.lyrics = {};
+
+    project.project.lyrics.sections = sectionData;
+    project.updatedAt = new Date().toISOString();
+
+    fs.writeFileSync(
+      currentProjectPath,
+      JSON.stringify(project, null, 2),
+      'utf-8'
+    );
+
+    console.log('project.json saved:', currentProjectPath);
+    alert('project.jsonに保存しました。');
+    return;
+  }
+
   localStorage.setItem(
     EDITOR_STORAGE_KEY,
     JSON.stringify({
@@ -441,7 +447,7 @@ function saveEditorData() {
     })
   );
 
-  console.log('Editor data saved');
+  alert('ローカルに保存しました。');
 }
 
 function loadEditorData() {

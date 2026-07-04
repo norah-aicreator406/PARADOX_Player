@@ -1,5 +1,5 @@
 const { pathToFileURL } = require('url');
-
+const fs = require('fs');
 
 const {
   loadLibrary,
@@ -97,45 +97,57 @@ audio.addEventListener('timeupdate', updateLyricsByTime);
 audio.addEventListener('loadedmetadata', sendVisualizerTime);
 audio.addEventListener('ended', sendVisualizerTime);
 
-const testLyricsBlocks = [
-  {
-    id: "lyric_001",
-    start: 0,
-    end: 5,
-    lines: ["君の声が", "まだ響いてる"],
-    animation: {
-      preset: "fade",
-      duration: 0.5
-    }
-  },
-  {
-  id: "lyric_002",
-  start: 5,
-  end: 10,
-  lines: ["夜空へ", "溶けていく"],
-  animation: {
-    preset: "slideUp",
-    duration: 0.5
-  }
-  },
-  {
-    id: "lyric_003",
-    start: 10,
-    end: 15,
-    lines: ["光の海を", "泳いでいく"],
-    animation: {
-      preset: "fade",
-      duration: 0.5
-    }
-  }
-];
-
+let currentLyricsBlocks = [];
 let currentLyricsBlockId = null;
 
+function parseTimeToSeconds(timeText) {
+  if (!timeText) return 0;
+
+  const [minutesPart, secondsPart] = String(timeText).split(':');
+  const minutes = Number(minutesPart) || 0;
+  const seconds = Number(secondsPart) || 0;
+
+  return minutes * 60 + seconds;
+}
+
+function loadLyricsBlocksFromProject(song) {
+  currentLyricsBlocks = [];
+  currentLyricsBlockId = null;
+
+  if (!song?.projectPath || !fs.existsSync(song.projectPath)) {
+    ipcRenderer.invoke('send-lyrics-to-visualizer', null);
+    return;
+  }
+
+  try {
+    const project = JSON.parse(fs.readFileSync(song.projectPath, 'utf-8'));
+    const sections = project?.project?.lyrics?.sections || {};
+
+    currentLyricsBlocks = Object.values(sections)
+      .flat()
+      .map(block => ({
+        id: block.id,
+        start: parseTimeToSeconds(block.start),
+        end: parseTimeToSeconds(block.end),
+        lines: String(block.text || '').split('\n'),
+        animation: {
+          preset: block.animationPreset || 'fade',
+          duration: 0.5
+        }
+      }))
+      .sort((a, b) => a.start - b.start);
+
+    ipcRenderer.invoke('send-lyrics-to-visualizer', null);
+  } catch (error) {
+    console.warn('project.jsonの歌詞読み込み失敗:', error);
+    currentLyricsBlocks = [];
+  }
+}
+
 function getCurrentLyricsBlock(currentTime) {
-  return testLyricsBlocks.find(block => {
-    return currentTime >= block.start && currentTime < block.end;
-  }) || null;
+  return currentLyricsBlocks.find(block =>
+    currentTime >= block.start && currentTime < block.end
+  ) || null;
 }
 
 function updateLyricsByTime() {
@@ -146,7 +158,6 @@ function updateLyricsByTime() {
       currentLyricsBlockId = null;
       ipcRenderer.invoke('send-lyrics-to-visualizer', null);
     }
-
     return;
   }
 
@@ -282,6 +293,34 @@ document.addEventListener('drop', (event) => {
 
     openSongRegisterWizard(filePath);
   });
+});
+
+[
+  'inspectorSpectrumEnabled',
+  'inspectorSpectrumStrength',
+  'inspectorParticlesEnabled',
+  'inspectorParticlesStrength',
+  'inspectorAuroraEnabled',
+  'inspectorAuroraStrength',
+  'inspectorGlowEnabled',
+  'inspectorGlowStrength'
+].forEach(id => {
+  const element = document.getElementById(id);
+
+  if (!element) {
+    console.warn('Effect control not found:', id);
+    return;
+  }
+
+  console.log('Effect control connected:', id);
+
+  const handler = () => {
+    console.log('Effect control changed:', id);
+    sendEffectSettingsToVisualizer();
+  };
+
+  element.addEventListener('input', handler);
+  element.addEventListener('change', handler);
 });
 
 ensureLibraryFolders();
@@ -1006,6 +1045,8 @@ function updateSongInspector(song) {
 
 async function playLibrarySong(song, songIndex = -1) {
   const playableSong = createPlayableLibrarySong(song);
+  
+  loadLyricsBlocksFromProject(playableSong);
 
   currentPlaybackIndex =
   songIndex >= 0
@@ -1077,6 +1118,7 @@ async function playSong(song, songIndex) {
   }
 
   currentSong = song;
+  loadLyricsBlocksFromProject(song);
   updateBottomPlayer(song);
   currentFilteredSongIndex = songIndex;
 
@@ -1876,55 +1918,40 @@ async function changeVisualizerAspectRatio(ratio) {
   await ipcRenderer.invoke('set-visualizer-aspect-ratio', ratio);
 }
 
-async function changeEffectSettings() {
-  const inputs = document.querySelectorAll('#effectControl input[type="range"]');
+function getEffectValue(enabledId, strengthId) {
+  const enabled = document.getElementById(enabledId)?.checked;
+  const slider = document.getElementById(strengthId);
 
-  const settings = {
-  spectrum: document.getElementById('spectrumEnabled')?.checked
-    ? Number(inputs[0].value) / 100
-    : 0,
+  if (!enabled || !slider) return 0;
 
-  particles: document.getElementById('particlesEnabled')?.checked
-    ? Number(inputs[1].value) / 100
-    : 0,
+  const raw = Number(slider.value);
+  const max = Number(slider.max || 1);
 
-  aurora: document.getElementById('auroraEnabled')?.checked
-    ? Number(inputs[2].value) / 100
-    : 0,
-
-  glow: document.getElementById('glowEnabled')?.checked
-    ? Number(inputs[3].value) / 100
-    : 0
-};
-
-  await ipcRenderer.invoke('send-visualizer-effect-settings', settings);
-  localStorage.setItem('paradoxEffectSettings', JSON.stringify(settings));
+  return max > 1 ? raw / max : raw;
 }
 
-function loadEffectSettings() {
-  const saved = localStorage.getItem('paradoxEffectSettings');
-  if (!saved) return;
+function collectEffectSettings() {
+  return {
+    spectrum: getEffectValue(
+      'inspectorSpectrumEnabled',
+      'inspectorSpectrumStrength'
+    ),
 
-  try {
-    const settings = JSON.parse(saved);
-    const inputs = document.querySelectorAll('#effectControl input[type="range"]');
+    particles: getEffectValue(
+      'inspectorParticlesEnabled',
+      'inspectorParticlesStrength'
+    ),
 
-    document.getElementById('spectrumEnabled').checked = settings.spectrum > 0;
-    document.getElementById('particlesEnabled').checked = settings.particles > 0;
-    document.getElementById('auroraEnabled').checked = settings.aurora > 0;
-    document.getElementById('glowEnabled').checked = settings.glow > 0;
-  
+    aurora: getEffectValue(
+      'inspectorAuroraEnabled',
+      'inspectorAuroraStrength'
+    ),
 
-    inputs[0].value = Math.round((settings.spectrum ?? 1) * 100);
-    inputs[1].value = Math.round((settings.particles ?? 1) * 100);
-    inputs[2].value = Math.round((settings.aurora ?? 1) * 100);
-    inputs[3].value = Math.round((settings.glow ?? 1) * 100);
-    
-
-    changeEffectSettings();
-  } catch (error) {
-    localStorage.removeItem('paradoxEffectSettings');
-  }
+    glow: getEffectValue(
+      'inspectorGlowEnabled',
+      'inspectorGlowStrength'
+    )
+  };
 }
 
 
@@ -2350,4 +2377,23 @@ async function openSelectedSongEditor() {
   });
 
   console.log('open-lyrics-editor-window invoked');
+}
+
+
+
+
+async function sendEffectSettingsToVisualizer() {
+  const settings = collectEffectSettings();
+
+  console.log('Effect settings send:', settings);
+
+  await ipcRenderer.invoke(
+    'send-visualizer-effect-settings',
+    settings
+  );
+
+  localStorage.setItem(
+    'paradoxEffectSettings',
+    JSON.stringify(settings)
+  );
 }
