@@ -118,21 +118,38 @@ function playSongChangeAnimation(callback) {
 }
 
 ipcRenderer.on('visualizer-song', (event, song) => {
-  console.log('[Visualizer] song received:', song);
+  console.log('★★★★ SONG ★★★★');
+  console.log(song);
   document.getElementById('title').textContent = song.title || '';
   document.getElementById('artist').textContent = song.artist || '';
 
   const coverImage = document.getElementById('coverImage');
   const coverFrame = document.getElementById('coverFrame');
 
-  if (song.coverUrl) {
-    coverImage.src = song.coverUrl;
-    coverFrame.style.display = 'block';
-  } else {
-    console.log('coverUrlなし');
-    coverImage.src = '';
-    coverFrame.style.display = 'none';
-  }
+  const coverUrl = song.artworkUrl || song.coverUrl || '';
+
+if (coverUrl) {
+  console.log('cover set:', coverUrl);
+
+  coverImage.onload = () => {
+    console.log('cover loaded');
+  };
+
+  coverImage.onerror = (error) => {
+    console.error('cover load failed:', error);
+  };
+
+  coverImage.src = coverUrl;
+  coverFrame.style.display = 'block';
+} else {
+  console.log('ジャケットなし');
+
+  coverImage.onload = null;
+  coverImage.onerror = null;
+  coverImage.removeAttribute('src');
+  coverImage.src = '';
+  coverFrame.style.display = 'none';
+}
 
   const bgVideo = document.getElementById('bgVideo');
   const bgImage = document.getElementById('bgImage');
@@ -466,7 +483,7 @@ function clampLevel(value) {
 }
 
 ipcRenderer.on('visualizer-level', (event, visualizerData) => {
-  console.log('[Visualizer] level received:', visualizerData);
+  
   const stage = document.getElementById('stage');
   const bars = document.querySelectorAll('.bar');
 

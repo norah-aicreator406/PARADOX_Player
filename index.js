@@ -947,6 +947,9 @@ function updateBottomPlayer(song) {
 async function playLibrarySong(song) {
   const playableSong = createPlayableLibrarySong(song);
 
+  console.log('★★★★★ playLibrarySong START ★★★★★');
+  console.log(playableSong);
+
   currentSong = playableSong;
   updateBottomPlayer(playableSong);
 
@@ -966,6 +969,8 @@ async function playLibrarySong(song) {
   startVisualizerLevelLoop();
 
   await ipcRenderer.invoke('send-song-to-visualizer', playableSong);
+
+  console.log('★★★★★ send-song finished ★★★★★');
 
   if (currentBackground) {
     await ipcRenderer.invoke('send-background-to-visualizer', currentBackground);

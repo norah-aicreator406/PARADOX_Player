@@ -392,7 +392,20 @@ ipcMain.handle('open-visualizer-window', async () => {
 });
 
 ipcMain.handle('send-song-to-visualizer', async (event, song) => {
-  sendSongToVisualizer(song);
+  if (!visualizerWindow || visualizerWindow.isDestroyed()) {
+    openVisualizerWindow();
+  }
+
+  const send = () => {
+    visualizerWindow.webContents.send('visualizer-song', song);
+  };
+
+  if (visualizerWindow.webContents.isLoading()) {
+    visualizerWindow.webContents.once('did-finish-load', send);
+  } else {
+    send();
+  }
+
   return true;
 });
 
