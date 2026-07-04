@@ -176,6 +176,43 @@ function updateSong(songId, updates) {
   return updatedSongs.find(song => song.id === songId) || null;
 }
 
+function updateSongArtwork(songId, sourceArtworkPath) {
+  const songs = loadLibrary();
+  const song = songs.find(item => item.id === songId);
+
+  if (!song || !sourceArtworkPath) return null;
+
+  const songDir = path.dirname(song.projectPath);
+  const artworkDir = path.join(songDir, 'artwork');
+
+  fs.mkdirSync(artworkDir, { recursive: true });
+
+  const artworkExt = path.extname(sourceArtworkPath);
+  const copiedArtworkPath = path.join(artworkDir, `cover${artworkExt}`);
+
+  fs.copyFileSync(sourceArtworkPath, copiedArtworkPath);
+
+  const updatedSong = updateSong(songId, {
+    artworkPath: copiedArtworkPath
+  });
+
+  if (updatedSong?.projectPath && fs.existsSync(updatedSong.projectPath)) {
+    const project = JSON.parse(fs.readFileSync(updatedSong.projectPath, 'utf-8'));
+    project.artworkPath = copiedArtworkPath;
+    project.updatedAt = new Date().toISOString();
+
+    fs.writeFileSync(
+      updatedSong.projectPath,
+      JSON.stringify(project, null, 2),
+      'utf-8'
+    );
+  }
+
+  return updatedSong;
+}
+
+
+
 function deleteSong(songId) {
   const songs = loadLibrary();
   const song = songs.find(item => item.id === songId);
@@ -195,5 +232,6 @@ module.exports = {
   addSongFromFile,
   getSongById,
   updateSong,
-  deleteSong
+  deleteSong,
+  updateSongArtwork
 };

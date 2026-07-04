@@ -6,7 +6,8 @@ const {
   addSongFromFile,
   ensureLibraryFolders,
   deleteSong,
-  updateSong
+  updateSong,
+  updateSongArtwork
 } = require('./libraryStore');
 const { ipcRenderer, webUtils } = require('electron');
 
@@ -2248,6 +2249,14 @@ function saveSongInspectorEdit() {
     return;
   }
 
+  const artworkInput = document.getElementById('editSongArtwork');
+
+let nextArtworkPath = selectedLibrarySong.artworkPath || '';
+
+if (artworkInput?.files?.length) {
+  nextArtworkPath = webUtils.getPathForFile(artworkInput.files[0]);
+}
+
   const updatedSong = updateSong(selectedLibrarySong.id, {
     title,
     artist,
@@ -2261,21 +2270,29 @@ function saveSongInspectorEdit() {
     favorite: document.getElementById('editSongFavorite')?.checked || false
   });
 
+let finalUpdatedSong = updatedSong;
+
+if (artworkInput?.files?.length) {
+  const selectedArtworkPath = webUtils.getPathForFile(artworkInput.files[0]);
+  finalUpdatedSong = updateSongArtwork(updatedSong.id, selectedArtworkPath);
+  artworkInput.value = '';
+}
+
   if (!updatedSong) {
     alert('保存に失敗しました。');
     return;
   }
 
-  selectedLibrarySong = updatedSong;
+  selectedLibrarySong = finalUpdatedSong;
 
-  if (currentSong?.id === updatedSong.id) {
-    currentSong = createPlayableLibrarySong(updatedSong);
+  if (currentSong?.id === finalUpdatedSong.id) {
+    currentSong = createPlayableLibrarySong(finalUpdatedSong);
     updateBottomPlayer(currentSong);
     ipcRenderer.invoke('send-song-to-visualizer', currentSong);
   }
 
   renderLibrarySongs();
-  updateSongInspector(updatedSong);
+  updateSongInspector(finalUpdatedSong);
 
   alert('曲情報を保存しました。');
 }

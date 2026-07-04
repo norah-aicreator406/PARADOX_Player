@@ -1833,6 +1833,53 @@ body {
   display: flex;
 }
 
+.songInfoBox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.songInfoBox label {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: .06em;
+}
+
+.songInfoBox input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  background: rgba(0,0,0,0.28);
+  color: var(--text);
+}
+
+.songInfoBox input[type="file"] {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.songInfoActions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.songInfoActions button {
+  width: 100%;
+}
+
+.songInfoDivider {
+  height: 1px;
+  background: var(--border-soft);
+  margin: 12px 0;
+  border: none;
+}
+
 
 </style>
 </head>
@@ -2389,6 +2436,9 @@ body {
   <div class="songInfoBox">
 
     <div class="songInfoArtwork"></div>
+    
+    <label>ジャケット変更</label>
+    <input id="editSongArtwork" type="file" accept="image/*">
 
     <div class="songInfoTitle">未選択</div>
     <div class="songInfoArtist">-</div>
@@ -2417,23 +2467,25 @@ body {
       お気に入り
     </label>
 
-    <button onclick="saveSongInspectorEdit()">
-      保存
-    </button>
+    <div class="songInfoActions">
 
-    <hr>
+  <button onclick="saveSongInspectorEdit()">
+    保存
+  </button>
 
-    <button onclick="copySelectedSongTitle()">
-      曲名をコピー
-    </button>
+  <button onclick="copySelectedSongTitle()">
+    曲名をコピー
+  </button>
 
-    <button onclick="copySelectedSongFullName()">
-      曲名＋アーティストをコピー
-    </button>
+  <button onclick="copySelectedSongFullName()">
+    曲名＋アーティストをコピー
+  </button>
 
-    <button id="openSongEditorButton">
-      Editorを開く
-    </button>
+  <button id="openSongEditorButton">
+    Editorを開く
+  </button>
+
+</div>
 
   </div>
 </section>
