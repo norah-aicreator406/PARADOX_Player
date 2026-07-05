@@ -1133,7 +1133,7 @@ const varied = interpolated * bandVariation + spike - dip;
 return Math.max(0.03, Math.min(1, varied));
 }
 
-function setLyrics(lines, animation = { preset: 'fade', duration: 0.5 }) {
+function setLyrics(lines, animation, style = {}, position = { x: 0, y: 0, z: 0 }) {
   const lyricsBlock = document.getElementById('lyricsBlock');
 
   if (!lyricsBlock) {
@@ -1142,6 +1142,22 @@ function setLyrics(lines, animation = { preset: 'fade', duration: 0.5 }) {
   }
 
   lyricsBlock.innerHTML = '';
+
+  lyricsBlock.style.fontFamily = `"${style.font || 'Arial'}", sans-serif`;
+  lyricsBlock.style.fontSize = `${style.size || 72}px`;
+  lyricsBlock.style.color = style.color || '#ffffff';
+  lyricsBlock.style.textAlign = style.align || 'center';
+  lyricsBlock.style.letterSpacing = `${style.letterSpacing || 0}px`;
+  lyricsBlock.style.lineHeight = String(style.lineHeight || 1.2);
+
+  lyricsBlock.style.webkitTextStroke =
+    `${style.outlineWidth || 0}px ${style.outlineColor || '#000000'}`;
+
+  lyricsBlock.style.textShadow =
+    `${style.shadowX || 0}px ${style.shadowY || 0}px ${style.shadowBlur || 0}px ${style.shadowColor || '#000000'}`;
+
+  lyricsBlock.style.transform =
+    `translate(-50%, -50%) translate(${position.x || 0}px, ${position.y || 0}px)`;
 
   const safeLines = Array.isArray(lines) ? lines : [String(lines || '')];
 
@@ -1154,6 +1170,8 @@ function setLyrics(lines, animation = { preset: 'fade', duration: 0.5 }) {
 
   applyLyricsAnimation(animation);
 }
+
+
 function applyLyricsAnimation(animation = {}) {
   const lyricsBlock = document.getElementById('lyricsBlock');
   if (!lyricsBlock) return;
@@ -1519,9 +1537,14 @@ ipcRenderer.on('visualizer-lyrics', (event, lyrics) => {
   }
 
   if (Array.isArray(lyrics.lines)) {
-  setLyrics(lyrics.lines, lyrics.animation);
+  setLyrics(
+  lyrics.lines,
+  lyrics.animation,
+  lyrics.style,
+  lyrics.position
+);
   showLyrics();
-  }
+}
 });
 
 

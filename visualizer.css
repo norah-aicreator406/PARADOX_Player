@@ -496,13 +496,12 @@ html, body {
 }
 
 
-.lyricsLayer {
-  width: 100%;
+#lyricsLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
   pointer-events: none;
-  font-weight: 800;
-  line-height: 1.2;
 }
-
 
 
 #visualCircle,
@@ -523,18 +522,13 @@ html, body {
 }
 
 #lyricsBlock {
-  text-align: center;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  line-height: 1.25;
-  color: #ffffff;
-  text-shadow:
-    0 0 8px rgba(255, 255, 255, 0.35),
-    0 0 18px rgba(124, 251, 255, 0.35),
-    0 0 32px rgba(255, 79, 216, 0.20);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
-#lyricsBlock.lyrics-motion-fade {
+/*#lyricsBlock.lyrics-motion-fade {
   animation: lyricsFadeIn var(--lyrics-motion-duration, 0.5s) ease-out;
 }
 
@@ -588,14 +582,21 @@ html, body {
     filter: blur(0);
   }
 }
-
+*/
 
 
 
 .lyricsLine {
-  font-size: clamp(28px, 4.8vw, 64px);
+  font-size: inherit;
+  font-family: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  text-shadow: inherit;
+  -webkit-text-stroke: inherit;
 }
 
+/*
 #lyricsBlock.lyrics-motion-fade {
   animation: lyricsFadeIn 0.5s ease-out;
 }
@@ -613,4 +614,4 @@ html, body {
     filter: blur(0);
   }
 }
-
+*/

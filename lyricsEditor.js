@@ -262,6 +262,20 @@ if (selectedBlock) {
     blockData.start = startTimeInput.value;
     blockData.end = endTimeInput.value;
     blockData.animationPreset = animationPresetInput.value;
+    blockData.style = {
+  font: fontInput.value,
+  size: Number(sizeInput.value),
+  color: colorInput.value,
+  align: alignInput.value,
+  outlineColor: outlineColorInput.value,
+  outlineWidth: Number(outlineWidthInput.value),
+  shadowColor: shadowColorInput.value,
+  shadowBlur: Number(shadowBlurInput.value),
+  shadowX: Number(shadowXInput.value),
+  shadowY: Number(shadowYInput.value),
+  letterSpacing: Number(letterSpacingInput.value),
+  lineHeight: Number(lineHeightInput.value)
+};
   }
 
   renderSectionBlocks();
@@ -453,7 +467,42 @@ console.log('Lyrics Editor Loaded');
 
 const saveEditorButton = document.getElementById('saveEditorButton');
 
+
+function normalizeAllLyricsBlocksBeforeSave() {
+  Object.values(sectionData).forEach(blocks => {
+    (blocks || []).forEach(block => {
+      if (!block.style) {
+        block.style = {
+          font: fontInput.value || 'Arial',
+          size: Number(sizeInput.value) || 72,
+          color: colorInput.value || '#ffffff',
+          align: alignInput.value || 'center',
+          outlineColor: outlineColorInput.value || '#000000',
+          outlineWidth: Number(outlineWidthInput.value) || 0,
+          shadowColor: shadowColorInput.value || '#000000',
+          shadowBlur: Number(shadowBlurInput.value) || 0,
+          shadowX: Number(shadowXInput.value) || 0,
+          shadowY: Number(shadowYInput.value) || 0,
+          letterSpacing: Number(letterSpacingInput.value) || 0,
+          lineHeight: Number(lineHeightInput.value) || 1.2
+        };
+      }
+
+      if (!block.position) {
+        block.position = { x: 0, y: 0, z: 0 };
+      }
+    });
+  });
+}
+
 function saveEditorData() {
+  syncSelectedBlockDataFromInspector();
+
+  console.log(
+    'SECTION DATA TO SAVE:',
+    JSON.stringify(sectionData, null, 2)
+  );
+
   if (currentProjectPath && fs.existsSync(currentProjectPath)) {
     const project = JSON.parse(fs.readFileSync(currentProjectPath, 'utf-8'));
 
@@ -470,9 +519,13 @@ function saveEditorData() {
     );
 
     console.log('project.json saved:', currentProjectPath);
+    console.log('saved project:', project);
+
     alert('project.jsonに保存しました。');
     return;
   }
+
+  console.warn('project.json保存ではなくlocalStorage保存になりました');
 
   localStorage.setItem(
     EDITOR_STORAGE_KEY,
@@ -524,11 +577,24 @@ function updateTimelinePlayhead() {
   updateEditorPreviewByTimeline();
 }
 
+function getAllLyricsBlocksSorted() {
+  return Object.entries(sectionData)
+    .flatMap(([sectionName, blocks]) =>
+      (blocks || []).map(block => ({
+        ...block,
+        sectionName
+      }))
+    )
+    .sort((a, b) =>
+      parseTimeToSeconds(a.start) - parseTimeToSeconds(b.start)
+    );
+}
+
 function getCurrentEditorLyricsBlock() {
   if (!editorAudio) return null;
 
-  const blocks = sectionData[currentSectionName] || [];
   const currentTime = editorAudio.currentTime;
+  const blocks = getAllLyricsBlocksSorted();
 
   return blocks.find(block => {
     const start = parseTimeToSeconds(block.start);
@@ -538,12 +604,55 @@ function getCurrentEditorLyricsBlock() {
   }) || null;
 }
 
+
+function buildLyricsPayloadForVisualizer(block) {
+  console.log('★★★★ NEW buildLyricsPayloadForVisualizer RUNNING ★★★★', block);
+  if (!block) return null;
+
+  const style = block.style || getCurrentInspectorStyle();
+
+  return {
+    id: block.id,
+    sectionName: block.sectionName || currentSectionName,
+    lines: String(block.text || '').split('\n'),
+    text: block.text || '',
+
+    position: block.position || { x: 0, y: 0, z: 0 },
+
+    animation: {
+      preset: block.animationPreset || 'fade',
+      duration: 0.5
+    },
+
+    style: {
+      font: style.font || 'Arial',
+      size: Number(style.size) || 72,
+      color: style.color || '#ffffff',
+      align: style.align || 'center',
+      outlineColor: style.outlineColor || '#000000',
+      outlineWidth: Number(style.outlineWidth) || 0,
+      shadowColor: style.shadowColor || '#000000',
+      shadowBlur: Number(style.shadowBlur) || 0,
+      shadowX: Number(style.shadowX) || 0,
+      shadowY: Number(style.shadowY) || 0,
+      letterSpacing: Number(style.letterSpacing) || 0,
+      lineHeight: Number(style.lineHeight) || 1.2
+    }
+  };
+}
+
+let lastSentPreviewLyricsId = null;
+
 function updateEditorPreviewByTimeline() {
   const currentBlock = getCurrentEditorLyricsBlock();
+  const previewLyrics = document.getElementById('editorPreviewLyrics');
 
   if (!currentBlock) {
-    const previewLyrics = document.getElementById('editorPreviewLyrics');
     if (previewLyrics) previewLyrics.textContent = '';
+
+    ipcRenderer.invoke('send-lyrics-to-visualizer', null);
+    lastSentPreviewLyricsId = null;
+
     return;
   }
 
@@ -553,6 +662,27 @@ function updateEditorPreviewByTimeline() {
   animationPresetInput.value = currentBlock.animationPreset || 'fade';
 
   updateEditorPreview();
+
+  console.log('currentBlock:', currentBlock);
+console.log('currentBlock.style:', currentBlock.style);
+console.log('currentBlock.position:', currentBlock.position);
+console.log('inspectorStyle:', getCurrentInspectorStyle());
+
+  const payload = {
+  id: currentBlock.id,
+  lines: String(currentBlock.text || '').split('\n'),
+  text: currentBlock.text || '',
+  position: currentBlock.position || { x: 0, y: 0, z: 0 },
+  animation: {
+    preset: currentBlock.animationPreset || 'fade',
+    duration: 0.5
+  },
+  style: currentBlock.style || getCurrentInspectorStyle()
+};
+
+console.log('★★★★ DIRECT PAYLOAD ★★★★', payload);
+
+ipcRenderer.invoke('send-lyrics-to-visualizer', payload);
 }
 
 function setupEditorAudioPlayer(audioPath) {
@@ -825,20 +955,42 @@ function selectLyricsBlock(block) {
 }
 
 function loadLyricsBlockToInspector(block) {
-  const sentence =
-    block.querySelector('.lyricsSentence')?.textContent.trim() || '';
+  const blockId = block.dataset.blockId;
+  const blocks = sectionData[currentSectionName] || [];
+  const blockData = blocks.find(item => item.id === blockId);
 
-  const timeText =
-    block.querySelector('.lyricsTime')?.textContent.trim() || '00:00.00 → 00:03.00';
+  if (!blockData) return;
 
-  const [start, end] = timeText.split('→').map(value => value.trim());
+  textInput.value = blockData.text || '';
+  startTimeInput.value = blockData.start || '00:00.00';
+  endTimeInput.value = blockData.end || '00:03.00';
+  animationPresetInput.value = blockData.animationPreset || 'fade';
 
-  textInput.value = sentence;
-  startTimeInput.value = start || '00:00.00';
-  endTimeInput.value = end || '00:03.00';
+  const style = blockData.style || {};
 
-  animationPresetInput.value =
-    block.dataset.animationPreset || 'fade';
+  fontInput.value = style.font || fontInput.value || 'Arial';
+  sizeInput.value = style.size ?? 72;
+  colorInput.value = style.color || '#ffffff';
+  alignInput.value = style.align || 'center';
+
+  outlineColorInput.value = style.outlineColor || '#000000';
+  outlineWidthInput.value = style.outlineWidth ?? 0;
+
+  shadowColorInput.value = style.shadowColor || '#000000';
+  shadowBlurInput.value = style.shadowBlur ?? 0;
+  shadowXInput.value = style.shadowX ?? 0;
+  shadowYInput.value = style.shadowY ?? 0;
+
+  letterSpacingInput.value = style.letterSpacing ?? 0;
+  lineHeightInput.value = style.lineHeight ?? 1.2;
+
+  sizeValue.textContent = sizeInput.value;
+  outlineWidthValue.textContent = outlineWidthInput.value;
+  shadowBlurValue.textContent = shadowBlurInput.value;
+  shadowXValue.textContent = shadowXInput.value;
+  shadowYValue.textContent = shadowYInput.value;
+  letterSpacingValue.textContent = letterSpacingInput.value;
+  lineHeightValue.textContent = lineHeightInput.value;
 
   updateEditorPreview();
 }
@@ -903,6 +1055,22 @@ function createLyricsBlockData(text = '新しい歌詞') {
     end: '00:03.00',
     text,
     animationPreset: 'fade',
+
+    style: {
+      font: fontInput.value || 'Arial',
+      size: Number(sizeInput.value) || 72,
+      color: colorInput.value || '#ffffff',
+      align: alignInput.value || 'center',
+      outlineColor: outlineColorInput.value || '#000000',
+      outlineWidth: Number(outlineWidthInput.value) || 0,
+      shadowColor: shadowColorInput.value || '#000000',
+      shadowBlur: Number(shadowBlurInput.value) || 0,
+      shadowX: Number(shadowXInput.value) || 0,
+      shadowY: Number(shadowYInput.value) || 0,
+      letterSpacing: Number(letterSpacingInput.value) || 0,
+      lineHeight: Number(lineHeightInput.value) || 1.2
+    },
+
     position: {
       x: 0,
       y: 0,
@@ -1379,6 +1547,13 @@ function showSection(sectionName) {
   }
 
   renderSectionBlocks();
+
+const firstBlock = document.querySelector('.lyricsBlock');
+
+if (firstBlock) {
+  selectLyricsBlock(firstBlock);
+}
+
 }
 
 function showInspectorByType(type) {
@@ -1495,4 +1670,46 @@ function stopTimelinePlayheadLoop() {
 
   cancelAnimationFrame(timelinePlayheadAnimationId);
   timelinePlayheadAnimationId = null;
+}
+
+function syncSelectedBlockDataFromInspector() {
+  const selectedBlock = document.querySelector('.lyricsBlock.selected');
+  if (!selectedBlock) return;
+
+  const blockId = selectedBlock.dataset.blockId;
+
+  Object.values(sectionData).forEach(blocks => {
+    (blocks || []).forEach(block => {
+      if (block.id !== blockId) return;
+
+      block.text = textInput.value;
+      block.start = startTimeInput.value;
+      block.end = endTimeInput.value;
+      block.animationPreset = animationPresetInput.value;
+      block.style = getCurrentInspectorStyle();
+
+      if (!block.position) {
+        block.position = { x: 0, y: 0, z: 0 };
+      }
+
+      console.log('STYLE SAVED TO BLOCK:', block);
+    });
+  });
+}
+
+function getCurrentInspectorStyle() {
+  return {
+    font: fontInput.value || 'Arial',
+    size: Number(sizeInput.value) || 72,
+    color: colorInput.value || '#ffffff',
+    align: alignInput.value || 'center',
+    outlineColor: outlineColorInput.value || '#000000',
+    outlineWidth: Number(outlineWidthInput.value) || 0,
+    shadowColor: shadowColorInput.value || '#000000',
+    shadowBlur: Number(shadowBlurInput.value) || 0,
+    shadowX: Number(shadowXInput.value) || 0,
+    shadowY: Number(shadowYInput.value) || 0,
+    letterSpacing: Number(letterSpacingInput.value) || 0,
+    lineHeight: Number(lineHeightInput.value) || 1.2
+  };
 }
