@@ -184,14 +184,20 @@
       <div class="controlGrid">
 
   <div>
-    <label>開始時間</label>
-    <input id="lyricsStartTime" type="text" value="00:00.00">
-  </div>
+  <label>開始時間</label>
+  <input id="lyricsStartTime" type="text" value="00:00.00">
+  <button id="setLyricsStartNowButton" type="button">
+    現在時刻を開始にする
+  </button>
+</div>
 
-  <div>
-    <label>終了時間</label>
-    <input id="lyricsEndTime" type="text" value="00:03.20">
-  </div>
+<div>
+  <label>終了時間</label>
+  <input id="lyricsEndTime" type="text" value="00:03.20">
+  <button id="setLyricsEndNowButton" type="button">
+    現在時刻を終了にする
+  </button>
+</div>
 
   <div class="controlGrid">
 
@@ -463,23 +469,51 @@
 
 
   <section id="timelinePanel">
+  <div id="timelineEditor">
 
-  <div id="sectionEditor">
+    <div class="timelineTopbar">
+      <div class="timelineTitle">Timeline</div>
 
-    <div class="sectionHeader">
-      <div class="sectionTitle">
-        Verse 1
-      </div>
-
-      <div class="sectionActions">
-        <button id="addLyricsBlockButton">+ 歌詞ブロック</button>
+      <div class="timelineActions">
+        <button id="addLyricsBlockButton">+ Block</button>
         <button id="duplicateLyricsBlockButton">複製</button>
         <button id="deleteLyricsBlockButton">削除</button>
       </div>
     </div>
-    
-<div id="lyricsBlockList"></div>
 
+  <div id="editorAudioPlayer" class="timelineTransport">
+  <div class="timelineTransportControls">
+    <button id="editorPlayPauseButton">▶</button>
+    <span id="editorCurrentTime">00:00.00</span>
+    <span id="editorDuration">00:00.00</span>
+  </div>
+
+  <div class="timelineTransportSeek">
+    <input id="editorSeekBar" type="range" min="0" max="100" value="0">
+  </div>
+</div>
+
+    <div class="timelineGrid">
+      <div class="timelineCorner"></div>
+
+      <div id="timelineRuler" class="timelineRuler">
+  <div>0:00</div>
+  <div>0:10</div>
+  <div>0:20</div>
+  <div>0:30</div>
+  <div>0:40</div>
+  <div>0:50</div>
+</div>
+
+      <div class="timelineTrackLabel">Lyrics</div>
+
+      <div class="timelineTrackArea">
+  <div id="timelinePlayhead"></div>
+  <div id="lyricsBlockList"></div>
+</div>
+    </div>
+
+  </div>
 </section>
 
 </div>

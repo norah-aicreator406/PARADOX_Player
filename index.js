@@ -27,6 +27,7 @@ let pendingPlaylistSongId = null;
 let currentPlaybackList = [];
 let currentPlaybackIndex = -1;
 let selectedLibrarySong = null;
+let selectedSongElement = null;
 let activeLibraryFilter = {
 
   type: 'all',
@@ -59,6 +60,8 @@ audio.addEventListener('timeupdate', () => {
   if (bottomSeekBar && Number.isFinite(audio.duration) && audio.duration > 0) {
     bottomSeekBar.value = (audio.currentTime / audio.duration) * 100;
   }
+
+  updateLyricsByTime();
 });
 
 audio.addEventListener('play', () => {
@@ -191,14 +194,17 @@ async function sendVisualizerTime() {
 }
 
 audio.addEventListener('ended', () => {
-  if (queue.length === 0) return;
+  if (queue.length > 0) {
+    const nextSong = queue.shift();
 
-  const nextSong = queue.shift();
+    renderQueue();
+    renderLibrarySongs();
 
-  renderQueue();
-  renderLibrarySongs();
+    playSong(nextSong, -1);
+    return;
+  }
 
-  playSong(nextSong, -1);
+  playNext();
 });
 
 ipcRenderer.on('visualizer-video-ended', () => {
@@ -505,8 +511,6 @@ function renderLibrarySongs() {
   const library = loadLibrary();
   const songsContainer = document.getElementById('songs');
 
-  console.log('Library:', library);
-
   if (!songsContainer) return;
 
   songsContainer.innerHTML = '';
@@ -569,6 +573,7 @@ currentPlaybackList = filteredLibrary.map(song =>
   createPlayableLibrarySong(song)
 );
   filteredLibrary.forEach((song, songIndex) => {
+    
     const songElement = document.createElement('div');
     songElement.className = 'librarySongRow';
 
@@ -631,6 +636,24 @@ if (playlistAddButton) {
 
    songElement.addEventListener('click', () => {
   updateSongInspector(song);
+
+if (playlistAddButton) {
+  playlistAddButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+
+    alert('プレイリスト追加は次のステップで実装します。');
+  });
+}
+
+songElement.addEventListener('click', () => {
+  console.log('song selected:', song);
+  updateSongInspector(song);
+});
+
+songElement.addEventListener('dblclick', () => {
+  playLibrarySong(song, songIndex);
+});
+
 });
 
 });
@@ -649,7 +672,20 @@ if (deleteButton) {
     renderLibrarySongs();
   });
 }
+songElement.addEventListener('click', () => {
 
+  if (selectedSongElement) {
+    selectedSongElement.classList.remove('selected');
+  }
+
+  selectedSongElement = songElement;
+
+  songElement.classList.add('selected');
+
+  console.log('song selected:', song.title);
+
+  updateSongInspector(song);
+});
 
     songsContainer.appendChild(songElement);
   });
@@ -2363,26 +2399,26 @@ if (openSongEditorButton) {
 }
 
 async function openSelectedSongEditor() {
-  console.log('openSelectedSongEditor called');
+  console.log('openSelectedSongEditor');
   console.log('selectedLibrarySong:', selectedLibrarySong);
+  console.log('currentSong:', currentSong);
 
-  if (!selectedLibrarySong) {
+  const targetSong = selectedLibrarySong || currentSong;
+
+  if (!targetSong) {
     alert('曲が選択されていません。');
     return;
   }
 
   await ipcRenderer.invoke('open-lyrics-editor-window', {
-    songId: selectedLibrarySong.id,
-    title: selectedLibrarySong.title,
-    artist: selectedLibrarySong.artist,
-    audioPath: selectedLibrarySong.audioPath,
-    artworkPath: selectedLibrarySong.artworkPath,
-    projectPath: selectedLibrarySong.projectPath
+    songId: targetSong.id,
+    title: targetSong.title,
+    artist: targetSong.artist,
+    audioPath: targetSong.audioPath,
+    artworkPath: targetSong.artworkPath,
+    projectPath: targetSong.projectPath
   });
-
-  console.log('open-lyrics-editor-window invoked');
 }
-
 
 
 

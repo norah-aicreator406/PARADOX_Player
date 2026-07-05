@@ -1634,6 +1634,34 @@ line-height:1.8;
 
   margin-bottom: 10px;
   transition: var(--transition);
+  position: relative;  
+}
+
+.librarySongRow::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--accent);
+  opacity: 0;
+  transform: scaleY(0.6);
+  transition: 0.2s ease;
+}
+
+.librarySongRow.selected {
+  background: rgba(19, 241, 211, 0.10);
+  border-color: rgba(19, 241, 211, 0.45);
+}
+
+.librarySongRow.selected::before {
+  opacity: 1;
+  transform: scaleY(1);
+  box-shadow:
+    0 0 8px var(--accent),
+    0 0 18px var(--accent);
 }
 
 .librarySongRow:hover {
@@ -1879,6 +1907,8 @@ body {
   margin: 12px 0;
   border: none;
 }
+
+
 
 
 </style>

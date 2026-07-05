@@ -1,4 +1,8 @@
 const fs = require('fs');
+const { pathToFileURL } = require('url');
+const TIMELINE_SCALE = 90; // 1秒 = 90px
+const TIMELINE_ROW_HEIGHT = 56;
+const TIMELINE_MIN_BLOCK_WIDTH = 260;
 
 const { ipcRenderer } = require('electron');
 const fontGroups = [
@@ -111,6 +115,30 @@ const stylePresets = {
   }
 
 };
+
+let timelinePlayheadAnimationId = null;
+
+
+
+function parseTimeToSeconds(timeText) {
+  if (!timeText) return 0;
+
+  const [minutesPart, secondsPart] = String(timeText).split(':');
+  const minutes = Number(minutesPart) || 0;
+  const seconds = Number(secondsPart) || 0;
+
+  return minutes * 60 + seconds;
+}
+
+function formatSecondsToTime(seconds) {
+  const safeSeconds = Math.max(0, Number(seconds) || 0);
+
+  const minutes = Math.floor(safeSeconds / 60);
+  const secs = Math.floor(safeSeconds % 60);
+  const centiseconds = Math.floor((safeSeconds % 1) * 100);
+
+  return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
+}
 
 
 function setupFontOptions() {
@@ -246,6 +274,7 @@ if (selectedBlock) {
     updatedBlock.classList.add('selected');
   }
 }
+updateEditorPreview();
 }
 function updateEditorPreview() {
   const previewLyrics = document.getElementById('editorPreviewLyrics');
@@ -342,6 +371,10 @@ ipcRenderer.on('lyrics-editor-data', (event, data) => {
   currentEditorSong = data;
   currentProjectPath = data.projectPath || null;
 
+  if (data.audioPath) {
+  setupEditorAudioPlayer(data.audioPath);
+}
+
   if (currentProjectPath && fs.existsSync(currentProjectPath)) {
     const project = JSON.parse(fs.readFileSync(currentProjectPath, 'utf-8'));
 
@@ -378,6 +411,8 @@ const sectionData = {
 
 let currentEditorSong = null;
 let currentProjectPath = null;
+let editorAudio = null;
+let editorAudioReady = false;
 
 const EDITOR_STORAGE_KEY = 'norahStudioEditorData';
 
@@ -449,6 +484,177 @@ function saveEditorData() {
 
   alert('ローカルに保存しました。');
 }
+
+function formatEditorTime(seconds) {
+  if (!Number.isFinite(seconds)) return '00:00.00';
+
+  const minutes = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  const centiseconds = Math.floor((seconds % 1) * 100);
+
+  return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
+}
+
+
+function updateTimelinePlayhead() {
+  if (!editorAudio) return;
+
+  const playhead = document.getElementById('timelinePlayhead');
+  const currentTimeLabel = document.getElementById('editorCurrentTime');
+  const seekBar = document.getElementById('editorSeekBar');
+
+  if (playhead) {
+    const x = editorAudio.currentTime * TIMELINE_SCALE;
+    playhead.style.left = `${x}px`;
+  }
+
+  if (currentTimeLabel) {
+    currentTimeLabel.textContent = formatEditorTime(editorAudio.currentTime);
+  }
+
+  if (
+    seekBar &&
+    Number.isFinite(editorAudio.duration) &&
+    editorAudio.duration > 0
+  ) {
+    seekBar.value = String(
+      (editorAudio.currentTime / editorAudio.duration) * 100
+    );
+  }
+  updateEditorPreviewByTimeline();
+}
+
+function getCurrentEditorLyricsBlock() {
+  if (!editorAudio) return null;
+
+  const blocks = sectionData[currentSectionName] || [];
+  const currentTime = editorAudio.currentTime;
+
+  return blocks.find(block => {
+    const start = parseTimeToSeconds(block.start);
+    const end = parseTimeToSeconds(block.end);
+
+    return currentTime >= start && currentTime < end;
+  }) || null;
+}
+
+function updateEditorPreviewByTimeline() {
+  const currentBlock = getCurrentEditorLyricsBlock();
+
+  if (!currentBlock) {
+    const previewLyrics = document.getElementById('editorPreviewLyrics');
+    if (previewLyrics) previewLyrics.textContent = '';
+    return;
+  }
+
+  textInput.value = currentBlock.text || '';
+  startTimeInput.value = currentBlock.start || '00:00.00';
+  endTimeInput.value = currentBlock.end || '00:03.00';
+  animationPresetInput.value = currentBlock.animationPreset || 'fade';
+
+  updateEditorPreview();
+}
+
+function setupEditorAudioPlayer(audioPath) {
+  const playButton = document.getElementById('editorPlayPauseButton');
+  const currentTimeLabel = document.getElementById('editorCurrentTime');
+  const durationLabel = document.getElementById('editorDuration');
+  const seekBar = document.getElementById('editorSeekBar');
+
+  if (!audioPath || !playButton || !currentTimeLabel || !durationLabel || !seekBar) {
+    console.warn('Editor audio player setup failed');
+    return;
+  }
+
+  if (!editorAudio) {
+    editorAudio = new Audio();
+
+    editorAudio.addEventListener('loadedmetadata', () => {
+      editorAudioReady = true;
+      durationLabel.textContent = formatEditorTime(editorAudio.duration);
+    });
+
+    editorAudio.addEventListener('timeupdate', () => {
+  updateTimelinePlayhead();
+});
+
+    editorAudio.addEventListener('play', () => {
+  playButton.textContent = 'Ⅱ';
+  startTimelinePlayheadLoop();
+});
+
+editorAudio.addEventListener('pause', () => {
+  playButton.textContent = '▶';
+  stopTimelinePlayheadLoop();
+});
+
+editorAudio.addEventListener('ended', () => {
+  stopTimelinePlayheadLoop();
+  updateTimelinePlayhead();
+});
+
+  }
+
+  editorAudio.src = pathToFileURL(audioPath).href;
+  editorAudio.load();
+
+  playButton.onclick = () => {
+    if (!editorAudioReady) return;
+
+    if (editorAudio.paused) {
+      editorAudio.play();
+    } else {
+      editorAudio.pause();
+    }
+  };
+
+  seekBar.oninput = () => {
+    if (!editorAudioReady || !Number.isFinite(editorAudio.duration)) return;
+
+    editorAudio.currentTime =
+      (Number(seekBar.value) / 100) * editorAudio.duration;
+  };
+}
+
+
+function setLyricsTimeFromEditorAudio(target) {
+  if (!editorAudio) {
+    alert('音源が読み込まれていません。');
+    return;
+  }
+
+  const timeText = formatEditorTime(editorAudio.currentTime);
+
+  if (target === 'start') {
+    startTimeInput.value = timeText;
+  }
+
+  if (target === 'end') {
+    endTimeInput.value = timeText;
+  }
+
+  sendLyricsUpdate();
+}
+
+const setLyricsStartNowButton =
+  document.getElementById('setLyricsStartNowButton');
+
+if (setLyricsStartNowButton) {
+  setLyricsStartNowButton.addEventListener('click', () => {
+    setLyricsTimeFromEditorAudio('start');
+  });
+}
+
+const setLyricsEndNowButton =
+  document.getElementById('setLyricsEndNowButton');
+
+if (setLyricsEndNowButton) {
+  setLyricsEndNowButton.addEventListener('click', () => {
+    setLyricsTimeFromEditorAudio('end');
+  });
+}
+
+
 
 function loadEditorData() {
   const saved = localStorage.getItem(EDITOR_STORAGE_KEY);
@@ -666,7 +872,20 @@ function createLyricsBlock() {
     <span>Position X:0 Y:0 Z:0</span>
 
   </div>
+
+  <div class="lyricsResizeHandle"></div>
 `;
+
+const index =
+  (sectionData[currentSectionName] || []).findIndex(item => item.id === blockData.id);
+
+block.style.position = 'absolute';
+block.style.left = `${parseTimeToSeconds(blockData.start) * 90}px`;
+block.style.top = `${index * 56}px`;
+block.style.width = `${Math.max(
+  (parseTimeToSeconds(blockData.end) - parseTimeToSeconds(blockData.start)) * 90,
+  260
+)}px`;
 
   block.addEventListener('click', () => {
   selectLyricsBlock(block);
@@ -717,11 +936,38 @@ function syncCurrentSectionOrderFromDOM() {
 }
 
 function createLyricsBlockFromData(blockData) {
+
+  console.log('createLyricsBlockFromData called:', blockData);
+
+
   const block = document.createElement('div');
   block.className = 'lyricsBlock';
-  block.draggable = true;
+  block.draggable = false;
   block.dataset.blockId = blockData.id;
   block.dataset.animationPreset = blockData.animationPreset || 'fade';
+
+  const startSeconds = parseTimeToSeconds(blockData.start);
+  const endSeconds = parseTimeToSeconds(blockData.end);
+  const durationSeconds = Math.max(endSeconds - startSeconds, 0.5);
+
+  const index =
+    (sectionData[currentSectionName] || []).findIndex(
+      item => item.id === blockData.id
+    );
+
+  block.style.position = 'absolute';
+  block.style.left = `${startSeconds * TIMELINE_SCALE}px`;
+block.style.top = `${index * TIMELINE_ROW_HEIGHT}px`;
+block.style.width = `${Math.max(
+  durationSeconds * TIMELINE_SCALE,
+  TIMELINE_MIN_BLOCK_WIDTH
+)}px`;
+
+console.log('timeline block style:', {
+  left: block.style.left,
+  top: block.style.top,
+  width: block.style.width
+});
 
   block.innerHTML = `
     <div class="lyricsBlockTop">
@@ -745,16 +991,167 @@ function createLyricsBlockFromData(blockData) {
     <div class="lyricsBlockMeta">
       <span>Position X:${blockData.position.x} Y:${blockData.position.y} Z:${blockData.position.z}</span>
     </div>
+    <div class="lyricsResizeHandle"></div>
   `;
 
   block.addEventListener('click', () => {
     selectLyricsBlock(block);
   });
 
-  setupLyricsBlockDrag(block);
+  // setupLyricsBlockDrag(block);
+  setupTimelineBlockDrag(block, blockData);
+  setupTimelineResize(block, blockData);
 
   return block;
 }
+
+
+function setupTimelineBlockDrag(block, blockData) {
+  let isDragging = false;
+  let startMouseX = 0;
+  let startLeft = 0;
+  let durationSeconds = 0;
+  let hasMoved = false;
+
+  block.addEventListener('mousedown', (event) => {
+  if (event.target.closest('.lyricsResizeHandle')) return;
+  if (event.button !== 0) return;
+
+    isDragging = true;
+    hasMoved = false;
+
+    startMouseX = event.clientX;
+    startLeft = parseFloat(block.style.left) || 0;
+
+    const startSeconds = parseTimeToSeconds(blockData.start);
+    const endSeconds = parseTimeToSeconds(blockData.end);
+
+    durationSeconds = Math.max(endSeconds - startSeconds, 0.5);
+
+    block.classList.add('dragging');
+
+    event.preventDefault();
+    event.stopPropagation();
+  });
+
+  document.addEventListener('mousemove', (event) => {
+    if (!isDragging) return;
+
+    const deltaX = event.clientX - startMouseX;
+
+    if (Math.abs(deltaX) > 3) {
+      hasMoved = true;
+    }
+
+    const nextLeft = Math.max(0, startLeft + deltaX);
+    block.style.left = `${nextLeft}px`;
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!isDragging) return;
+
+    isDragging = false;
+    block.classList.remove('dragging');
+
+    if (!hasMoved) return;
+
+    const finalLeft = parseFloat(block.style.left) || 0;
+
+    const nextStartSeconds = finalLeft / TIMELINE_SCALE;
+    const nextEndSeconds = nextStartSeconds + durationSeconds;
+
+    blockData.start = formatSecondsToTime(nextStartSeconds);
+    blockData.end = formatSecondsToTime(nextEndSeconds);
+
+    startTimeInput.value = blockData.start;
+    endTimeInput.value = blockData.end;
+
+    selectLyricsBlock(block);
+    updateEditorPreview();
+  });
+}
+
+
+
+function setupTimelineResize(block, blockData){
+
+    const handle =
+    block.querySelector('.lyricsResizeHandle');
+
+    if(!handle) return;
+
+    let resizing=false;
+
+    let startMouseX=0;
+
+    let startWidth=0;
+
+    let startSeconds=0;
+
+    handle.addEventListener("mousedown",(event)=>{
+
+        resizing=true;
+
+        startMouseX=
+        event.clientX;
+
+        startWidth=
+        block.offsetWidth;
+
+        startSeconds=
+        parseTimeToSeconds(blockData.start);
+
+        event.stopPropagation();
+
+        event.preventDefault();
+
+    });
+
+    document.addEventListener("mousemove",(event)=>{
+
+        if(!resizing) return;
+
+        const delta=
+        event.clientX-startMouseX;
+
+        const width=
+        Math.max(
+            TIMELINE_MIN_BLOCK_WIDTH,
+            startWidth+delta
+        );
+
+        block.style.width=
+        width+"px";
+
+    });
+
+    document.addEventListener("mouseup",()=>{
+
+        if(!resizing) return;
+
+        resizing=false;
+
+        const width=
+        parseFloat(block.style.width);
+
+        const duration=
+        width/TIMELINE_SCALE;
+
+        blockData.end=
+        formatSecondsToTime(
+            startSeconds+duration
+        );
+
+        endTimeInput.value=
+        blockData.end;
+
+        updateEditorPreview();
+
+    });
+
+}
+
+
 
 function getAnimationLabel(value) {
   if (value === 'slideUp') return 'Slide Up';
@@ -1079,4 +1476,23 @@ if (importLyricsButton && lyricsImportOverlay) {
   importLyricsButton.addEventListener('click', () => {
     lyricsImportOverlay.classList.add('is-hidden');
   });
+}
+
+
+function startTimelinePlayheadLoop() {
+  if (timelinePlayheadAnimationId) return;
+
+  const loop = () => {
+    updateTimelinePlayhead();
+    timelinePlayheadAnimationId = requestAnimationFrame(loop);
+  };
+
+  loop();
+}
+
+function stopTimelinePlayheadLoop() {
+  if (!timelinePlayheadAnimationId) return;
+
+  cancelAnimationFrame(timelinePlayheadAnimationId);
+  timelinePlayheadAnimationId = null;
 }
