@@ -347,6 +347,8 @@ ipcMain.handle('send-background-to-visualizer', async (event, background) => {
 });
 
 ipcMain.handle('send-lyrics-to-visualizer', async (event, lyrics) => {
+  console.log('🔥 MAIN RECEIVED LYRICS:', JSON.stringify(lyrics, null, 2));
+
   if (!visualizerWindow || visualizerWindow.isDestroyed()) return false;
 
   visualizerWindow.webContents.send('visualizer-lyrics', lyrics);

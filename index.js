@@ -127,18 +127,21 @@ function loadLyricsBlocksFromProject(song) {
     const sections = project?.project?.lyrics?.sections || {};
 
     currentLyricsBlocks = Object.values(sections)
-      .flat()
-      .map(block => ({
-        id: block.id,
-        start: parseTimeToSeconds(block.start),
-        end: parseTimeToSeconds(block.end),
-        lines: String(block.text || '').split('\n'),
-        animation: {
-          preset: block.animationPreset || 'fade',
-          duration: 0.5
-        }
-      }))
-      .sort((a, b) => a.start - b.start);
+  .flat()
+  .map(block => ({
+    id: block.id,
+    start: parseTimeToSeconds(block.start),
+    end: parseTimeToSeconds(block.end),
+    lines: String(block.text || '').split('\n'),
+    text: block.text || '',
+    style: block.style || {},
+    position: block.position || { x: 0, y: 0, z: 0 },
+    animation: {
+      preset: block.animationPreset || 'fade',
+      duration: 0.5
+    }
+  }))
+  .sort((a, b) => a.start - b.start);
 
     ipcRenderer.invoke('send-lyrics-to-visualizer', null);
   } catch (error) {
@@ -169,10 +172,13 @@ function updateLyricsByTime() {
   currentLyricsBlockId = currentBlock.id;
 
   ipcRenderer.invoke('send-lyrics-to-visualizer', {
-    id: currentBlock.id,
-    lines: currentBlock.lines,
-    animation: currentBlock.animation
-  });
+  id: currentBlock.id,
+  lines: currentBlock.lines,
+  text: currentBlock.text || '',
+  style: currentBlock.style || {},
+  position: currentBlock.position || { x: 0, y: 0, z: 0 },
+  animation: currentBlock.animation
+});
 }
 
 

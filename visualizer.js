@@ -1133,31 +1133,43 @@ const varied = interpolated * bandVariation + spike - dip;
 return Math.max(0.03, Math.min(1, varied));
 }
 
-function setLyrics(lines, animation, style = {}, position = { x: 0, y: 0, z: 0 }) {
-  const lyricsBlock = document.getElementById('lyricsBlock');
+function getVisualizerScale() {
+  const BASE_WIDTH = 1080;
+  const BASE_HEIGHT = 1920;
 
-  if (!lyricsBlock) {
-    console.error('lyricsBlock が見つかりません');
-    return;
-  }
+  return Math.min(
+    window.innerWidth / BASE_WIDTH,
+    window.innerHeight / BASE_HEIGHT
+  );
+}
+
+function setLyrics(lines, animation = { preset: 'fade', duration: 0.5 }, style = {}, position = { x: 0, y: 0, z: 0 }) {
+  const lyricsBlock = document.getElementById('lyricsBlock');
+  if (!lyricsBlock) return;
+
+  const scale = getVisualizerScale();
 
   lyricsBlock.innerHTML = '';
 
+  lyricsBlock.style.position = 'absolute';
+  lyricsBlock.style.left = '50%';
+  lyricsBlock.style.top = '50%';
+
   lyricsBlock.style.fontFamily = `"${style.font || 'Arial'}", sans-serif`;
-  lyricsBlock.style.fontSize = `${style.size || 72}px`;
+  lyricsBlock.style.fontSize = `${(Number(style.size) || 72) * scale}px`;
   lyricsBlock.style.color = style.color || '#ffffff';
   lyricsBlock.style.textAlign = style.align || 'center';
-  lyricsBlock.style.letterSpacing = `${style.letterSpacing || 0}px`;
+  lyricsBlock.style.letterSpacing = `${(Number(style.letterSpacing) || 0) * scale}px`;
   lyricsBlock.style.lineHeight = String(style.lineHeight || 1.2);
 
   lyricsBlock.style.webkitTextStroke =
-    `${style.outlineWidth || 0}px ${style.outlineColor || '#000000'}`;
+    `${(Number(style.outlineWidth) || 0) * scale}px ${style.outlineColor || '#000000'}`;
 
   lyricsBlock.style.textShadow =
-    `${style.shadowX || 0}px ${style.shadowY || 0}px ${style.shadowBlur || 0}px ${style.shadowColor || '#000000'}`;
+    `${(Number(style.shadowX) || 0) * scale}px ${(Number(style.shadowY) || 0) * scale}px ${(Number(style.shadowBlur) || 0) * scale}px ${style.shadowColor || '#000000'}`;
 
   lyricsBlock.style.transform =
-    `translate(-50%, -50%) translate(${position.x || 0}px, ${position.y || 0}px)`;
+    `translate(-50%, -50%) translate(${(Number(position.x) || 0) * scale}px, ${(Number(position.y) || 0) * scale}px)`;
 
   const safeLines = Array.isArray(lines) ? lines : [String(lines || '')];
 
@@ -1201,12 +1213,25 @@ function applyLyricsAnimation(animation = {}) {
 
 
 function clearLyrics() {
-  setLyrics([]);
+  const lyricsBlock = document.getElementById('lyricsBlock');
+
+  if (!lyricsBlock) return;
+
+  lyricsBlock.innerHTML = '';
+  lyricsBlock.style.opacity = '0';
 }
 
 function showLyrics() {
   const lyricsLayer = document.getElementById('lyricsLayer');
-  if (lyricsLayer) lyricsLayer.style.display = 'flex';
+  const lyricsBlock = document.getElementById('lyricsBlock');
+
+  if (lyricsLayer) {
+    lyricsLayer.style.display = 'block';
+  }
+
+  if (lyricsBlock) {
+    lyricsBlock.style.opacity = '1';
+  }
 }
 
 function hideLyrics() {
@@ -1517,34 +1542,22 @@ ipcRenderer.on('visualizer-effect-settings', (event, settings) => {
 });
 
 ipcRenderer.on('visualizer-lyrics', (event, lyrics) => {
-  console.log('[Visualizer] lyrics received:', lyrics);
+  console.log('🔥 FINAL RECEIVED LYRICS:', JSON.stringify(lyrics, null, 2));
 
   if (!lyrics) {
     clearLyrics();
     return;
   }
 
-  if (Array.isArray(lyrics)) {
-    setLyrics(lyrics);
-    showLyrics();
-    return;
-  }
-
-  if (typeof lyrics === 'string') {
-    setLyrics(lyrics.split('\n'));
-    showLyrics();
-    return;
-  }
-
   if (Array.isArray(lyrics.lines)) {
-  setLyrics(
-  lyrics.lines,
-  lyrics.animation,
-  lyrics.style,
-  lyrics.position
-);
-  showLyrics();
-}
+    setLyrics(
+      lyrics.lines,
+      lyrics.animation,
+      lyrics.style,
+      lyrics.position
+    );
+    showLyrics();
+  }
 });
 
 

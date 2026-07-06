@@ -496,14 +496,6 @@ html, body {
 }
 
 
-#lyricsLayer {
-  position: fixed;
-  inset: 0;
-  z-index: 35;
-  pointer-events: none;
-}
-
-
 #visualCircle,
 #circleAura,
 #ringBurst {
@@ -515,17 +507,15 @@ html, body {
   inset: 0;
   z-index: 35;
   pointer-events: none;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 170px;
+  display: block;
 }
 
 #lyricsBlock {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  pointer-events: none;
+  white-space: pre-line;
 }
 
 /*#lyricsBlock.lyrics-motion-fade {
@@ -615,3 +605,15 @@ html, body {
   }
 }
 */
+
+#lyricsBlock .lyricsLine {
+  font: inherit !important;
+  font-size: inherit !important;
+  font-family: inherit !important;
+  font-weight: inherit !important;
+  color: inherit !important;
+  letter-spacing: inherit !important;
+  line-height: inherit !important;
+  text-shadow: inherit !important;
+  -webkit-text-stroke: inherit !important;
+}
