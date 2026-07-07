@@ -803,6 +803,7 @@ function setupEditorAudioPlayer(audioPath) {
       durationLabel.textContent = formatEditorTime(editorAudio.duration);
 
       updateTimelineContentWidth();
+      renderTimelineRuler();
 
     });
 
@@ -1866,7 +1867,7 @@ function setupLyricsSelectionResize() {
 }
 
 function setupTimelineSeekByClick() {
-  const trackArea = document.querySelector('.timelineTrackArea');
+  const trackArea = document.querySelector('.timelineScrollArea');
   const timelineContent = document.getElementById('lyricsBlockList');
 
   if (!trackArea || !timelineContent) return;
@@ -1894,7 +1895,7 @@ function setupTimelineSeekByClick() {
 
 function setupTimelinePlayheadDrag() {
   const playhead = document.getElementById('timelinePlayhead');
-  const trackArea = document.querySelector('.timelineTrackArea');
+  const trackArea = document.querySelector('.timelineScrollArea');
   if (!playhead || !trackArea) return;
 
   playhead.addEventListener('mousedown', (event) => {
@@ -1961,17 +1962,6 @@ function setupTimelineManualScrollDetection() {
 }
 
 
-function updateTimelineContentWidth() {
-  const timelineContent = document.getElementById('lyricsBlockList');
-
-  if (!timelineContent || !editorAudio || !Number.isFinite(editorAudio.duration)) return;
-
-  const minWidth = 1600;
-  const durationWidth = editorAudio.duration * timelineScale;
-  const extraSpace = 600;
-
-  timelineContent.style.width = `${Math.max(minWidth, durationWidth + extraSpace)}px`;
-}
 
 
 function setTimelineZoom(nextScale) {
@@ -1982,12 +1972,13 @@ function setTimelineZoom(nextScale) {
 
   renderSectionBlocks();
   updateTimelineContentWidth();
+  renderTimelineRuler();
   updateTimelinePlayhead();
 }
 
 
 function setupTimelineZoomByWheel() {
-  const trackArea = document.querySelector('.timelineTrackArea');
+  const trackArea = document.querySelector('.timelineScrollArea');
   if (!trackArea) return;
 
   trackArea.addEventListener('wheel', (event) => {
@@ -1999,6 +1990,70 @@ function setupTimelineZoomByWheel() {
     setTimelineZoom(timelineScale + zoomStep);
   }, { passive: false });
 }
+
+function getTimelineRulerStep() {
+  if (timelineScale < 40) return 30;
+  if (timelineScale < 80) return 10;
+  if (timelineScale < 150) return 5;
+  if (timelineScale < 250) return 1;
+  return 0.5;
+}
+
+
+function renderTimelineRuler() {
+  const ruler = document.querySelector('.timelineRuler');
+  if (!ruler || !editorAudio || !Number.isFinite(editorAudio.duration)) return;
+
+  ruler.innerHTML = '';
+
+  const duration = editorAudio.duration;
+  const step = getTimelineRulerStep();
+
+  const totalWidth = getTimelineTotalWidth();
+
+  ruler.style.position = 'relative';
+  ruler.style.width = `${totalWidth}px`;
+
+  for (let time = 0; time <= duration; time += step) {
+    const mark = document.createElement('div');
+    mark.className = 'timelineRulerMark';
+
+    mark.style.position = 'absolute';
+    mark.style.left = `${time * timelineScale}px`;
+
+    mark.textContent = formatEditorTime(time).replace('.00', '');
+
+    ruler.appendChild(mark);
+  }
+
+  updateTimelineContentWidth();
+}
+
+function getTimelineTotalWidth() {
+  if (!editorAudio || !Number.isFinite(editorAudio.duration)) return 1600;
+
+  return Math.max(
+    1600,
+    editorAudio.duration * timelineScale + 800
+  );
+}
+
+function updateTimelineContentWidth() {
+  const timelineContent = document.getElementById('timelineContent');
+  const lyricsBlockList = document.getElementById('lyricsBlockList');
+  const width = getTimelineTotalWidth();
+
+  if (timelineContent) {
+    timelineContent.style.width = `${width}px`;
+    timelineContent.style.minWidth = `${width}px`;
+  }
+
+  if (lyricsBlockList) {
+    lyricsBlockList.style.width = `${width}px`;
+    lyricsBlockList.style.minWidth = `${width}px`;
+  }
+}
+
 
 
 setupPreviewLyricsDrag();
