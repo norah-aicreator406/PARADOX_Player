@@ -10,27 +10,7 @@ html, body {
 
 
 
-#stage {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  color: #fff;
 
-  --bass: 0;
-  --mid: 0;
-  --high: 0;
-  --master: 0;
-
-  --cyan: #7cfbff;
-  --cyan-soft: rgba(124, 251, 255, 0.42);
-  --blue: #2f7bff;
-  --blue-soft: rgba(47, 123, 255, 0.34);
-  --pink: #ff4fd8;
-  --pink-soft: rgba(255, 79, 216, 0.28);
-
-  background: #000;
-}
 
 
 #glslLayer {
@@ -505,18 +485,14 @@ html, body {
 #lyricsLayer {
   position: fixed;
   inset: 0;
-  z-index: 35;
+  z-index: 80;
   pointer-events: none;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-#lyricsBlock {
-  position: absolute !important;
-  left: 50% !important;
-  top: 50% !important;
-  pointer-events: none;
-  white-space: pre-line;
-}
+
 
 /*#lyricsBlock.lyrics-motion-fade {
   animation: lyricsFadeIn var(--lyrics-motion-duration, 0.5s) ease-out;
@@ -576,16 +552,6 @@ html, body {
 
 
 
-.lyricsLine {
-  font-size: inherit;
-  font-family: inherit;
-  color: inherit;
-  letter-spacing: inherit;
-  line-height: inherit;
-  text-shadow: inherit;
-  -webkit-text-stroke: inherit;
-}
-
 /*
 #lyricsBlock.lyrics-motion-fade {
   animation: lyricsFadeIn 0.5s ease-out;
@@ -606,10 +572,72 @@ html, body {
 }
 */
 
+
+
+#lyricsLayer {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+
+
+#stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+
+#visualizerCanvas {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: 1080px;
+  height: 1920px;
+  transform-origin: center center;
+  transform: translate(-50%, -50%) scale(var(--visualizer-canvas-scale, 1));
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 80;
+}
+
+#visualizerCanvas{
+  display: block;
+}
+
+
+#lyricsLayer,
+#lyricsCanvas {
+  position: absolute;
+  inset: 0;
+  width: 1080px;
+  height: 1920px;
+  display: block;
+  pointer-events: none;
+}
+
+#lyricsBlock {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  white-space: pre-line;
+  pointer-events: none;
+  opacity: 1;
+  z-index: 999;
+}
+
+
+
+
+
+#editorPreviewLyrics .lyricsLine,
 #lyricsBlock .lyricsLine {
-  font: inherit !important;
-  font-size: inherit !important;
   font-family: inherit !important;
+  font-size: inherit !important;
   font-weight: inherit !important;
   color: inherit !important;
   letter-spacing: inherit !important;

@@ -160,12 +160,9 @@ function updateLyricsByTime() {
   const currentBlock = getCurrentLyricsBlock(audio.currentTime);
 
   if (!currentBlock) {
-    if (currentLyricsBlockId !== null) {
-      currentLyricsBlockId = null;
-      ipcRenderer.invoke('send-lyrics-to-visualizer', null);
-    }
-    return;
-  }
+  currentLyricsBlockId = null;
+  return;
+}
 
   if (currentLyricsBlockId === currentBlock.id) return;
 

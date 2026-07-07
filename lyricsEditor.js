@@ -298,20 +298,21 @@ function updateEditorPreview(targetBlockData = null) {
   const blockData = targetBlockData || getSelectedLyricsBlockData();
   const style = blockData?.style || getCurrentInspectorStyle();
 
-  previewLyrics.textContent = blockData?.text ?? textInput.value ?? '';
+  const payload = {
+    id: blockData?.id || null,
+    text: blockData?.text ?? textInput.value ?? '',
+    lines: String(blockData?.text ?? textInput.value ?? '').split('\n'),
+    style,
+    position: blockData?.position || { x: 0, y: 0, z: 0 },
+    animation: {
+      preset: blockData?.animationPreset || animationPresetInput.value || 'fade',
+      duration: 0.5
+    }
+  };
 
-  previewLyrics.style.fontFamily = `"${style.font || 'Arial'}", sans-serif`;
-  previewLyrics.style.fontSize = `${Number(style.size) || 72}px`;
-  previewLyrics.style.color = style.color || '#ffffff';
-  previewLyrics.style.textAlign = style.align || 'center';
-  previewLyrics.style.letterSpacing = `${Number(style.letterSpacing) || 0}px`;
-  previewLyrics.style.lineHeight = String(style.lineHeight || 1.2);
-  previewLyrics.style.webkitTextStroke =
-    `${Number(style.outlineWidth) || 0}px ${style.outlineColor || '#000000'}`;
-  previewLyrics.style.textShadow =
-    `${Number(style.shadowX) || 0}px ${Number(style.shadowY) || 0}px ${Number(style.shadowBlur) || 0}px ${style.shadowColor || '#000000'}`;
-
-  applyPreviewLyricsPosition(blockData);
+ window.LyricsRenderer.render(previewLyrics, payload);
+ 
+ ensureLyricsSelectionBox();
 }
 
 
@@ -333,6 +334,7 @@ function getSelectedLyricsBlockData() {
 
 function setupPreviewLyricsDrag() {
   const previewLyrics = document.getElementById('editorPreviewLyrics');
+  
   if (!previewLyrics) return;
 
   let isDragging = false;
@@ -343,8 +345,9 @@ function setupPreviewLyricsDrag() {
   let targetBlock = null;
 
   previewLyrics.addEventListener('mousedown', (event) => {
-    targetBlock = getSelectedLyricsBlockData();
+  if (event.target.closest('.selectionHandle')) return;
 
+  targetBlock = getSelectedLyricsBlockData();
     if (!targetBlock) return;
     if (event.button !== 0) return;
 
@@ -368,18 +371,22 @@ function setupPreviewLyricsDrag() {
   document.addEventListener('mousemove', (event) => {
   if (!isDragging || !targetBlock) return;
 
-const stage = document.getElementById('editorPreviewStage');
-const rect = stage.getBoundingClientRect();
+  const canvas = document.getElementById('editorPreviewCanvas');
+  if (!canvas) return;
 
-const scale = getEditorPreviewScale();
+  const rect = canvas.getBoundingClientRect();
 
-const dx = (event.clientX - startMouseX) / scale;
-const dy = (event.clientY - startMouseY) / scale;
+  const scaleX = rect.width / canvas.offsetWidth;
+  const scaleY = rect.height / canvas.offsetHeight;
 
-targetBlock.position.x = startX + dx;
-targetBlock.position.y = startY + dy;
+  const dx = (event.clientX - startMouseX) / scaleX;
+  const dy = (event.clientY - startMouseY) / scaleY;
 
-applyPreviewLyricsPosition(targetBlock);
+  targetBlock.position.x = startX + dx;
+  targetBlock.position.y = startY + dy;
+
+  previewLyrics.style.transform =
+    `translate(-50%, -50%) translate(${targetBlock.position.x}px, ${targetBlock.position.y}px)`;
 });
 
   document.addEventListener('mouseup', () => {
@@ -389,7 +396,6 @@ applyPreviewLyricsPosition(targetBlock);
   previewLyrics.classList.remove('is-dragging');
 
   updateEditorPreview(targetBlock);
-
   sendLyricsBlockToVisualizer(targetBlock);
 
   targetBlock = null;
@@ -935,6 +941,8 @@ ratioButtons.forEach(button => {
     } else {
       previewStage.classList.add('ratio-16-9');
     }
+
+    resizeEditorPreviewCanvas();
   });
 });
 
@@ -1714,14 +1722,10 @@ function applyPreviewLyricsPosition(blockData) {
   const previewLyrics = document.getElementById('editorPreviewLyrics');
   if (!previewLyrics) return;
 
-  const scale = getEditorPreviewScale();
   const position = blockData?.position || { x: 0, y: 0 };
 
-  previewLyrics.style.position = 'absolute';
-  previewLyrics.style.left = '50%';
-  previewLyrics.style.top = '50%';
   previewLyrics.style.transform =
-    `translate(-50%, -50%) translate(${(Number(position.x) || 0) * scale}px, ${(Number(position.y) || 0) * scale}px)`;
+    `translate(-50%, -50%) translate(${Number(position.x) || 0}px, ${Number(position.y) || 0}px)`;
 }
 
 
@@ -1734,7 +1738,106 @@ function sendLyricsBlockToVisualizer(block) {
 }
 
 
+function resizeEditorPreviewCanvas() {
+  const stage = document.getElementById('editorPreviewStage');
+  const canvas = document.getElementById('editorPreviewCanvas');
+
+  if (!stage || !canvas) return;
+
+  const isWide = stage.classList.contains('ratio-16-9');
+
+  const baseWidth = isWide ? 1920 : 1080;
+  const baseHeight = isWide ? 1080 : 1920;
+
+  canvas.style.width = `${baseWidth}px`;
+  canvas.style.height = `${baseHeight}px`;
+
+  const rect = stage.getBoundingClientRect();
+
+  const scale = Math.min(
+    rect.width / baseWidth,
+    rect.height / baseHeight
+  );
+
+  canvas.style.setProperty('--editor-preview-canvas-scale', String(scale));
+}
+
+window.addEventListener('resize', resizeEditorPreviewCanvas);
+
+
+
+function ensureLyricsSelectionBox() {
+  const previewLyrics = document.getElementById('editorPreviewLyrics');
+  if (!previewLyrics) return null;
+
+  let box = previewLyrics.querySelector('.lyricsSelectionBox');
+
+  if (!box) {
+    box = document.createElement('div');
+    box.className = 'lyricsSelectionBox';
+
+    ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'].forEach(position => {
+      const handle = document.createElement('div');
+      handle.className = `selectionHandle ${position}`;
+      handle.dataset.handle = position;
+      box.appendChild(handle);
+    });
+
+    previewLyrics.appendChild(box);
+  }
+
+  return box;
+}
+
+
+function setupLyricsSelectionResize() {
+  const previewLyrics = document.getElementById('editorPreviewLyrics');
+  if (!previewLyrics) return;
+
+  let resizing = false;
+  let startMouseX = 0;
+  let startFontSize = 72;
+  let targetBlock = null;
+
+  document.addEventListener('mousedown', (event) => {
+    const handle = event.target.closest('.selectionHandle.bottomRight');
+    if (!handle) return;
+
+    targetBlock = getSelectedLyricsBlockData();
+    if (!targetBlock) return;
+
+    resizing = true;
+
+    startMouseX = event.clientX;
+    startFontSize = Number(targetBlock.style?.size || 72);
+
+    event.preventDefault();
+    event.stopPropagation();
+  });
+
+  document.addEventListener('mousemove', (event) => {
+    if (!resizing || !targetBlock) return;
+
+    const dx = event.clientX - startMouseX;
+
+    const newSize = Math.max(10, Math.round(startFontSize + dx));
+
+    targetBlock.style.size = newSize;
+
+    sizeInput.value = newSize;
+
+    updateEditorPreview(targetBlock);
+    sendLyricsBlockToVisualizer(targetBlock);
+  });
+
+  document.addEventListener('mouseup', () => {
+    resizing = false;
+    targetBlock = null;
+  });
+}
 
 
 
 setupPreviewLyricsDrag();
+resizeEditorPreviewCanvas();
+setupLyricsSelectionResize();

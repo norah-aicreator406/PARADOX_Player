@@ -204,15 +204,6 @@ input[type="range"] {
   overflow: hidden;
 }
 
-#editorPreviewLyrics {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  cursor: move;
-  user-select: none;
-  white-space: pre-line;
-}
 
 .layerTitle{
     margin:0 0 18px;
@@ -1100,14 +1091,6 @@ input[type="range"] {
 }
 
 
-#editorPreviewLyrics {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  cursor: move;
-  user-select: none;
-}
 
 #editorPreviewLyrics.is-dragging {
   opacity: 0.85;
@@ -1135,12 +1118,82 @@ input[type="range"] {
 }
 
 #editorPreviewLyrics {
+  pointer-events: auto;
+}
+
+
+#editorPreviewStage {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#editorPreviewCanvas {
+  position: relative;
+  width: 1080px;
+  height: 1920px;
+  transform-origin: center center;
+  transform: scale(var(--editor-preview-canvas-scale, 1));
+}
+
+.lyricsSelectionBox {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  cursor: move;
-  user-select: none;
-  white-space: pre-line;
-  z-index: 5;
+  inset: -12px;
+  border: 1px solid rgba(92, 200, 255, 0.9);
+  box-shadow: 0 0 14px rgba(92, 200, 255, 0.35);
+  pointer-events: none;
+}
+
+.selectionHandle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #5CC8FF;
+  box-shadow: 0 0 12px rgba(92, 200, 255, 0.85);
+  pointer-events: auto;
+}
+
+.selectionHandle.topLeft {
+  left: -6px;
+  top: -6px;
+  cursor: nwse-resize;
+}
+
+.selectionHandle.topRight {
+  right: -6px;
+  top: -6px;
+  cursor: nesw-resize;
+}
+
+.selectionHandle.bottomLeft {
+  left: -6px;
+  bottom: -6px;
+  cursor: nesw-resize;
+}
+
+.selectionHandle.bottomRight {
+  right: -6px;
+  bottom: -6px;
+  cursor: nwse-resize;
+}
+
+
+
+
+
+
+
+#editorPreviewLyrics .lyricsLine,
+#lyricsBlock .lyricsLine {
+  font-family: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  color: inherit !important;
+  letter-spacing: inherit !important;
+  line-height: inherit !important;
+  text-shadow: inherit !important;
+  -webkit-text-stroke: inherit !important;
 }

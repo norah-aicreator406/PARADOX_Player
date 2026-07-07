@@ -1145,40 +1145,20 @@ function getVisualizerScale() {
 
 function setLyrics(lines, animation = { preset: 'fade', duration: 0.5 }, style = {}, position = { x: 0, y: 0, z: 0 }) {
   const lyricsBlock = document.getElementById('lyricsBlock');
-  if (!lyricsBlock) return;
 
-  const scale = getVisualizerScale();
+  if (!lyricsBlock) {
+    console.error('lyricsBlock が見つかりません');
+    return;
+  }
 
-  lyricsBlock.innerHTML = '';
+  const payload = {
+    lines,
+    style,
+    position,
+    animation
+  };
 
-  lyricsBlock.style.position = 'absolute';
-  lyricsBlock.style.left = '50%';
-  lyricsBlock.style.top = '50%';
-
-  lyricsBlock.style.fontFamily = `"${style.font || 'Arial'}", sans-serif`;
-  lyricsBlock.style.fontSize = `${(Number(style.size) || 72) * scale}px`;
-  lyricsBlock.style.color = style.color || '#ffffff';
-  lyricsBlock.style.textAlign = style.align || 'center';
-  lyricsBlock.style.letterSpacing = `${(Number(style.letterSpacing) || 0) * scale}px`;
-  lyricsBlock.style.lineHeight = String(style.lineHeight || 1.2);
-
-  lyricsBlock.style.webkitTextStroke =
-    `${(Number(style.outlineWidth) || 0) * scale}px ${style.outlineColor || '#000000'}`;
-
-  lyricsBlock.style.textShadow =
-    `${(Number(style.shadowX) || 0) * scale}px ${(Number(style.shadowY) || 0) * scale}px ${(Number(style.shadowBlur) || 0) * scale}px ${style.shadowColor || '#000000'}`;
-
-  lyricsBlock.style.transform =
-    `translate(-50%, -50%) translate(${(Number(position.x) || 0) * scale}px, ${(Number(position.y) || 0) * scale}px)`;
-
-  const safeLines = Array.isArray(lines) ? lines : [String(lines || '')];
-
-  safeLines.forEach(line => {
-    const div = document.createElement('div');
-    div.className = 'lyricsLine';
-    div.textContent = line;
-    lyricsBlock.appendChild(div);
-  });
+  window.LyricsRenderer.render(lyricsBlock, payload);
 
   applyLyricsAnimation(animation);
 }
@@ -1222,16 +1202,17 @@ function clearLyrics() {
 }
 
 function showLyrics() {
+  const visualizerCanvas = document.getElementById('visualizerCanvas');
   const lyricsLayer = document.getElementById('lyricsLayer');
+  const lyricsCanvas = document.getElementById('lyricsCanvas');
   const lyricsBlock = document.getElementById('lyricsBlock');
 
-  if (lyricsLayer) {
-    lyricsLayer.style.display = 'block';
-  }
+  if (visualizerCanvas) visualizerCanvas.style.display = 'block';
+  if (lyricsLayer) lyricsLayer.style.display = 'block';
+  if (lyricsCanvas) lyricsCanvas.style.display = 'block';
+  if (lyricsBlock) lyricsBlock.style.opacity = '1';
 
-  if (lyricsBlock) {
-    lyricsBlock.style.opacity = '1';
-  }
+  resizeVisualizerCanvas();
 }
 
 function hideLyrics() {
@@ -1654,6 +1635,19 @@ ipcRenderer.on('visualizer-time', (event, data) => {
         data.duration;
 
 });
+
+function resizeVisualizerCanvas() {
+  const canvas = document.getElementById('visualizerCanvas');
+  if (!canvas) return;
+
+  const scale = Math.min(
+    window.innerWidth / 1080,
+    window.innerHeight / 1920
+  );
+
+  canvas.style.setProperty('--visualizer-canvas-scale', String(scale));
+}
+
 
 let videoAudioContext = null;
 let videoAnalyser = null;
