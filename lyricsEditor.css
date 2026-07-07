@@ -483,13 +483,12 @@ input[type="range"] {
 }
 
 #lyricsBlockList{
+    z-index:10;
+}
 
-    display:flex;
 
-    flex-direction:column;
-
-    gap:10px;
-
+#timelinePlayhead{
+    z-index:100;
 }
 
 .lyricsBlock{
@@ -1216,6 +1215,24 @@ input[type="range"] {
 }
 
 
+#timelineGridLines{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    z-index:0;
+}
+
+.timelineGridLine{
+    position:absolute;
+    top:0;
+    bottom:0;
+    width:1px;
+    background:rgba(255,255,255,.035);
+}
+
+#editorSeekBar {
+  display: none;
+}
 
 
 

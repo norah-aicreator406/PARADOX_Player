@@ -2021,6 +2021,10 @@ function getTimelineRulerStep() {
 
 function renderTimelineRuler() {
   const ruler = document.querySelector('.timelineRuler');
+  const gridLines=document.getElementById("timelineGridLines");
+
+gridLines.innerHTML="";
+
   if (!ruler || !editorAudio || !Number.isFinite(editorAudio.duration)) return;
 
   ruler.innerHTML = '';
@@ -2035,6 +2039,13 @@ function renderTimelineRuler() {
 
   for (let time = 0; time <= duration; time += step) {
     const mark = document.createElement('div');
+    const line=document.createElement("div");
+
+line.className="timelineGridLine";
+
+line.style.left=`${time*timelineScale}px`;
+
+gridLines.appendChild(line);
     mark.className = 'timelineRulerMark';
 
     mark.style.position = 'absolute';
