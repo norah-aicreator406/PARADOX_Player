@@ -1965,15 +1965,34 @@ function setupTimelineManualScrollDetection() {
 
 
 function setTimelineZoom(nextScale) {
+  const scrollArea = document.querySelector('.timelineScrollArea');
+
+  const currentTime =
+    editorAudio && Number.isFinite(editorAudio.currentTime)
+      ? editorAudio.currentTime
+      : 0;
+
+  const oldScale = timelineScale;
+
   timelineScale = Math.min(
     TIMELINE_SCALE_MAX,
     Math.max(TIMELINE_SCALE_MIN, nextScale)
   );
 
+  const playheadRatio =
+    scrollArea
+      ? (currentTime * oldScale - scrollArea.scrollLeft) / scrollArea.clientWidth
+      : 0.5;
+
   renderSectionBlocks();
   updateTimelineContentWidth();
   renderTimelineRuler();
   updateTimelinePlayhead();
+
+  if (scrollArea) {
+    scrollArea.scrollLeft =
+      currentTime * timelineScale - scrollArea.clientWidth * playheadRatio;
+  }
 }
 
 
