@@ -117,6 +117,11 @@ const stylePresets = {
 };
 
 let timelinePlayheadAnimationId = null;
+let autoFollowPlayhead = true;
+let isDraggingPlayhead = false;
+let isUserScrollingTimeline = false;
+let timelineScrollTimer = null;
+let isAutoScrollingTimeline = false;
 
 
 
@@ -655,6 +660,25 @@ function updateTimelinePlayhead() {
   if (playhead) {
     const x = editorAudio.currentTime * TIMELINE_SCALE;
     playhead.style.left = `${x}px`;
+    if (autoFollowPlayhead) {
+  const trackArea = document.querySelector('.timelineTrackArea');
+
+  if (trackArea) {
+    const playheadX = editorAudio.currentTime * TIMELINE_SCALE;
+    const visibleLeft = trackArea.scrollLeft;
+    const visibleRight = visibleLeft + trackArea.clientWidth;
+
+    const margin = 120;
+
+    if (playheadX > visibleRight - margin) {
+      trackArea.scrollLeft = playheadX - trackArea.clientWidth + margin;
+    }
+
+    if (playheadX < visibleLeft + margin) {
+      trackArea.scrollLeft = Math.max(0, playheadX - margin);
+    }
+  }
+}
   }
 
   if (currentTimeLabel) {
@@ -775,6 +799,9 @@ function setupEditorAudioPlayer(audioPath) {
     editorAudio.addEventListener('loadedmetadata', () => {
       editorAudioReady = true;
       durationLabel.textContent = formatEditorTime(editorAudio.duration);
+
+      updateTimelineContentWidth();
+
     });
 
     editorAudio.addEventListener('timeupdate', () => {
@@ -1836,8 +1863,119 @@ function setupLyricsSelectionResize() {
   });
 }
 
+function setupTimelineSeekByClick() {
+  const trackArea = document.querySelector('.timelineTrackArea');
+  const timelineContent = document.getElementById('lyricsBlockList');
+
+  if (!trackArea || !timelineContent) return;
+
+  timelineContent.addEventListener('mousedown', (event) => {
+    if (event.target.closest('.lyricsBlock')) return;
+    if (event.target.closest('#timelinePlayhead')) return;
+    if (!editorAudio || !editorAudioReady) return;
+
+    autoFollowPlayhead = true;
+
+    const rect = timelineContent.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const nextTime = Math.max(0, x / TIMELINE_SCALE);
+
+    editorAudio.currentTime = nextTime;
+
+    updateTimelinePlayhead();
+    updateEditorPreviewByTimeline();
+
+    event.preventDefault();
+  });
+}
+
+
+function setupTimelinePlayheadDrag() {
+  const playhead = document.getElementById('timelinePlayhead');
+  const trackArea = document.querySelector('.timelineTrackArea');
+  if (!playhead || !trackArea) return;
+
+  playhead.addEventListener('mousedown', (event) => {
+    if (!editorAudio || !editorAudioReady) return;
+
+    isDraggingPlayhead = true;
+    autoFollowPlayhead = true;
+
+    event.preventDefault();
+    event.stopPropagation();
+  });
+
+  document.addEventListener('mousemove', (event) => {
+    if (!isDraggingPlayhead) return;
+
+    const rect = trackArea.getBoundingClientRect();
+
+    const EDGE_SIZE = 60;
+    const SCROLL_SPEED = 22;
+
+    if (event.clientX > rect.right - EDGE_SIZE) {
+      trackArea.scrollLeft += SCROLL_SPEED;
+    }
+
+    if (event.clientX < rect.left + EDGE_SIZE) {
+      trackArea.scrollLeft = Math.max(0, trackArea.scrollLeft - SCROLL_SPEED);
+    }
+
+    const scrollLeft = trackArea.scrollLeft || 0;
+    const x = event.clientX - rect.left + scrollLeft;
+    const nextTime = Math.max(0, x / TIMELINE_SCALE);
+
+    editorAudio.currentTime = nextTime;
+
+    updateTimelinePlayhead();
+    updateEditorPreviewByTimeline();
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!isDraggingPlayhead) return;
+
+    isDraggingPlayhead = false;
+    autoFollowPlayhead = true;
+  });
+}
+
+function setupTimelineManualScrollDetection() {
+  const trackArea = document.querySelector('.timelineTrackArea');
+  if (isAutoScrollingTimeline) return;
+  if (!trackArea) return;
+
+  trackArea.addEventListener('scroll', () => {
+    if (isDraggingPlayhead) return;
+
+    isUserScrollingTimeline = true;
+    autoFollowPlayhead = false;
+
+    clearTimeout(timelineScrollTimer);
+
+    timelineScrollTimer = setTimeout(() => {
+      isUserScrollingTimeline = false;
+    }, 300);
+  });
+}
+
+
+function updateTimelineContentWidth() {
+  const timelineContent = document.getElementById('lyricsBlockList');
+
+  if (!timelineContent || !editorAudio || !Number.isFinite(editorAudio.duration)) return;
+
+  const minWidth = 1600;
+  const durationWidth = editorAudio.duration * TIMELINE_SCALE;
+  const extraSpace = 600;
+
+  timelineContent.style.width = `${Math.max(minWidth, durationWidth + extraSpace)}px`;
+}
+
 
 
 setupPreviewLyricsDrag();
 resizeEditorPreviewCanvas();
 setupLyricsSelectionResize();
+setupTimelineSeekByClick();
+setupTimelinePlayheadDrag();
+setupTimelineManualScrollDetection();

@@ -1068,28 +1068,44 @@ input[type="range"] {
   top: 0;
   bottom: 0;
   left: 0;
-  width: 2px;
+
+  width: 3px;
+  margin-left: -1.5px;
+
   background: #ff4f6d;
-  z-index: 50;
-  pointer-events: none;
+
+  cursor: ew-resize;
+  z-index: 100;
+
+  pointer-events: auto;
+
   box-shadow:
-    0 0 8px rgba(255, 79, 109, 0.8),
-    0 0 18px rgba(255, 79, 109, 0.35);
+    0 0 8px rgba(255,79,109,.8),
+    0 0 18px rgba(255,79,109,.35);
 }
 
 #timelinePlayhead::before {
   content: "";
-  position: absolute;
-  top: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: #ff4f6d;
-  box-shadow: 0 0 12px rgba(255, 79, 109, 0.9);
-}
 
+  position: absolute;
+
+  top: -8px;
+  left: 50%;
+
+  width: 12px;
+  height: 12px;
+
+  transform: translateX(-50%);
+
+  border-radius: 50%;
+
+  background: #ff4f6d;
+
+  box-shadow:
+    0 0 6px rgba(255,79,109,.9),
+    0 0 14px rgba(255,79,109,.7),
+    0 0 26px rgba(255,79,109,.45);
+}
 
 
 #editorPreviewLyrics.is-dragging {
