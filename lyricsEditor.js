@@ -1,6 +1,8 @@
 const fs = require('fs');
 const { pathToFileURL } = require('url');
-const TIMELINE_SCALE = 90; // 1秒 = 90px
+let timelineScale = 90; // 1秒 = 90px
+const TIMELINE_SCALE_MIN = 20;
+const TIMELINE_SCALE_MAX = 260;
 const TIMELINE_ROW_HEIGHT = 56;
 const TIMELINE_MIN_BLOCK_WIDTH = 260;
 
@@ -658,13 +660,13 @@ function updateTimelinePlayhead() {
   const seekBar = document.getElementById('editorSeekBar');
 
   if (playhead) {
-    const x = editorAudio.currentTime * TIMELINE_SCALE;
+    const x = editorAudio.currentTime * timelineScale;
     playhead.style.left = `${x}px`;
     if (autoFollowPlayhead) {
   const trackArea = document.querySelector('.timelineTrackArea');
 
   if (trackArea) {
-    const playheadX = editorAudio.currentTime * TIMELINE_SCALE;
+    const playheadX = editorAudio.currentTime * timelineScale;
     const visibleLeft = trackArea.scrollLeft;
     const visibleRight = visibleLeft + trackArea.clientWidth;
 
@@ -1189,10 +1191,10 @@ function createLyricsBlockFromData(blockData) {
     );
 
   block.style.position = 'absolute';
-  block.style.left = `${startSeconds * TIMELINE_SCALE}px`;
+  block.style.left = `${startSeconds * timelineScale}px`;
 block.style.top = `${index * TIMELINE_ROW_HEIGHT}px`;
 block.style.width = `${Math.max(
-  durationSeconds * TIMELINE_SCALE,
+  durationSeconds * timelineScale,
   TIMELINE_MIN_BLOCK_WIDTH
 )}px`;
 
@@ -1289,7 +1291,7 @@ function setupTimelineBlockDrag(block, blockData) {
     if (!hasMoved) return;
 
     const finalLeft = parseFloat(block.style.left) || 0;
-    const nextStartSeconds = finalLeft / TIMELINE_SCALE;
+    const nextStartSeconds = finalLeft / timelineScale;
     const nextEndSeconds = nextStartSeconds + durationSeconds;
 
     blockData.start = formatSecondsToTime(nextStartSeconds);
@@ -1367,7 +1369,7 @@ function setupTimelineResize(block, blockData){
         parseFloat(block.style.width);
 
         const duration=
-        width/TIMELINE_SCALE;
+        width/timelineScale;
 
         blockData.end=
         formatSecondsToTime(
@@ -1878,7 +1880,7 @@ function setupTimelineSeekByClick() {
 
     const rect = timelineContent.getBoundingClientRect();
     const x = event.clientX - rect.left;
-    const nextTime = Math.max(0, x / TIMELINE_SCALE);
+    const nextTime = Math.max(0, x / timelineScale);
 
     editorAudio.currentTime = nextTime;
 
@@ -1923,7 +1925,7 @@ function setupTimelinePlayheadDrag() {
 
     const scrollLeft = trackArea.scrollLeft || 0;
     const x = event.clientX - rect.left + scrollLeft;
-    const nextTime = Math.max(0, x / TIMELINE_SCALE);
+    const nextTime = Math.max(0, x / timelineScale);
 
     editorAudio.currentTime = nextTime;
 
@@ -1965,12 +1967,38 @@ function updateTimelineContentWidth() {
   if (!timelineContent || !editorAudio || !Number.isFinite(editorAudio.duration)) return;
 
   const minWidth = 1600;
-  const durationWidth = editorAudio.duration * TIMELINE_SCALE;
+  const durationWidth = editorAudio.duration * timelineScale;
   const extraSpace = 600;
 
   timelineContent.style.width = `${Math.max(minWidth, durationWidth + extraSpace)}px`;
 }
 
+
+function setTimelineZoom(nextScale) {
+  timelineScale = Math.min(
+    TIMELINE_SCALE_MAX,
+    Math.max(TIMELINE_SCALE_MIN, nextScale)
+  );
+
+  renderSectionBlocks();
+  updateTimelineContentWidth();
+  updateTimelinePlayhead();
+}
+
+
+function setupTimelineZoomByWheel() {
+  const trackArea = document.querySelector('.timelineTrackArea');
+  if (!trackArea) return;
+
+  trackArea.addEventListener('wheel', (event) => {
+    if (!event.ctrlKey && !event.metaKey) return;
+
+    event.preventDefault();
+
+    const zoomStep = event.deltaY < 0 ? 10 : -10;
+    setTimelineZoom(timelineScale + zoomStep);
+  }, { passive: false });
+}
 
 
 setupPreviewLyricsDrag();
@@ -1979,3 +2007,4 @@ setupLyricsSelectionResize();
 setupTimelineSeekByClick();
 setupTimelinePlayheadDrag();
 setupTimelineManualScrollDetection();
+setupTimelineZoomByWheel();
