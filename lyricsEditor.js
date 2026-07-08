@@ -352,6 +352,7 @@ function setupPreviewLyricsDrag() {
   let targetBlock = null;
 
   previewLyrics.addEventListener('mousedown', (event) => {
+  if (event.detail >= 2) return;
   if (event.target.closest('.selectionHandle')) return;
 
   targetBlock = getSelectedLyricsBlockData();
@@ -408,6 +409,96 @@ function setupPreviewLyricsDrag() {
   targetBlock = null;
 });
 }
+
+
+
+function setupInlineLyricsTextEdit() {
+  const previewLyrics = document.getElementById('editorPreviewLyrics');
+  if (!previewLyrics) return;
+
+  let editingBlock = null;
+  let originalText = '';
+
+  document.addEventListener('dblclick', (event) => {
+  const previewLyrics = document.getElementById('editorPreviewLyrics');
+  if (!previewLyrics) return;
+
+  if (!event.target.closest('#editorPreviewLyrics')) return;
+  if (event.target.closest('.selectionHandle')) return;
+
+  editingBlock = getSelectedLyricsBlockData();
+  if (!editingBlock) return;
+
+  originalText = editingBlock.text || '';
+
+  previewLyrics.contentEditable = 'true';
+  previewLyrics.classList.add('is-editing');
+  previewLyrics.focus();
+
+  const range = document.createRange();
+  range.selectNodeContents(previewLyrics);
+
+  const selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  event.preventDefault();
+  event.stopPropagation();
+});
+
+  previewLyrics.addEventListener('keydown', (event) => {
+    if (!editingBlock) return;
+
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      finishInlineLyricsEdit();
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      cancelInlineLyricsEdit();
+    }
+  });
+
+  previewLyrics.addEventListener('blur', () => {
+    if (editingBlock) {
+      finishInlineLyricsEdit();
+    }
+  });
+
+  function finishInlineLyricsEdit() {
+    if (!editingBlock) return;
+
+    const nextText = previewLyrics.innerText.trim();
+
+    editingBlock.text = nextText;
+    textInput.value = nextText;
+
+    previewLyrics.contentEditable = 'false';
+    previewLyrics.classList.remove('is-editing');
+
+    updateEditorPreview(editingBlock);
+    renderSectionBlocks();
+    sendLyricsBlockToVisualizer(editingBlock);
+
+    editingBlock = null;
+  }
+
+  function cancelInlineLyricsEdit() {
+    if (!editingBlock) return;
+
+    editingBlock.text = originalText;
+    textInput.value = originalText;
+
+    previewLyrics.contentEditable = 'false';
+    previewLyrics.classList.remove('is-editing');
+
+    updateEditorPreview(editingBlock);
+
+    editingBlock = null;
+  }
+}
+
 
 
 
@@ -521,6 +612,49 @@ ipcRenderer.on('lyrics-editor-data', (event, data) => {
 
 let currentSectionName = 'Verse 1';
 
+/*const commandUndoStack = [];
+const commandRedoStack = [];
+const COMMAND_HISTORY_LIMIT = 100;
+
+function pushCommand(command) {
+  commandUndoStack.push(command);
+
+  if (commandUndoStack.length > COMMAND_HISTORY_LIMIT) {
+    commandUndoStack.shift();
+  }
+
+  commandRedoStack.length = 0;
+}
+
+function undoEditorAction() {
+  const command = commandUndoStack.pop();
+  if (!command || typeof command.undo !== 'function') return;
+
+  command.undo();
+  commandRedoStack.push(command);
+}
+
+function redoEditorAction() {
+  const command = commandRedoStack.pop();
+  if (!command || typeof command.redo !== 'function') return;
+
+  command.redo();
+  commandUndoStack.push(command);
+}
+
+function refreshEditorAfterCommand() {
+  renderSectionBlocks();
+
+  const firstBlock = document.querySelector('.lyricsBlock.selected')
+    || document.querySelector('.lyricsBlock');
+
+  if (firstBlock) {
+    selectLyricsBlock(firstBlock);
+  } else {
+    updateEditorPreview(null);
+  }
+}*/
+
 const sectionData = {
   'Verse 1': [],
   'Chorus': []
@@ -597,6 +731,42 @@ function normalizeAllLyricsBlocksBeforeSave() {
     });
   });
 }
+
+
+/*function cloneEditorState() {
+  return {
+    currentSectionName,
+    sectionData: JSON.parse(JSON.stringify(sectionData))
+  };
+}*/
+
+/*function restoreEditorState(state) {
+  if (!state) return;
+
+  currentSectionName = state.currentSectionName || currentSectionName;
+
+  Object.keys(sectionData).forEach(key => {
+    delete sectionData[key];
+  });
+
+  Object.assign(
+    sectionData,
+    JSON.parse(JSON.stringify(state.sectionData || {}))
+  );
+
+  showSection(currentSectionName);
+  updateEditorPreview();
+}*/
+
+/*function pushUndoState() {
+  undoStack.push(cloneEditorState());
+
+  if (undoStack.length > HISTORY_LIMIT) {
+    undoStack.shift();
+  }
+
+  redoStack.length = 0;
+}:*/
 
 function saveEditorData() {
   syncSelectedBlockDataFromInspector();
@@ -1058,9 +1228,11 @@ const lyricsBlockList =
   document.getElementById('lyricsBlockList');
 
 const duplicateLyricsBlockButton =
+// pushUndoState();
   document.getElementById('duplicateLyricsBlockButton');
 
 const deleteLyricsBlockButton =
+// pushUndoState();
   document.getElementById('deleteLyricsBlockButton');
 
 function selectLyricsBlock(block) {
@@ -1104,6 +1276,24 @@ function loadLyricsBlockToInspector(block) {
   lineHeightInput.value = style.lineHeight ?? 1.2;
 
   sizeValue.textContent = sizeInput.value;
+
+let isTimingInputMode = false;
+
+const timingInputToggle = document.getElementById('timingInputToggle');
+
+if (timingInputToggle) {
+  timingInputToggle.addEventListener('click', () => {
+    isTimingInputMode = !isTimingInputMode;
+
+    timingInputToggle.textContent = isTimingInputMode ? 'ON' : 'OFF';
+    timingInputToggle.classList.toggle('is-active', isTimingInputMode);
+
+  if (timingShortcutGuide) {
+      timingShortcutGuide.classList.toggle('is-active', isTimingInputMode);
+    }
+  });
+}
+
   outlineWidthValue.textContent = outlineWidthInput.value;
   shadowBlurValue.textContent = shadowBlurInput.value;
   shadowXValue.textContent = shadowXInput.value;
@@ -1397,7 +1587,6 @@ function getAnimationLabel(value) {
 
 if (addLyricsBlockButton && lyricsBlockList) {
   addLyricsBlockButton.addEventListener('click', () => {
-
     if (!sectionData[currentSectionName]) {
       sectionData[currentSectionName] = [];
     }
@@ -1415,7 +1604,6 @@ if (addLyricsBlockButton && lyricsBlockList) {
     if (newBlock) {
       selectLyricsBlock(newBlock);
     }
-
   });
 }
 
@@ -2085,6 +2273,49 @@ function updateTimelineContentWidth() {
 }
 
 
+/*
+function undoEditorAction() {
+  if (undoStack.length === 0) return;
+
+  redoStack.push(cloneEditorState());
+
+  const previousState = undoStack.pop();
+  restoreEditorState(previousState);
+}
+*/
+
+/*
+function redoEditorAction() {
+  if (redoStack.length === 0) return;
+
+  undoStack.push(cloneEditorState());
+
+  const nextState = redoStack.pop();
+  restoreEditorState(nextState);
+}
+*/
+
+/*
+document.addEventListener('keydown', (event) => {
+  const isModifier = event.ctrlKey || event.metaKey;
+
+  if (!isModifier) return;
+
+  const key = event.key.toLowerCase();
+
+  if (key === 'z') {
+    event.preventDefault();
+    undoEditorAction();
+  }
+
+  if (key === 'y') {
+    event.preventDefault();
+    redoEditorAction();
+  }
+});
+*/
+
+
 
 setupPreviewLyricsDrag();
 resizeEditorPreviewCanvas();
@@ -2093,3 +2324,4 @@ setupTimelineSeekByClick();
 setupTimelinePlayheadDrag();
 setupTimelineManualScrollDetection();
 setupTimelineZoomByWheel();
+setupInlineLyricsTextEdit();

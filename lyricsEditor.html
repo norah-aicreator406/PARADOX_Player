@@ -472,26 +472,40 @@
   <div id="timelineEditor">
 
     <div class="timelineTopbar">
-      <div class="timelineTitle">Timeline</div>
+  <div class="timelineTitle">Timeline</div>
 
-      <div class="timelineActions">
-        <button id="addLyricsBlockButton">+ Block</button>
-        <button id="duplicateLyricsBlockButton">複製</button>
-        <button id="deleteLyricsBlockButton">削除</button>
-      </div>
-    </div>
+  <div class="timelineActions">
+  <button id="addLyricsBlockButton">+ Block</button>
+  <button id="duplicateLyricsBlockButton">複製</button>
+  <button id="deleteLyricsBlockButton">削除</button>
 
-  <div id="editorAudioPlayer" class="timelineTransport">
-  <div class="timelineTransportControls">
-    <button id="editorPlayPauseButton">▶</button>
+  <button id="editorPlayPauseButton">▶</button>
+
+  <div class="timelineTimeDisplay">
     <span id="editorCurrentTime">00:00.00</span>
+    <span class="timeSeparator">/</span>
     <span id="editorDuration">00:00.00</span>
   </div>
+
+  <div class="timelineModeToggle">
+    <span class="modeLabel">タイミング入力</span>
+    <button id="timingInputToggle" class="modeToggleButton" type="button">
+      OFF
+    </button>
+  </div>
+
+  <div id="timingShortcutGuide" class="timingShortcutGuide">
+    <span>Space：再生/停止</span>
+    <span>B：ブロック頭区切り</span>
+    <span>E：終了</span>
+  </div>
+</div>
+</div>
 
   <div class="timelineTransportSeek">
     <input id="editorSeekBar" type="range" min="0" max="100" value="0">
   </div>
-</div>
+
 
     <div class="timelineGrid">
   <div class="timelineCorner"></div>
