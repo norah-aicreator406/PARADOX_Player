@@ -14,6 +14,11 @@ window.LyricsRenderer = {
 
     const style = payload.style || {};
     const position = payload.position || { x: 0, y: 0, z: 0 };
+    const layout = payload.layout || {};
+    console.log('RENDER layout:', layout);
+
+    const width = Number(layout.width) || 900;
+    const rotation = Number(layout.rotation) || 0;
 
     targetElement.innerHTML = '';
     targetElement.style.opacity = '1';
@@ -23,7 +28,7 @@ window.LyricsRenderer = {
     targetElement.style.top = '50%';
 
     targetElement.style.transform =
-      `translate(-50%, -50%) translate(${Number(position.x) || 0}px, ${Number(position.y) || 0}px)`;
+      `translate(-50%, -50%) translate(${Number(position.x) || 0}px, ${Number(position.y) || 0}px) rotate(${rotation}deg)`;
 
     targetElement.style.fontFamily = `"${style.font || 'Arial'}", sans-serif`;
     targetElement.style.fontSize = `${Number(style.size) || 72}px`;
@@ -32,15 +37,11 @@ window.LyricsRenderer = {
     targetElement.style.letterSpacing = `${Number(style.letterSpacing) || 0}px`;
     targetElement.style.lineHeight = String(style.lineHeight || 1.2);
 
-
-    const layout = payload.layout || {};
-    targetElement.style.width = `${Number(layout.width) || 900}px`;
-    targetElement.style.maxWidth = `${Number(layout.width) || 900}px`;
+    targetElement.style.width = `${width}px`;
+    targetElement.style.maxWidth = `${width}px`;
     targetElement.style.whiteSpace = 'pre-wrap';
     targetElement.style.wordBreak = 'keep-all';
     targetElement.style.overflowWrap = 'normal';
-
-    
 
     targetElement.style.webkitTextStroke =
       `${Number(style.outlineWidth) || 0}px ${style.outlineColor || '#000000'}`;

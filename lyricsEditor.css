@@ -1215,7 +1215,11 @@ input[type="range"] {
 .selectionHandle.topRight {
   right: -6px;
   top: -6px;
-  cursor: nesw-resize;
+  cursor: grab;
+}
+
+.selectionHandle.topRight:active {
+  cursor: grabbing;
 }
 
 .selectionHandle.bottomLeft {

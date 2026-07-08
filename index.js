@@ -136,6 +136,7 @@ function loadLyricsBlocksFromProject(song) {
     text: block.text || '',
     style: block.style || {},
     position: block.position || { x: 0, y: 0, z: 0 },
+    layout: block.layout || { width: 900, rotation: 0 },
     animation: {
       preset: block.animationPreset || 'fade',
       duration: 0.5
@@ -174,6 +175,7 @@ function updateLyricsByTime() {
   text: currentBlock.text || '',
   style: currentBlock.style || {},
   position: currentBlock.position || { x: 0, y: 0, z: 0 },
+  layout: currentBlock.layout || { width: 900, rotation: 0 },
   animation: currentBlock.animation
 });
 }

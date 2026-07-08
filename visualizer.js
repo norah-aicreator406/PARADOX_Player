@@ -1143,7 +1143,13 @@ function getVisualizerScale() {
   );
 }
 
-function setLyrics(lines, animation = { preset: 'fade', duration: 0.5 }, style = {}, position = { x: 0, y: 0, z: 0 }) {
+function setLyrics(
+  lines,
+  animation = { preset: 'fade', duration: 0.5 },
+  style = {},
+  position = { x: 0, y: 0, z: 0 },
+  layout = { width: 900, rotation: 0 }
+) {
   const lyricsBlock = document.getElementById('lyricsBlock');
 
   if (!lyricsBlock) {
@@ -1155,6 +1161,7 @@ function setLyrics(lines, animation = { preset: 'fade', duration: 0.5 }, style =
     lines,
     style,
     position,
+    layout,
     animation
   };
 
@@ -1523,7 +1530,8 @@ ipcRenderer.on('visualizer-effect-settings', (event, settings) => {
 });
 
 ipcRenderer.on('visualizer-lyrics', (event, lyrics) => {
-  console.log('🔥 FINAL RECEIVED LYRICS:', JSON.stringify(lyrics, null, 2));
+  console.log('VISUALIZER received layout:', lyrics?.layout);
+console.log('VISUALIZER received:', JSON.stringify(lyrics, null, 2));
 
   if (!lyrics) {
     clearLyrics();
@@ -1532,11 +1540,12 @@ ipcRenderer.on('visualizer-lyrics', (event, lyrics) => {
 
   if (Array.isArray(lyrics.lines)) {
     setLyrics(
-      lyrics.lines,
-      lyrics.animation,
-      lyrics.style,
-      lyrics.position
-    );
+  lyrics.lines,
+  lyrics.animation,
+  lyrics.style,
+  lyrics.position,
+  lyrics.layout
+);
     showLyrics();
   }
 });

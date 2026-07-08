@@ -311,7 +311,7 @@ function updateEditorPreview(targetBlockData = null) {
     lines: String(blockData?.text ?? textInput.value ?? '').split('\n'),
     style,
     position: blockData?.position || { x: 0, y: 0, z: 0 },
-    layout: blockData?.layout || { width: 900 },
+    layout: blockData?.layout || { width: 900, rotation: 0 },
     animation: {
       preset: blockData?.animationPreset || animationPresetInput.value || 'fade',
       duration: 0.5
@@ -729,6 +729,17 @@ function normalizeAllLyricsBlocksBeforeSave() {
 
       if (!block.position) {
         block.position = { x: 0, y: 0, z: 0 };
+      if (!block.layout) {
+  block.layout = { width: 900, rotation: 0 };
+}
+
+if (block.layout.width == null) {
+  block.layout.width = 900;
+}
+
+if (block.layout.rotation == null) {
+  block.layout.rotation = 0;
+}
       }
     });
   });
@@ -913,7 +924,7 @@ function buildLyricsPayloadForVisualizer(block) {
 
     position: block.position || { x: 0, y: 0, z: 0 },
 
-    layout: block.layout || { width: 900 },
+    layout: block.layout || { width: 900, rotation: 0 },
 
     animation: {
       preset: block.animationPreset || 'fade',
@@ -1340,7 +1351,8 @@ function createLyricsBlockData(text = '新しい歌詞') {
     },
 
 layout: {
-  width: 900
+  width: 900,
+  rotation: 0
 }
 
   };
@@ -1961,6 +1973,9 @@ function sendLyricsBlockToVisualizer(block) {
 
   const payload = buildLyricsPayloadForVisualizer(block);
 
+  console.log('SEND layout:', payload.layout);
+  console.log('SEND payload:', JSON.stringify(payload, null, 2));
+
   ipcRenderer.invoke('send-lyrics-to-visualizer', payload);
 }
 
@@ -2391,6 +2406,64 @@ document.addEventListener('keydown', (event) => {
 });
 */
 
+function setupLyricsRotationHandle() {
+  let rotating = false;
+  let targetBlock = null;
+  let startAngle = 0;
+  let startRotation = 0;
+
+  document.addEventListener('mousedown', (event) => {
+    const handle = event.target.closest('.selectionHandle.topRight');
+    if (!handle) return;
+
+    const previewLyrics = document.getElementById('editorPreviewLyrics');
+    if (!previewLyrics) return;
+
+    targetBlock = getSelectedLyricsBlockData();
+    if (!targetBlock) return;
+
+    if (!targetBlock.layout) {
+      targetBlock.layout = { width: 900, rotation: 0 };
+    }
+
+    const rect = previewLyrics.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    startAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX);
+    startRotation = Number(targetBlock.layout.rotation) || 0;
+
+    rotating = true;
+
+    event.preventDefault();
+    event.stopPropagation();
+  });
+
+  document.addEventListener('mousemove', (event) => {
+    if (!rotating || !targetBlock) return;
+
+    const previewLyrics = document.getElementById('editorPreviewLyrics');
+    if (!previewLyrics) return;
+
+    const rect = previewLyrics.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    const currentAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX);
+    const deltaDeg = (currentAngle - startAngle) * 180 / Math.PI;
+
+    targetBlock.layout.rotation = Math.round(startRotation + deltaDeg);
+
+    updateEditorPreview(targetBlock);
+    sendLyricsBlockToVisualizer(targetBlock);
+  });
+
+  document.addEventListener('mouseup', () => {
+    rotating = false;
+    targetBlock = null;
+  });
+}
+
 
 
 
@@ -2407,3 +2480,4 @@ setupTimelineManualScrollDetection();
 setupTimelineZoomByWheel();
 setupInlineLyricsTextEdit();
 setupLyricsWidthResize(); // 左右ハンドル
+setupLyricsRotationHandle(); // 右上回転ハンドル
