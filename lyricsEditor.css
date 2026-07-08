@@ -1356,3 +1356,15 @@ input[type="range"] {
 .selectionSideHandle.right {
   right: -18px;
 }
+
+
+
+
+#editorPreviewLyrics,
+#lyricsBlock,
+#editorPreviewLyrics .lyricsLine,
+#lyricsBlock .lyricsLine {
+  white-space: pre-wrap !important;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}

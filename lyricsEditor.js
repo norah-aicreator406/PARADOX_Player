@@ -2099,6 +2099,8 @@ function setupLyricsSelectionResize() {
   横幅リサイズ関数を追加
 --------------------*/
 
+let activeSide = null;
+
 function setupLyricsWidthResize() {
   let resizing = false;
   let startMouseX = 0;
@@ -2119,26 +2121,42 @@ function setupLyricsWidthResize() {
     resizing = true;
     startMouseX = event.clientX;
     startWidth = Number(targetBlock.layout.width) || 900;
+    activeSide = handle.dataset.sideHandle;
 
     event.preventDefault();
     event.stopPropagation();
+
+    
   });
 
   document.addEventListener('mousemove', (event) => {
-    if (!resizing || !targetBlock) return;
+  if (!resizing || !targetBlock) return;
 
-    const dx = event.clientX - startMouseX;
-    const newWidth = Math.max(160, Math.round(startWidth + Math.abs(dx) * 2));
+  const dx = event.clientX - startMouseX;
+  const side = activeSide;
 
-    targetBlock.layout.width = newWidth;
+  let newWidth = startWidth;
 
-    updateEditorPreview(targetBlock);
-    sendLyricsBlockToVisualizer(targetBlock);
-  });
+  if (side === 'right') {
+    newWidth = startWidth + dx;
+  }
+
+  if (side === 'left') {
+    newWidth = startWidth - dx;
+  }
+
+  newWidth = Math.max(80, Math.round(newWidth));
+
+  targetBlock.layout.width = newWidth;
+
+  updateEditorPreview(targetBlock);
+  sendLyricsBlockToVisualizer(targetBlock);
+});
 
   document.addEventListener('mouseup', () => {
     resizing = false;
     targetBlock = null;
+    activeSide = null;
   });
 }
 

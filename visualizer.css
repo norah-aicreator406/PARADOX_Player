@@ -645,3 +645,12 @@ html, body {
   text-shadow: inherit !important;
   -webkit-text-stroke: inherit !important;
 }
+
+#editorPreviewLyrics,
+#lyricsBlock,
+#editorPreviewLyrics .lyricsLine,
+#lyricsBlock .lyricsLine {
+  white-space: pre-wrap !important;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
