@@ -311,6 +311,7 @@ function updateEditorPreview(targetBlockData = null) {
     lines: String(blockData?.text ?? textInput.value ?? '').split('\n'),
     style,
     position: blockData?.position || { x: 0, y: 0, z: 0 },
+    layout: blockData?.layout || { width: 900 },
     animation: {
       preset: blockData?.animationPreset || animationPresetInput.value || 'fade',
       duration: 0.5
@@ -354,6 +355,7 @@ function setupPreviewLyricsDrag() {
   previewLyrics.addEventListener('mousedown', (event) => {
   if (event.detail >= 2) return;
   if (event.target.closest('.selectionHandle')) return;
+  if (event.target.closest('.selectionSideHandle')) return;
 
   targetBlock = getSelectedLyricsBlockData();
     if (!targetBlock) return;
@@ -911,6 +913,8 @@ function buildLyricsPayloadForVisualizer(block) {
 
     position: block.position || { x: 0, y: 0, z: 0 },
 
+    layout: block.layout || { width: 900 },
+
     animation: {
       preset: block.animationPreset || 'fade',
       duration: 0.5
@@ -1333,7 +1337,12 @@ function createLyricsBlockData(text = '新しい歌詞') {
       x: 0,
       y: 0,
       z: 0
-    }
+    },
+
+layout: {
+  width: 900
+}
+
   };
 }
 
@@ -2001,11 +2010,28 @@ function ensureLyricsSelectionBox() {
       box.appendChild(handle);
     });
 
+    /*-----------------------
+　左右ハンドル追加
+   ------------------------*/
+
+['left', 'right'].forEach(side => {
+  const handle = document.createElement('div');
+  handle.className = `selectionSideHandle ${side}`;
+  handle.dataset.sideHandle = side;
+  box.appendChild(handle);
+});
+
+
     previewLyrics.appendChild(box);
   }
 
   return box;
 }
+
+
+
+
+
 
 
 function setupLyricsSelectionResize() {
@@ -2053,6 +2079,56 @@ function setupLyricsSelectionResize() {
     targetBlock = null;
   });
 }
+
+/*--------------------
+  横幅リサイズ関数を追加
+--------------------*/
+
+function setupLyricsWidthResize() {
+  let resizing = false;
+  let startMouseX = 0;
+  let startWidth = 900;
+  let targetBlock = null;
+
+  document.addEventListener('mousedown', (event) => {
+    const handle = event.target.closest('.selectionSideHandle');
+    if (!handle) return;
+
+    targetBlock = getSelectedLyricsBlockData();
+    if (!targetBlock) return;
+
+    if (!targetBlock.layout) {
+      targetBlock.layout = { width: 900 };
+    }
+
+    resizing = true;
+    startMouseX = event.clientX;
+    startWidth = Number(targetBlock.layout.width) || 900;
+
+    event.preventDefault();
+    event.stopPropagation();
+  });
+
+  document.addEventListener('mousemove', (event) => {
+    if (!resizing || !targetBlock) return;
+
+    const dx = event.clientX - startMouseX;
+    const newWidth = Math.max(160, Math.round(startWidth + Math.abs(dx) * 2));
+
+    targetBlock.layout.width = newWidth;
+
+    updateEditorPreview(targetBlock);
+    sendLyricsBlockToVisualizer(targetBlock);
+  });
+
+  document.addEventListener('mouseup', () => {
+    resizing = false;
+    targetBlock = null;
+  });
+}
+
+
+
 
 function setupTimelineSeekByClick() {
   const trackArea = document.querySelector('.timelineScrollArea');
@@ -2317,6 +2393,11 @@ document.addEventListener('keydown', (event) => {
 
 
 
+
+
+
+
+
 setupPreviewLyricsDrag();
 resizeEditorPreviewCanvas();
 setupLyricsSelectionResize();
@@ -2325,3 +2406,4 @@ setupTimelinePlayheadDrag();
 setupTimelineManualScrollDetection();
 setupTimelineZoomByWheel();
 setupInlineLyricsTextEdit();
+setupLyricsWidthResize(); // 左右ハンドル

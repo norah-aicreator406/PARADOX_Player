@@ -31,6 +31,15 @@ window.LyricsRenderer = {
     targetElement.style.textAlign = style.align || 'center';
     targetElement.style.letterSpacing = `${Number(style.letterSpacing) || 0}px`;
     targetElement.style.lineHeight = String(style.lineHeight || 1.2);
+
+
+    const layout = payload.layout || {};
+    targetElement.style.width = `${Number(layout.width) || 900}px`;
+    targetElement.style.maxWidth = `${Number(layout.width) || 900}px`;
+    targetElement.style.whiteSpace = 'pre-wrap';
+    targetElement.style.wordBreak = 'keep-all';
+    targetElement.style.overflowWrap = 'normal';
+
     
 
     targetElement.style.webkitTextStroke =

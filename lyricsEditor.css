@@ -1315,8 +1315,6 @@ input[type="range"] {
 
 
 
-
-
 #editorPreviewLyrics .lyricsLine,
 #lyricsBlock .lyricsLine {
   font-family: inherit !important;
@@ -1327,4 +1325,30 @@ input[type="range"] {
   line-height: inherit !important;
   text-shadow: inherit !important;
   -webkit-text-stroke: inherit !important;
+}
+
+
+/*-----------------------------
+　　中央固定・左右ドラッグ方式
+-------------------------------*/
+
+.selectionSideHandle {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 36px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: rgba(92, 200, 255, 0.75);
+  box-shadow: 0 0 12px rgba(92, 200, 255, 0.65);
+  cursor: ew-resize;
+  pointer-events: auto;
+}
+
+.selectionSideHandle.left {
+  left: -18px;
+}
+
+.selectionSideHandle.right {
+  right: -18px;
 }
