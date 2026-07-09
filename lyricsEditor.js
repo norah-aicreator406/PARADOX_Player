@@ -37,6 +37,10 @@ openLyricsImportButton?.addEventListener('click', openLyricsImportDialog);
 cancelLyricsImportButton?.addEventListener('click', closeLyricsImportDialog);
 
 applyLyricsImportButton?.addEventListener('click', () => {
+  if (lyricsImportStep === 'import') {
+  importParsedLyricsToEditor();
+  return;
+}
   console.log('解析ボタン押されました');
 
   const textarea = document.getElementById('lyricsImportTextarea');
@@ -58,12 +62,15 @@ applyLyricsImportButton?.addEventListener('click', () => {
   blockMode: blockModeInput?.value || 'blankLine',
   detectSection: sectionOption?.checked ?? true
 });
-  
-  console.log('textarea value:', textarea.value);
-  console.log('textarea length:', textarea.value.length);
-  console.log('解析結果:', parsed);
 
-  previewContent.innerHTML = '';
+// ←ここ！！
+latestParsedLyrics = parsed;
+
+console.log('textarea value:', textarea.value);
+console.log('textarea length:', textarea.value.length);
+console.log('解析結果:', parsed);
+
+previewContent.innerHTML = '';
 
   Object.entries(parsed).forEach(([sectionName, blocks]) => {
   const section = document.createElement('div');
@@ -2650,7 +2657,34 @@ function parseImportedLyrics(rawText, options = {}) {
 }
 
 
+function importParsedLyricsToEditor() {
+  if (!latestParsedLyrics) return;
 
+  Object.keys(sectionData).forEach(key => {
+    delete sectionData[key];
+  });
+
+  Object.entries(latestParsedLyrics).forEach(([sectionName, texts]) => {
+    sectionData[sectionName] = texts.map((text, index) => {
+      const block = createLyricsBlockData(text);
+
+      const startSeconds = index * 3;
+      const endSeconds = startSeconds + 3;
+
+      block.start = formatSecondsToTime(startSeconds);
+      block.end = formatSecondsToTime(endSeconds);
+
+      return block;
+    });
+  });
+
+  const sectionNames = Object.keys(sectionData);
+  currentSectionName = sectionNames[0] || 'Verse 1';
+
+  closeLyricsImportDialog();
+  showSection(currentSectionName);
+  renderSectionBlocks();
+}
 
 
 
