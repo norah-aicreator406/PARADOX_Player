@@ -483,7 +483,7 @@
     <span id="editorDuration">00:00.00</span>
   </div>
 
-
+  <button id="openLyricsImportButton" type="button">歌詞取り込み</button>
   <button id="addLyricsBlockButton">+ Block</button>
   <button id="duplicateLyricsBlockButton">複製</button>
   <button id="deleteLyricsBlockButton">削除</button>
@@ -530,9 +530,58 @@
   </div>
 </section>
 
+<div id="lyricsImportDialog" class="lyricsImportDialog is-hidden">
+  <div class="lyricsImportPanel">
+    <div class="lyricsImportTitle">歌詞取り込み</div>
+
+    <textarea
+      id="lyricsImportTextarea"
+      class="lyricsImportTextarea"
+      placeholder="[Verse]&#10;ここに歌詞を貼り付け"
+    ></textarea>
+
+    <div class="lyricsImportOptions">
+  <div class="lyricsImportOptionTitle">ブロック化方法</div>
+
+  <label>
+    <input type="radio" name="lyricsBlockMode" value="blankLine" checked>
+    空行ごとにブロック化
+  </label>
+
+  <label>
+    <input type="radio" name="lyricsBlockMode" value="line">
+    1行ごとにブロック化
+  </label>
+
+  <label>
+    <input id="detectSectionOption" type="checkbox" checked>
+    [Verse] [Chorus] などをセクションとして認識
+  </label>
+</div>
+
+    <div id="lyricsImportPreview" class="lyricsImportPreview is-hidden">
+      <div class="lyricsImportPreviewTitle">解析結果</div>
+      <div id="lyricsImportPreviewContent"></div>
+    </div>
+
+    <div class="lyricsImportActions">
+      <button id="cancelLyricsImportButton">キャンセル</button>
+      <button id="applyLyricsImportButton">取り込み</button>
+    </div>
+  </div>
+</div>
+
 </div>
 <script src="./LyricsRenderer.js"></script>
 <script src="./lyricsEditor.js"></script>
+
+
+
+
+
+    
+
+
 
 </body>
 </html>

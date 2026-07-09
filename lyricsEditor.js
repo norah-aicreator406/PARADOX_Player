@@ -6,6 +6,107 @@ const TIMELINE_SCALE_MAX = 260;
 const TIMELINE_ROW_HEIGHT = 56;
 const TIMELINE_MIN_BLOCK_WIDTH = 260;
 
+const lyricsImportDialog = document.getElementById('lyricsImportDialog');
+const openLyricsImportButton = document.getElementById('openLyricsImportButton');
+const cancelLyricsImportButton = document.getElementById('cancelLyricsImportButton');
+const applyLyricsImportButton = document.getElementById('applyLyricsImportButton');
+
+function openLyricsImportDialog() {
+  lyricsImportDialog?.classList.remove('is-hidden');
+
+  lyricsImportStep = 'analyze';
+  latestParsedLyrics = null;
+
+  if (applyLyricsImportButton) {
+    applyLyricsImportButton.textContent = '解析';
+  }
+
+  const preview = document.getElementById('lyricsImportPreview');
+  const previewContent = document.getElementById('lyricsImportPreviewContent');
+
+  if (preview) preview.classList.add('is-hidden');
+  if (previewContent) previewContent.innerHTML = '';
+}
+
+function closeLyricsImportDialog() {
+  lyricsImportDialog?.classList.add('is-hidden');
+}
+
+openLyricsImportButton?.addEventListener('click', openLyricsImportDialog);
+
+cancelLyricsImportButton?.addEventListener('click', closeLyricsImportDialog);
+
+applyLyricsImportButton?.addEventListener('click', () => {
+  console.log('解析ボタン押されました');
+
+  const textarea = document.getElementById('lyricsImportTextarea');
+  const blockModeInput = document.querySelector('input[name="lyricsBlockMode"]:checked');
+  const sectionOption = document.getElementById('detectSectionOption');
+  const preview = document.getElementById('lyricsImportPreview');
+  const previewContent = document.getElementById('lyricsImportPreviewContent');
+
+  if (!textarea || !preview || !previewContent) {
+    console.error('歌詞取り込み要素が見つかりません', {
+      textarea,
+      preview,
+      previewContent
+    });
+    return;
+  }
+
+  const parsed = parseImportedLyrics(textarea.value, {
+  blockMode: blockModeInput?.value || 'blankLine',
+  detectSection: sectionOption?.checked ?? true
+});
+  
+  console.log('textarea value:', textarea.value);
+  console.log('textarea length:', textarea.value.length);
+  console.log('解析結果:', parsed);
+
+  previewContent.innerHTML = '';
+
+  Object.entries(parsed).forEach(([sectionName, blocks]) => {
+  const section = document.createElement('div');
+  section.className = 'importSectionPreview';
+
+  const samples = blocks.slice(0, 3);
+
+  section.innerHTML = `
+    <strong>${sectionName}</strong>：${blocks.length}ブロック
+    <div class="importBlockSamples">
+      ${samples.map((text, index) => `
+        <div class="importBlockSample">
+          <span>${index + 1}.</span>
+          <em>${String(text).replace(/\n/g, ' / ')}</em>
+        </div>
+      `).join('')}
+      ${
+        blocks.length > 3
+          ? `<div class="importBlockMore">...ほか${blocks.length - 3}件</div>`
+          : ''
+      }
+    </div>
+  `;
+
+  previewContent.appendChild(section);
+});
+
+  preview.classList.remove('is-hidden');
+  lyricsImportStep = 'import';
+  applyLyricsImportButton.textContent = '取り込み';
+});
+  
+
+document.addEventListener('keydown', (event) => {
+  if (
+    event.key === 'Escape' &&
+    !lyricsImportDialog.classList.contains('is-hidden')
+  ) {
+    closeLyricsImportDialog();
+  }
+});
+
+
 const { ipcRenderer } = require('electron');
 const fontGroups = [
   {
@@ -124,6 +225,8 @@ let isDraggingPlayhead = false;
 let isUserScrollingTimeline = false;
 let timelineScrollTimer = null;
 let isAutoScrollingTimeline = false;
+
+
 
 
 
@@ -2480,6 +2583,70 @@ function setupLyricsRotationHandle() {
     rotating = false;
     targetBlock = null;
   });
+}
+
+let latestParsedLyrics = null;
+let lyricsImportStep = 'analyze';
+
+
+function parseImportedLyrics(rawText, options = {}) {
+  const detectSection = options.detectSection ?? true;
+  const blockMode = options.blockMode || 'blankLine';
+
+  const lines = String(rawText || '').split(/\r?\n/);
+
+  const result = {};
+  let currentSection = 'Verse 1';
+  let buffer = [];
+
+  function ensureSection(sectionName) {
+    if (!result[sectionName]) {
+      result[sectionName] = [];
+    }
+  }
+
+  function flushBuffer() {
+    const text = buffer.join('\n').trim();
+    if (!text) return;
+
+    ensureSection(currentSection);
+    result[currentSection].push(text);
+    buffer = [];
+  }
+
+  lines.forEach(line => {
+    const trimmed = line.trim();
+
+    const sectionMatch = detectSection
+      ? trimmed.match(/^\[(.+?)\]$/)
+      : null;
+
+    if (sectionMatch) {
+      flushBuffer();
+      currentSection = sectionMatch[1].trim();
+      ensureSection(currentSection);
+      return;
+    }
+
+    if (blockMode === 'line') {
+      if (trimmed !== '') {
+        ensureSection(currentSection);
+        result[currentSection].push(line.trim());
+      }
+      return;
+    }
+
+    if (blockMode === 'blankLine' && trimmed === '') {
+      flushBuffer();
+      return;
+    }
+
+    buffer.push(line);
+  });
+
+  flushBuffer();
+
+  return result;
 }
 
 

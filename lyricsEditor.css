@@ -1358,6 +1358,150 @@ input[type="range"] {
 }
 
 
+.lyricsImportDialog {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(5, 7, 12, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lyricsImportDialog.is-hidden {
+  display: none;
+}
+
+.lyricsImportPanel {
+  width: min(760px, 88vw);
+  max-height: 86vh;
+  overflow-y: auto;
+
+  background: #141720;
+  border: 1px solid #2b2f3a;
+  border-radius: 20px;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.lyricsImportTitle {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+
+.lyricsImportTextarea {
+  width: 100%;
+  height: 300px;
+  resize: vertical;
+  background: #0f1118;
+  color: white;
+  border: 1px solid #2b3340;
+  border-radius: 14px;
+  padding: 14px;
+  box-sizing: border-box;
+  line-height: 1.7;
+}
+
+.lyricsImportOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+  color: #cfd6e6;
+  font-size: 13px;
+}
+
+.lyricsImportActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.lyricsImportPreview {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid rgba(92, 200, 255, 0.25);
+  border-radius: 14px;
+  background: rgba(92, 200, 255, 0.06);
+
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.lyricsImportPreview.is-hidden {
+  display: none;
+}
+
+.lyricsImportPreviewTitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: #9be7ff;
+  margin-bottom: 10px;
+}
+
+.importSectionPreview {
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: #dfe6f3;
+}
+
+.importSectionPreview strong {
+  color: #ffffff;
+}
+
+.lyricsImportOptionTitle {
+  font-size: 12px;
+  font-weight: 800;
+  color: #9be7ff;
+  margin-bottom: 2px;
+}
+
+
+.importBlockSamples {
+  margin-top: 8px;
+  display: grid;
+  gap: 4px;
+  color: #bfc8d8;
+}
+
+.importBlockSample {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.importBlockSample span {
+  color: #5CC8FF;
+  font-weight: 800;
+}
+
+.importBlockSample em {
+  font-style: normal;
+  color: #e7edf7;
+}
+
+.importBlockMore {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #8f96a3;
+}
+
+.lyricsImportPreview::-webkit-scrollbar {
+  width: 8px;
+}
+
+.lyricsImportPreview::-webkit-scrollbar-thumb {
+  background: rgba(92, 200, 255, 0.45);
+  border-radius: 999px;
+}
+
+.lyricsImportPreview::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 
 
 #editorPreviewLyrics,
