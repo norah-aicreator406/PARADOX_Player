@@ -3044,19 +3044,56 @@ function handleTimingInputE() {
   if (!timingInputStarted) return;
 
   const blocks = sectionData[currentSectionName] || [];
-  const currentBlock = blocks[timingInputBlockIndex];
+  const completedBlockIndex = timingInputBlockIndex;
+  const currentBlock = blocks[completedBlockIndex];
 
   if (!currentBlock) return;
 
+  // 最後のブロックの終了時間を確定
   currentBlock.end =
     formatSecondsToTime(editorAudio.currentTime);
 
-  selectLyricsBlockByIndex(timingInputBlockIndex);
+  const completedSectionName = currentSectionName;
+  const sectionNames = Object.keys(sectionData);
+  const currentSectionIndex =
+    sectionNames.indexOf(completedSectionName);
+
+  const nextSectionName =
+    sectionNames[currentSectionIndex + 1] || null;
 
   editorAudio.pause();
 
   timingInputStarted = false;
   timingInputBlockIndex = -1;
+
+  if (nextSectionName) {
+    // 次のセクションへ移動
+    showSection(nextSectionName);
+
+    const nextBlocks = sectionData[nextSectionName] || [];
+
+    // 次セクションの先頭ブロックを選択して待機
+    if (nextBlocks.length > 0) {
+      const firstBlockElement = document.querySelector(
+        `.lyricsBlock[data-block-id="${nextBlocks[0].id}"]`
+      );
+
+      if (firstBlockElement) {
+        selectLyricsBlock(firstBlockElement);
+      }
+    }
+
+    console.log(
+      `セクション完了：${completedSectionName} → ${nextSectionName}で待機`
+    );
+
+    return;
+  }
+
+  // 最終セクションでは最後のブロックを選択したまま終了
+  selectLyricsBlockByIndex(completedBlockIndex);
+
+  console.log('全セクションのタイミング入力が完了しました');
 }
 
 
