@@ -1558,3 +1558,30 @@ input[type="range"] {
   top: 50%;
   pointer-events: none;
 }
+
+
+.timelineZoomControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.timelineZoomControls button {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  border-radius: 8px;
+}
+
+#timelineZoomSlider {
+  width: 140px;
+}
+
+#timelineZoomValue {
+  min-width: 58px;
+  font-size: 12px;
+  color: #9ea8b8;
+  font-variant-numeric: tabular-nums;
+}

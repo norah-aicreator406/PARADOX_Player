@@ -775,6 +775,8 @@ const sectionData = {
   'Chorus': []
 };
 
+const selectedLyricsBlockIds = new Set();
+let lastSelectedLyricsBlockId = null;
 let currentEditorSong = null;
 let currentProjectPath = null;
 let editorAudio = null;
@@ -1465,15 +1467,89 @@ const deleteLyricsBlockButton =
 // pushUndoState();
   document.getElementById('deleteLyricsBlockButton');
 
-function selectLyricsBlock(block) {
-  document.querySelectorAll('.lyricsBlock').forEach(item => {
-    item.classList.remove('selected');
-  });
+function selectLyricsBlock(
+  block,
+  {
+    additive = false,
+    range = false
+  } = {}
+) {
+  if (!block) return;
 
-  block.classList.add('selected');
+  const blockId = block.dataset.blockId;
+  if (!blockId) return;
 
-  loadLyricsBlockToInspector(block);
+  const blocks = sectionData[currentSectionName] || [];
+
+  // Shift＋クリック：直前選択から範囲選択
+  if (
+    range &&
+    lastSelectedLyricsBlockId
+  ) {
+    const startIndex = blocks.findIndex(
+      item => item.id === lastSelectedLyricsBlockId
+    );
+
+    const endIndex = blocks.findIndex(
+      item => item.id === blockId
+    );
+
+    if (startIndex !== -1 && endIndex !== -1) {
+      const from = Math.min(startIndex, endIndex);
+      const to = Math.max(startIndex, endIndex);
+
+      // Shift単独なら既存選択を解除して範囲だけ選択
+      if (!additive) {
+        selectedLyricsBlockIds.clear();
+      }
+
+      for (let index = from; index <= to; index += 1) {
+        selectedLyricsBlockIds.add(blocks[index].id);
+      }
+    }
+  }
+
+  // Command / Ctrl＋クリック：個別追加・解除
+  else if (additive) {
+    if (selectedLyricsBlockIds.has(blockId)) {
+      selectedLyricsBlockIds.delete(blockId);
+    } else {
+      selectedLyricsBlockIds.add(blockId);
+    }
+
+    lastSelectedLyricsBlockId = blockId;
+  }
+
+  // 通常クリック：1件だけ選択
+  else {
+    selectedLyricsBlockIds.clear();
+    selectedLyricsBlockIds.add(blockId);
+    lastSelectedLyricsBlockId = blockId;
+  }
+
+  applyLyricsBlockSelectionClasses();
+
+  // 最後にクリックしたブロックをInspectorの代表にする
+  if (selectedLyricsBlockIds.has(blockId)) {
+    loadLyricsBlockToInspector(block);
+  }
 }
+
+
+function applyLyricsBlockSelectionClasses() {
+  document
+    .querySelectorAll('.lyricsBlock')
+    .forEach(block => {
+      const blockId = block.dataset.blockId;
+
+      block.classList.toggle(
+        'selected',
+        selectedLyricsBlockIds.has(blockId)
+      );
+    });
+}
+
+
 
 function loadLyricsBlockToInspector(block) {
   const blockId = block.dataset.blockId;
@@ -1582,12 +1658,17 @@ function renderSectionBlocks() {
 
   lyricsBlockList.innerHTML = '';
 
-  const blocks = sectionData[currentSectionName] || [];
+  const blocks =
+    sectionData[currentSectionName] || [];
 
   blocks.forEach(blockData => {
-    const block = createLyricsBlockFromData(blockData);
+    const block =
+      createLyricsBlockFromData(blockData);
+
     lyricsBlockList.appendChild(block);
   });
+
+  applyLyricsBlockSelectionClasses();
 }
 
 function syncCurrentSectionOrderFromDOM() {
@@ -1660,9 +1741,21 @@ console.log('timeline block style:', {
     <div class="lyricsResizeHandle"></div>
   `;
 
-  block.addEventListener('click', () => {
-    selectLyricsBlock(block);
+  block.addEventListener('click', event => {
+  const additive =
+    event.ctrlKey ||
+    event.metaKey;
+
+  const range =
+    event.shiftKey;
+
+  selectLyricsBlock(block, {
+    additive,
+    range
   });
+
+  event.stopPropagation();
+});
 
   // setupLyricsBlockDrag(block);
   setupTimelineBlockDrag(block, blockData);
@@ -1847,6 +1940,20 @@ if (addLyricsBlockButton && lyricsBlockList) {
   });
 }
 
+
+
+if (lyricsBlockList) {
+  lyricsBlockList.addEventListener('click', event => {
+    if (event.target.closest('.lyricsBlock')) return;
+
+    selectedLyricsBlockIds.clear();
+    lastSelectedLyricsBlockId = null;
+
+    applyLyricsBlockSelectionClasses();
+  });
+}
+
+/*
 if (lyricsBlockList) {
   lyricsBlockList.addEventListener('click', (event) => {
     const block = event.target.closest('.lyricsBlock');
@@ -1856,6 +1963,7 @@ if (lyricsBlockList) {
     selectLyricsBlock(block);
   });
 }
+*/  
 
 if (lyricsBlockList) {
 
@@ -2453,11 +2561,17 @@ function setupTimelineSeekByClick() {
   if (!trackArea || !timelineContent) return;
 
   timelineContent.addEventListener('mousedown', (event) => {
-    if (event.target.closest('.lyricsBlock')) return;
-    if (event.target.closest('#timelinePlayhead')) return;
-    if (!editorAudio || !editorAudioReady) return;
+  if (event.target.closest('.lyricsBlock')) return;
+  if (event.target.closest('#timelinePlayhead')) return;
 
-    autoFollowPlayhead = true;
+  // 空白部分を押した時点で全選択解除
+  selectedLyricsBlockIds.clear();
+  lastSelectedLyricsBlockId = null;
+  applyLyricsBlockSelectionClasses();
+
+  if (!editorAudio || !editorAudioReady) return;
+
+  autoFollowPlayhead = true;
 
     const rect = timelineContent.getBoundingClientRect();
     const x = event.clientX - rect.left;
@@ -2589,6 +2703,49 @@ function setupTimelineZoomByWheel() {
     setTimelineZoom(timelineScale + zoomStep);
   }, { passive: false });
 }
+
+function setupTimelineZoomControls() {
+  const zoomOutButton =
+    document.getElementById('timelineZoomOutButton');
+
+  const zoomInButton =
+    document.getElementById('timelineZoomInButton');
+
+  const zoomSlider =
+    document.getElementById('timelineZoomSlider');
+
+  const zoomValue =
+    document.getElementById('timelineZoomValue');
+
+  if (!zoomSlider) return;
+
+  function refreshZoomUi() {
+    zoomSlider.value = String(timelineScale);
+
+    if (zoomValue) {
+      zoomValue.textContent = `${timelineScale}px/s`;
+    }
+  }
+
+  zoomSlider.addEventListener('input', () => {
+    setTimelineZoom(Number(zoomSlider.value));
+    refreshZoomUi();
+  });
+
+  zoomOutButton?.addEventListener('click', () => {
+    setTimelineZoom(timelineScale - 10);
+    refreshZoomUi();
+  });
+
+  zoomInButton?.addEventListener('click', () => {
+    setTimelineZoom(timelineScale + 10);
+    refreshZoomUi();
+  });
+
+  refreshZoomUi();
+}
+
+
 
 function getTimelineRulerStep() {
   if (timelineScale < 40) return 30;
@@ -3140,3 +3297,5 @@ setupTimelineZoomByWheel();
 setupInlineLyricsTextEdit();
 setupLyricsWidthResize(); // 左右ハンドル
 setupLyricsRotationHandle(); // 右上回転ハンドル
+setupTimelineZoomControls();
+setupTimelineZoomByWheel();
