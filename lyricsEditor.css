@@ -1512,3 +1512,35 @@ input[type="range"] {
   word-break: keep-all;
   overflow-wrap: break-word;
 }
+
+
+.sectionTabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.sectionTab {
+  height: 30px;
+  padding: 0 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  background: #1b202a;
+  color: #cfd6e6;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sectionTab.active {
+  background: #5CC8FF;
+  color: #071018;
+  box-shadow: 0 0 14px rgba(92,200,255,.45);
+}
+
+.sectionTabAdd {
+  min-width: 34px;
+  padding: 0 12px;
+}

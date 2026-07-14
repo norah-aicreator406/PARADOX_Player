@@ -232,6 +232,9 @@ let isDraggingPlayhead = false;
 let isUserScrollingTimeline = false;
 let timelineScrollTimer = null;
 let isAutoScrollingTimeline = false;
+let isTimingInputMode = false;
+let timingInputStarted = false;
+let timingInputBlockIndex = -1;
 
 
 
@@ -1402,7 +1405,15 @@ function loadLyricsBlockToInspector(block) {
 
   sizeValue.textContent = sizeInput.value;
 
-let isTimingInputMode = false;
+  outlineWidthValue.textContent = outlineWidthInput.value;
+  shadowBlurValue.textContent = shadowBlurInput.value;
+  shadowXValue.textContent = shadowXInput.value;
+  shadowYValue.textContent = shadowYInput.value;
+  letterSpacingValue.textContent = letterSpacingInput.value;
+  lineHeightValue.textContent = lineHeightInput.value;
+
+  updateEditorPreview(blockData);
+}
 
 const timingInputToggle = document.getElementById('timingInputToggle');
 
@@ -1416,17 +1427,13 @@ if (timingInputToggle) {
   if (timingShortcutGuide) {
       timingShortcutGuide.classList.toggle('is-active', isTimingInputMode);
     }
+
+    if (!isTimingInputMode) {
+    timingInputStarted = false;
+    timingInputBlockIndex = -1;
+  }
+
   });
-}
-
-  outlineWidthValue.textContent = outlineWidthInput.value;
-  shadowBlurValue.textContent = shadowBlurInput.value;
-  shadowXValue.textContent = shadowXInput.value;
-  shadowYValue.textContent = shadowYInput.value;
-  letterSpacingValue.textContent = letterSpacingInput.value;
-  lineHeightValue.textContent = lineHeightInput.value;
-
-  updateEditorPreview(blockData);
 }
 
 
@@ -1888,6 +1895,8 @@ const firstBlock = document.querySelector('.lyricsBlock');
 if (firstBlock) {
   selectLyricsBlock(firstBlock);
 }
+
+renderSectionTabs();
 
 }
 
@@ -2679,14 +2688,244 @@ function importParsedLyricsToEditor() {
   });
 
   const sectionNames = Object.keys(sectionData);
-  currentSectionName = sectionNames[0] || 'Verse 1';
+currentSectionName = sectionNames[0] || 'Verse 1';
 
-  closeLyricsImportDialog();
-  showSection(currentSectionName);
-  renderSectionBlocks();
+closeLyricsImportDialog();
+showSection(currentSectionName);
 }
 
 
+function renderSectionTabs() {
+  const container = document.getElementById('sectionTabs');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  Object.keys(sectionData).forEach(sectionName => {
+    const tab = document.createElement('button');
+    tab.className = 'sectionTab';
+    tab.textContent = sectionName;
+
+    if (sectionName === currentSectionName) {
+      tab.classList.add('active');
+    }
+
+    let sectionTabClickTimer = null;
+
+    tab.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (sectionTabClickTimer) {
+        clearTimeout(sectionTabClickTimer);
+        sectionTabClickTimer = null;
+        renameSection(sectionName);
+        return;
+      }
+
+      sectionTabClickTimer = setTimeout(() => {
+        showSection(sectionName);
+        sectionTabClickTimer = null;
+      }, 220);
+    });
+
+    container.appendChild(tab);
+  });
+
+  const addButton = document.createElement('button');
+  addButton.className = 'sectionTab sectionTabAdd';
+  addButton.textContent = '+';
+
+  addButton.addEventListener('click', () => {
+    const name = prompt('セクション名を入力してください', 'New Section');
+    if (!name) return;
+
+    if (!sectionData[name]) {
+      sectionData[name] = [];
+    }
+
+    showSection(name);
+  });
+
+  container.appendChild(addButton);
+}
+
+
+function renameSection(oldName) {
+  const newName = prompt('セクション名を変更', oldName);
+
+  if (!newName) return;
+  if (newName === oldName) return;
+
+  if (sectionData[newName]) {
+    alert('同じ名前のセクションがすでにあります。');
+    return;
+  }
+
+  sectionData[newName] = sectionData[oldName] || [];
+  delete sectionData[oldName];
+
+  if (currentSectionName === oldName) {
+    currentSectionName = newName;
+  }
+
+  showSection(currentSectionName);
+}
+
+
+
+function isTypingInInputElement() {
+  const activeElement = document.activeElement;
+
+  return (
+    activeElement instanceof HTMLInputElement ||
+    activeElement instanceof HTMLTextAreaElement ||
+    activeElement instanceof HTMLSelectElement ||
+    activeElement?.isContentEditable
+  );
+}
+
+function getSelectedLyricsBlockIndex() {
+  const selectedBlock = document.querySelector('.lyricsBlock.selected');
+  if (!selectedBlock) return -1;
+
+  const blockId = selectedBlock.dataset.blockId;
+  const blocks = sectionData[currentSectionName] || [];
+
+  return blocks.findIndex(block => block.id === blockId);
+}
+
+function selectLyricsBlockByIndex(index) {
+  const blocks = sectionData[currentSectionName] || [];
+  const blockData = blocks[index];
+
+  if (!blockData) return;
+
+  renderSectionBlocks();
+
+  const blockElement = document.querySelector(
+    `.lyricsBlock[data-block-id="${blockData.id}"]`
+  );
+
+  if (blockElement) {
+    selectLyricsBlock(blockElement);
+  }
+}
+
+function ensureBlockEndAfterStart(block, startSeconds) {
+  const currentEnd = parseTimeToSeconds(block.end);
+
+  if (currentEnd <= startSeconds) {
+    block.end = formatSecondsToTime(startSeconds + 0.5);
+  }
+}
+
+
+function handleTimingInputB() {
+  if (!editorAudio || !editorAudioReady) return;
+
+  const blocks = sectionData[currentSectionName] || [];
+  if (blocks.length === 0) return;
+
+  const currentSeconds = editorAudio.currentTime;
+  const currentTimeText = formatSecondsToTime(currentSeconds);
+
+  // 最初のB
+  if (!timingInputStarted) {
+    const selectedIndex = getSelectedLyricsBlockIndex();
+
+    timingInputBlockIndex =
+      selectedIndex >= 0 ? selectedIndex : 0;
+
+    const block = blocks[timingInputBlockIndex];
+
+    block.start = currentTimeText;
+    ensureBlockEndAfterStart(block, currentSeconds);
+
+    timingInputStarted = true;
+
+    selectLyricsBlockByIndex(timingInputBlockIndex);
+
+    if (editorAudio.paused) {
+      editorAudio.play();
+    }
+
+    return;
+  }
+
+  // 2回目以降のB
+  const currentBlock = blocks[timingInputBlockIndex];
+  const nextBlock = blocks[timingInputBlockIndex + 1];
+
+  if (!currentBlock || !nextBlock) {
+    console.warn('最後のブロックです。終了位置ではEを押してください。');
+    return;
+  }
+
+  // 現在ブロック終了
+  currentBlock.end = currentTimeText;
+
+  // 次ブロック開始
+  timingInputBlockIndex += 1;
+
+  nextBlock.start = currentTimeText;
+  ensureBlockEndAfterStart(nextBlock, currentSeconds);
+
+  selectLyricsBlockByIndex(timingInputBlockIndex);
+}
+
+
+function handleTimingInputE() {
+  if (!editorAudio || !editorAudioReady) return;
+  if (!timingInputStarted) return;
+
+  const blocks = sectionData[currentSectionName] || [];
+  const currentBlock = blocks[timingInputBlockIndex];
+
+  if (!currentBlock) return;
+
+  currentBlock.end =
+    formatSecondsToTime(editorAudio.currentTime);
+
+  selectLyricsBlockByIndex(timingInputBlockIndex);
+
+  editorAudio.pause();
+
+  timingInputStarted = false;
+  timingInputBlockIndex = -1;
+}
+
+
+document.addEventListener('keydown', (event) => {
+  if (!isTimingInputMode) return;
+  if (isTypingInInputElement()) return;
+  if (event.repeat) return;
+
+  if (event.code === 'Space') {
+    event.preventDefault();
+
+    if (!editorAudio || !editorAudioReady) return;
+
+    if (editorAudio.paused) {
+      editorAudio.play();
+    } else {
+      editorAudio.pause();
+    }
+
+    return;
+  }
+
+  if (event.key.toLowerCase() === 'b') {
+    event.preventDefault();
+    handleTimingInputB();
+    return;
+  }
+
+  if (event.key.toLowerCase() === 'e') {
+    event.preventDefault();
+    handleTimingInputE();
+  }
+});
 
 
 
