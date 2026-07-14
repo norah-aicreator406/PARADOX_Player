@@ -2010,16 +2010,48 @@ if (duplicateLyricsBlockButton && lyricsBlockList) {
 
 if (deleteLyricsBlockButton) {
   deleteLyricsBlockButton.addEventListener('click', () => {
-    const selectedBlock = getSelectedLyricsBlock();
-    if (!selectedBlock) return;
+    if (selectedLyricsBlockIds.size === 0) return;
 
-    const blockId = selectedBlock.dataset.blockId;
+    const deleteCount = selectedLyricsBlockIds.size;
+
+    const ok = confirm(
+      `${deleteCount}個の歌詞ブロックを削除しますか？`
+    );
+
+    if (!ok) return;
+
     const blocks = sectionData[currentSectionName] || [];
 
     sectionData[currentSectionName] =
-      blocks.filter(block => block.id !== blockId);
+      blocks.filter(block =>
+        !selectedLyricsBlockIds.has(block.id)
+      );
+
+    selectedLyricsBlockIds.clear();
+    lastSelectedLyricsBlockId = null;
 
     renderSectionBlocks();
+
+    const firstBlock =
+      document.querySelector('.lyricsBlock');
+
+    if (firstBlock) {
+      selectLyricsBlock(firstBlock);
+    } else {
+      const previewLyrics =
+        document.getElementById('editorPreviewLyrics');
+
+      const previewLayer =
+        document.getElementById('editorPreviewLyricsLayer');
+
+      if (previewLyrics) {
+        previewLyrics.innerHTML = '';
+      }
+
+      if (previewLayer) {
+        previewLayer.innerHTML = '';
+      }
+    }
   });
 }
 
