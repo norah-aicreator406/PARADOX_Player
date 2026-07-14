@@ -4,7 +4,7 @@ let timelineScale = 90; // 1秒 = 90px
 const TIMELINE_SCALE_MIN = 20;
 const TIMELINE_SCALE_MAX = 260;
 const TIMELINE_ROW_HEIGHT = 56;
-const TIMELINE_MIN_BLOCK_WIDTH = 260;
+const TIMELINE_MIN_BLOCK_WIDTH = 24;
 
 const lyricsImportDialog = document.getElementById('lyricsImportDialog');
 const openLyricsImportButton = document.getElementById('openLyricsImportButton');
@@ -1023,6 +1023,75 @@ function getCurrentEditorLyricsBlock() {
 }
 
 
+function getCurrentEditorLyricsBlocks() {
+  if (!editorAudio) return [];
+
+  const currentTime = editorAudio.currentTime;
+  const blocks = getAllLyricsBlocksSorted();
+
+  return blocks
+    .filter(block => {
+      const start = parseTimeToSeconds(block.start);
+      const end = parseTimeToSeconds(block.end);
+
+      return currentTime >= start && currentTime < end;
+    })
+    .sort((a, b) => {
+      const zA = Number(a.position?.z) || 0;
+      const zB = Number(b.position?.z) || 0;
+
+      return zA - zB;
+    });
+}
+
+
+function renderEditorActiveLyrics(blocks) {
+  const layer = document.getElementById('editorPreviewLyricsLayer');
+  const mainLyrics = document.getElementById('editorPreviewLyrics');
+
+  if (!layer || !mainLyrics) return;
+
+  layer.innerHTML = '';
+
+  if (!blocks.length) {
+    mainLyrics.innerHTML = '';
+    return;
+  }
+
+  const selectedBlockData = getSelectedLyricsBlockData();
+
+  const primaryBlock =
+    blocks.find(block => block.id === selectedBlockData?.id) ||
+    blocks[blocks.length - 1];
+
+  // 選択・直接操作用のメイン歌詞
+  updateEditorPreview(primaryBlock);
+
+  // Inspectorもメイン歌詞へ同期
+  textInput.value = primaryBlock.text || '';
+  startTimeInput.value = primaryBlock.start || '00:00.00';
+  endTimeInput.value = primaryBlock.end || '00:03.00';
+  animationPresetInput.value =
+    primaryBlock.animationPreset || 'fade';
+
+  // メイン以外を追加表示
+  blocks.forEach(block => {
+    if (block.id === primaryBlock.id) return;
+
+    const item = document.createElement('div');
+    item.className = 'editorPreviewLyricsItem';
+    item.dataset.blockId = block.id;
+    item.style.zIndex = String(Number(block.position?.z) || 0);
+
+    layer.appendChild(item);
+
+    const payload = buildLyricsPayloadForVisualizer(block);
+    window.LyricsRenderer.render(item, payload);
+  });
+}
+
+
+
 function buildLyricsPayloadForVisualizer(block) {
   console.log('★★★★ NEW buildLyricsPayloadForVisualizer RUNNING ★★★★', block);
   if (!block) return null;
@@ -1061,25 +1130,58 @@ function buildLyricsPayloadForVisualizer(block) {
   };
 }
 
-let lastSentPreviewLyricsId = null;
+let lastSentPreviewLyricsSignature = '';
 
 function updateEditorPreviewByTimeline() {
-  const currentBlock = getCurrentEditorLyricsBlock();
-  const previewLyrics = document.getElementById('editorPreviewLyrics');
+  const currentBlocks = getCurrentEditorLyricsBlocks();
 
-  if (!currentBlock) {
-    if (previewLyrics) previewLyrics.textContent = '';
-    lastSentPreviewLyricsId = null;
+ console.log(
+    'ACTIVE LYRICS AT TIME:',
+    editorAudio?.currentTime,
+    currentBlocks.length,
+    currentBlocks.map(block => ({
+      text: block.text,
+      start: block.start,
+      end: block.end
+    }))
+  );
+
+  if (currentBlocks.length === 0) {
+    const previewLyrics =
+      document.getElementById('editorPreviewLyrics');
+
+    const layer =
+      document.getElementById('editorPreviewLyricsLayer');
+
+    if (previewLyrics) {
+      previewLyrics.innerHTML = '';
+    }
+
+    if (layer) {
+      layer.innerHTML = '';
+    }
+
+    // すでに空なら何度も送らない
+    if (lastSentPreviewLyricsSignature !== '[]') {
+      lastSentPreviewLyricsSignature = '[]';
+
+      ipcRenderer.invoke(
+  'send-lyrics-to-visualizer',
+  {
+    source: 'lyrics-editor',
+    blocks: []
+  }
+);
+    }
+
     return;
   }
 
-  textInput.value = currentBlock.text || '';
-  startTimeInput.value = currentBlock.start || '00:00.00';
-  endTimeInput.value = currentBlock.end || '00:03.00';
-  animationPresetInput.value = currentBlock.animationPreset || 'fade';
+  // エディター側の複数表示
+  renderEditorActiveLyrics(currentBlocks);
 
-  updateEditorPreview(currentBlock);
-  sendLyricsBlockToVisualizer(currentBlock);
+  // Visualizer側へ複数ブロックを配列送信
+  sendLyricsBlocksToVisualizer(currentBlocks);
 }
 
 function setupEditorAudioPlayer(audioPath) {
@@ -2088,14 +2190,76 @@ function applyPreviewLyricsPosition(blockData) {
 
 
 function sendLyricsBlockToVisualizer(block) {
+
+const payloads = safeBlocks
+  .map(block => buildLyricsPayloadForVisualizer(block))
+  .filter(Boolean);
+  
   if (!block) return;
 
-  const payload = buildLyricsPayloadForVisualizer(block);
+  /*
+   * 再生中は単体で送らない。
+   * 現在時刻に表示対象となる全ブロックを送る。
+   */
+  if (
+    editorAudio &&
+    editorAudioReady &&
+    !editorAudio.paused
+  ) {
+    const activeBlocks = getCurrentEditorLyricsBlocks();
 
-  console.log('SEND layout:', payload.layout);
-  console.log('SEND payload:', JSON.stringify(payload, null, 2));
+    sendLyricsBlocksToVisualizer(activeBlocks);
+    return;
+  }
 
-  ipcRenderer.invoke('send-lyrics-to-visualizer', payload);
+  /*
+   * 停止中の編集操作では、選択中ブロックを単体表示する。
+   */
+  const payload =
+    buildLyricsPayloadForVisualizer(block);
+
+  lastSentPreviewLyricsSignature = '';
+
+  ipcRenderer.invoke(
+    'send-lyrics-to-visualizer',
+    {
+      source: 'lyrics-editor',
+      blocks: [payload]
+    }
+  );
+}
+
+
+function sendLyricsBlocksToVisualizer(blocks) {
+  const safeBlocks = Array.isArray(blocks)
+    ? blocks.filter(Boolean)
+    : [];
+
+  const payloads = safeBlocks
+    .map(block => buildLyricsPayloadForVisualizer(block))
+    .filter(Boolean);
+
+  const signature = JSON.stringify(payloads);
+
+  if (signature === lastSentPreviewLyricsSignature) {
+    return;
+  }
+
+  lastSentPreviewLyricsSignature = signature;
+
+  console.log(
+    'EDITOR SEND MULTIPLE:',
+    payloads.length,
+    payloads
+  );
+
+  ipcRenderer.invoke(
+    'send-lyrics-to-visualizer',
+    {
+      source: 'lyrics-editor',
+      blocks: payloads
+    }
+  );
 }
 
 

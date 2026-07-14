@@ -654,3 +654,22 @@ html, body {
   word-break: keep-all;
   overflow-wrap: break-word;
 }
+
+#lyricsBlocksLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.visualizerLyricsBlock {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  pointer-events: none;
+}
+
+#lyricsBlock {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}

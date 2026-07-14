@@ -39,9 +39,12 @@ window.LyricsRenderer = {
 
     targetElement.style.width = `${width}px`;
     targetElement.style.maxWidth = `${width}px`;
+    targetElement.style.boxSizing = 'border-box';
+
     targetElement.style.whiteSpace = 'pre-wrap';
-    targetElement.style.wordBreak = 'keep-all';
-    targetElement.style.overflowWrap = 'normal';
+    targetElement.style.wordBreak = 'normal';
+    targetElement.style.overflowWrap = 'anywhere';
+    targetElement.style.lineBreak = 'strict';
 
     targetElement.style.webkitTextStroke =
       `${Number(style.outlineWidth) || 0}px ${style.outlineColor || '#000000'}`;

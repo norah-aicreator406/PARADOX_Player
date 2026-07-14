@@ -1150,12 +1150,20 @@ function setLyrics(
   position = { x: 0, y: 0, z: 0 },
   layout = { width: 900, rotation: 0 }
 ) {
-  const lyricsBlock = document.getElementById('lyricsBlock');
+  const lyricsBlocksLayer =
+    document.getElementById('lyricsBlocksLayer');
 
-  if (!lyricsBlock) {
-    console.error('lyricsBlock が見つかりません');
+  if (!lyricsBlocksLayer) {
+    console.error('lyricsBlocksLayer が見つかりません');
     return;
   }
+
+  lyricsBlocksLayer.innerHTML = '';
+
+  const lyricsBlock = document.createElement('div');
+  lyricsBlock.className = 'visualizerLyricsBlock';
+
+  lyricsBlocksLayer.appendChild(lyricsBlock);
 
   const payload = {
     lines,
@@ -1166,58 +1174,118 @@ function setLyrics(
   };
 
   window.LyricsRenderer.render(lyricsBlock, payload);
-
-  applyLyricsAnimation(animation);
+  applyLyricsAnimation(lyricsBlock, animation);
 }
 
 
-function applyLyricsAnimation(animation = {}) {
-  const lyricsBlock = document.getElementById('lyricsBlock');
-  if (!lyricsBlock) return;
+function setLyricsBlocks(blocks) {
+  const lyricsBlocksLayer =
+    document.getElementById('lyricsBlocksLayer');
+
+  if (!lyricsBlocksLayer) {
+    console.error('lyricsBlocksLayer が見つかりません');
+    return;
+  }
+
+  lyricsBlocksLayer.innerHTML = '';
+
+  const safeBlocks = Array.isArray(blocks)
+    ? blocks.filter(Boolean)
+    : [];
+
+  safeBlocks
+    .slice()
+    .sort((a, b) => {
+      const zA = Number(a?.position?.z) || 0;
+      const zB = Number(b?.position?.z) || 0;
+
+      return zA - zB;
+    })
+    .forEach((block) => {
+      const lyricsBlock = document.createElement('div');
+
+      lyricsBlock.className = 'visualizerLyricsBlock';
+      lyricsBlock.dataset.blockId = block.id || '';
+      lyricsBlock.style.zIndex =
+        String(Number(block?.position?.z) || 0);
+
+      lyricsBlocksLayer.appendChild(lyricsBlock);
+
+      window.LyricsRenderer.render(
+        lyricsBlock,
+        block
+      );
+
+      applyLyricsAnimation(
+        lyricsBlock,
+        block.animation || {
+          preset: 'fade',
+          duration: 0.5
+        }
+      );
+    });
+}
+
+
+function applyLyricsAnimation(targetElement, animation = {}) {
+  if (!targetElement) return;
 
   const preset = animation.preset || 'fade';
   const duration = Number(animation.duration ?? 0.5);
 
-  lyricsBlock.style.setProperty('--lyrics-motion-duration', `${duration}s`);
+  targetElement.style.setProperty(
+    '--lyrics-motion-duration',
+    `${duration}s`
+  );
 
-  lyricsBlock.classList.remove(
+  targetElement.classList.remove(
     'lyrics-motion-fade',
     'lyrics-motion-slide-up',
     'lyrics-motion-zoom'
   );
 
-  void lyricsBlock.offsetWidth;
+  void targetElement.offsetWidth;
 
   if (preset === 'slideUp') {
-    lyricsBlock.classList.add('lyrics-motion-slide-up');
+    targetElement.classList.add('lyrics-motion-slide-up');
   } else if (preset === 'zoom') {
-    lyricsBlock.classList.add('lyrics-motion-zoom');
+    targetElement.classList.add('lyrics-motion-zoom');
   } else {
-    lyricsBlock.classList.add('lyrics-motion-fade');
+    targetElement.classList.add('lyrics-motion-fade');
   }
 }
 
 
 
 function clearLyrics() {
-  const lyricsBlock = document.getElementById('lyricsBlock');
+  const layer = document.getElementById('lyricsBlocksLayer');
 
-  if (!lyricsBlock) return;
+  if (!layer) return;
 
-  lyricsBlock.innerHTML = '';
-  lyricsBlock.style.opacity = '0';
+  layer.innerHTML = '';
 }
 
 function showLyrics() {
-  const visualizerCanvas = document.getElementById('visualizerCanvas');
-  const lyricsLayer = document.getElementById('lyricsLayer');
-  const lyricsCanvas = document.getElementById('lyricsCanvas');
-  const lyricsBlock = document.getElementById('lyricsBlock');
+  const visualizerCanvas =
+    document.getElementById('visualizerCanvas');
 
-  if (visualizerCanvas) visualizerCanvas.style.display = 'block';
-  if (lyricsLayer) lyricsLayer.style.display = 'block';
-  if (lyricsCanvas) lyricsCanvas.style.display = 'block';
-  if (lyricsBlock) lyricsBlock.style.opacity = '1';
+  const lyricsLayer =
+    document.getElementById('lyricsLayer');
+
+  const lyricsCanvas =
+    document.getElementById('lyricsCanvas');
+
+  if (visualizerCanvas) {
+    visualizerCanvas.style.display = 'block';
+  }
+
+  if (lyricsLayer) {
+    lyricsLayer.style.display = 'block';
+  }
+
+  if (lyricsCanvas) {
+    lyricsCanvas.style.display = 'block';
+  }
 
   resizeVisualizerCanvas();
 }
@@ -1529,25 +1597,48 @@ ipcRenderer.on('visualizer-effect-settings', (event, settings) => {
   console.log('[Visualizer] effectSettings applied:', effectSettings);
 });
 
-ipcRenderer.on('visualizer-lyrics', (event, lyrics) => {
-  console.log('VISUALIZER received layout:', lyrics?.layout);
-console.log('VISUALIZER received:', JSON.stringify(lyrics, null, 2));
 
-  if (!lyrics) {
+let lyricsEditorControlsVisualizer = false;
+
+ipcRenderer.on('visualizer-lyrics', (event, lyricsPayload) => {
+  if (!lyricsPayload) {
     clearLyrics();
     return;
   }
 
-  if (Array.isArray(lyrics.lines)) {
-    setLyrics(
-  lyrics.lines,
-  lyrics.animation,
-  lyrics.style,
-  lyrics.position,
-  lyrics.layout
-);
+  // 配列が直接送られた場合
+  if (Array.isArray(lyricsPayload)) {
+    setLyricsBlocks(lyricsPayload);
     showLyrics();
+    return;
   }
+
+  // { blocks: [...] } 形式
+  if (Array.isArray(lyricsPayload.blocks)) {
+    setLyricsBlocks(lyricsPayload.blocks);
+    showLyrics();
+    return;
+  }
+
+  // 従来の単体形式
+  if (
+    Array.isArray(lyricsPayload.lines) ||
+    typeof lyricsPayload.text === 'string'
+  ) {
+    setLyrics(
+      lyricsPayload.lines ||
+        String(lyricsPayload.text || '').split('\n'),
+      lyricsPayload.animation,
+      lyricsPayload.style,
+      lyricsPayload.position,
+      lyricsPayload.layout
+    );
+
+    showLyrics();
+    return;
+  }
+
+  clearLyrics();
 });
 
 

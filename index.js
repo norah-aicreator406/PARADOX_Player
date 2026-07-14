@@ -96,12 +96,11 @@ if (bottomPlayPauseButton) {
   });
 }
 audio.addEventListener('timeupdate', sendVisualizerTime);
-audio.addEventListener('timeupdate', updateLyricsByTime);
 audio.addEventListener('loadedmetadata', sendVisualizerTime);
 audio.addEventListener('ended', sendVisualizerTime);
 
 let currentLyricsBlocks = [];
-let currentLyricsBlockId = null;
+let currentLyricsBlockSignature = '';
 
 function parseTimeToSeconds(timeText) {
   if (!timeText) return 0;
@@ -115,7 +114,7 @@ function parseTimeToSeconds(timeText) {
 
 function loadLyricsBlocksFromProject(song) {
   currentLyricsBlocks = [];
-  currentLyricsBlockId = null;
+  currentLyricsBlockSignature = '';
 
   if (!song?.projectPath || !fs.existsSync(song.projectPath)) {
     ipcRenderer.invoke('send-lyrics-to-visualizer', null);
@@ -151,33 +150,53 @@ function loadLyricsBlocksFromProject(song) {
   }
 }
 
-function getCurrentLyricsBlock(currentTime) {
-  return currentLyricsBlocks.find(block =>
-    currentTime >= block.start && currentTime < block.end
-  ) || null;
+function getCurrentLyricsBlocks(currentTime) {
+  return currentLyricsBlocks
+    .filter(block =>
+      currentTime >= block.start &&
+      currentTime < block.end
+    )
+    .sort((a, b) => {
+      const zA = Number(a.position?.z) || 0;
+      const zB = Number(b.position?.z) || 0;
+
+      return zA - zB;
+    });
 }
 
 function updateLyricsByTime() {
-  const currentBlock = getCurrentLyricsBlock(audio.currentTime);
+  const activeBlocks =
+    getCurrentLyricsBlocks(audio.currentTime);
 
-  if (!currentBlock) {
-  currentLyricsBlockId = null;
-  return;
-}
+  const signature = activeBlocks
+    .map(block => block.id)
+    .join('|');
 
-  if (currentLyricsBlockId === currentBlock.id) return;
+  // 表示対象が前回と同じなら送信しない
+  if (signature === currentLyricsBlockSignature) {
+    return;
+  }
 
-  currentLyricsBlockId = currentBlock.id;
+  currentLyricsBlockSignature = signature;
 
-  ipcRenderer.invoke('send-lyrics-to-visualizer', {
-  id: currentBlock.id,
-  lines: currentBlock.lines,
-  text: currentBlock.text || '',
-  style: currentBlock.style || {},
-  position: currentBlock.position || { x: 0, y: 0, z: 0 },
-  layout: currentBlock.layout || { width: 900, rotation: 0 },
-  animation: currentBlock.animation
-});
+  // 現在時刻に歌詞がない
+  if (activeBlocks.length === 0) {
+    ipcRenderer.invoke(
+      'send-lyrics-to-visualizer',
+      null
+    );
+
+    return;
+  }
+
+  // 現在時刻に該当する歌詞をすべて送る
+  ipcRenderer.invoke(
+    'send-lyrics-to-visualizer',
+    {
+      source: 'player',
+      blocks: activeBlocks
+    }
+  );
 }
 
 

@@ -1168,7 +1168,7 @@ input[type="range"] {
 }
 
 #editorPreviewLyrics {
-  pointer-events: auto;
+  z-index: 20;
 }
 
 
@@ -1543,4 +1543,18 @@ input[type="range"] {
 .sectionTabAdd {
   min-width: 34px;
   padding: 0 12px;
+}
+
+#editorPreviewLyricsLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.editorPreviewLyricsItem {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  pointer-events: none;
 }
