@@ -237,6 +237,10 @@ let isAutoScrollingTimeline = false;
 let isTimingInputMode = false;
 let timingInputStarted = false;
 let timingInputBlockIndex = -1;
+const TIMING_GUIDE_POSITION_KEY =
+  'norahStudioTimingGuidePosition';
+
+let timingGuidePanel = null;
 let lastEditorActiveLyricsSignature = '';
 let previousEditorActiveLyricsIds = new Set();
 
@@ -999,6 +1003,13 @@ function formatEditorTime(seconds) {
 }
 
 
+function getTimelineScrollArea() {
+  return document.querySelector(
+    '.timelineScrollArea'
+  );
+}
+
+
 function updateTimelinePlayhead() {
   if (!editorAudio) return;
 
@@ -1007,28 +1018,14 @@ function updateTimelinePlayhead() {
   const seekBar = document.getElementById('editorSeekBar');
 
   if (playhead) {
-    const x = editorAudio.currentTime * timelineScale;
-    playhead.style.left = `${x}px`;
-    if (autoFollowPlayhead) {
-  const trackArea = document.querySelector('.timelineTrackArea');
+  const x =
+    editorAudio.currentTime *
+    timelineScale;
 
-  if (trackArea) {
-    const playheadX = editorAudio.currentTime * timelineScale;
-    const visibleLeft = trackArea.scrollLeft;
-    const visibleRight = visibleLeft + trackArea.clientWidth;
+  playhead.style.left = `${x}px`;
 
-    const margin = 120;
-
-    if (playheadX > visibleRight - margin) {
-      trackArea.scrollLeft = playheadX - trackArea.clientWidth + margin;
-    }
-
-    if (playheadX < visibleLeft + margin) {
-      trackArea.scrollLeft = Math.max(0, playheadX - margin);
-    }
-  }
+  followTimelinePlayheadHorizontally();
 }
-  }
 
   if (currentTimeLabel) {
     currentTimeLabel.textContent = formatEditorTime(editorAudio.currentTime);
@@ -1045,6 +1042,79 @@ function updateTimelinePlayhead() {
   }
   updateEditorPreviewByTimeline();
 }
+
+
+function followTimelinePlayheadHorizontally() {
+  if (!editorAudio) return;
+  if (!autoFollowPlayhead) return;
+  if (isDraggingPlayhead) return;
+
+  const scrollArea =
+    getTimelineScrollArea();
+
+  if (!scrollArea) return;
+
+  const playheadX =
+    editorAudio.currentTime * timelineScale;
+
+  const visibleLeft =
+    scrollArea.scrollLeft;
+
+  const visibleRight =
+    visibleLeft + scrollArea.clientWidth;
+
+  /*
+   * 赤バーが右端ギリギリまで行く前に
+   * 横スクロールを開始する。
+   */
+  const rightMargin = 160;
+
+  /*
+   * 巻き戻した際の左側余白。
+   */
+  const leftMargin = 80;
+
+  if (
+    playheadX >
+    visibleRight - rightMargin
+  ) {
+    const nextScrollLeft =
+      playheadX -
+      scrollArea.clientWidth +
+      rightMargin;
+
+    isAutoScrollingTimeline = true;
+
+    scrollArea.scrollLeft =
+      Math.max(0, nextScrollLeft);
+
+    requestAnimationFrame(() => {
+      isAutoScrollingTimeline = false;
+    });
+
+    return;
+  }
+
+  if (
+    playheadX <
+    visibleLeft + leftMargin
+  ) {
+    const nextScrollLeft =
+      playheadX - leftMargin;
+
+    isAutoScrollingTimeline = true;
+
+    scrollArea.scrollLeft =
+      Math.max(0, nextScrollLeft);
+
+    requestAnimationFrame(() => {
+      isAutoScrollingTimeline = false;
+    });
+  }
+}
+
+
+
 
 function getAllLyricsBlocksSorted() {
   return Object.entries(sectionData)
@@ -1316,7 +1386,14 @@ function setupEditorAudioPlayer(audioPath) {
    editorAudio.addEventListener('play', () => {
   lastEditorActiveLyricsSignature = '';
 
+  /*
+   * 再生開始時は、
+   * 現在の赤バー位置への追従を再開する。
+   */
+  autoFollowPlayhead = true;
+
   playButton.textContent = 'Ⅱ';
+
   startTimelinePlayheadLoop();
 });
 
@@ -1448,6 +1525,10 @@ if (timelineResizeHandle && editorApp) {
 
     editorApp.style.gridTemplateRows =
       `52px 1fr 8px ${clampedHeight}px`;
+
+      requestAnimationFrame(() => {
+      updateTimelineContentHeight();
+});
   });
 
   document.addEventListener('mouseup', () => {
@@ -1701,18 +1782,35 @@ if (timingInputToggle) {
   timingInputToggle.addEventListener('click', () => {
     isTimingInputMode = !isTimingInputMode;
 
-    timingInputToggle.textContent = isTimingInputMode ? 'ON' : 'OFF';
-    timingInputToggle.classList.toggle('is-active', isTimingInputMode);
+    timingInputToggle.textContent =
+      isTimingInputMode
+        ? 'ON'
+        : 'OFF';
 
-  if (timingShortcutGuide) {
-      timingShortcutGuide.classList.toggle('is-active', isTimingInputMode);
+    timingInputToggle.classList.toggle(
+      'is-active',
+      isTimingInputMode
+    );
+
+    if (
+      typeof timingShortcutGuide !== 'undefined' &&
+      timingShortcutGuide
+    ) {
+      timingShortcutGuide.classList.toggle(
+        'is-active',
+        isTimingInputMode
+      );
     }
 
-    if (!isTimingInputMode) {
+    if (isTimingInputMode) {
+      showTimingGuidePanel();
+      return;
+    }
+
     timingInputStarted = false;
     timingInputBlockIndex = -1;
-  }
 
+    hideTimingGuidePanel();
   });
 }
 
@@ -1771,6 +1869,8 @@ function renderSectionBlocks() {
   });
 
   applyLyricsBlockSelectionClasses();
+
+  updateTimelineContentHeight();
 }
 
 function syncCurrentSectionOrderFromDOM() {
@@ -2560,7 +2660,15 @@ function resizeEditorPreviewCanvas() {
   canvas.style.setProperty('--editor-preview-canvas-scale', String(scale));
 }
 
-window.addEventListener('resize', resizeEditorPreviewCanvas);
+window.addEventListener(
+  'resize',
+   resizeEditorPreviewCanvas
+);
+
+window.addEventListener(
+  'resize',
+  updateTimelineContentHeight
+);
 
 
 
@@ -2803,22 +2911,92 @@ function setupTimelinePlayheadDrag() {
 }
 
 function setupTimelineManualScrollDetection() {
-  const trackArea = document.querySelector('.timelineTrackArea');
-  if (isAutoScrollingTimeline) return;
-  if (!trackArea) return;
+  const scrollArea =
+    getTimelineScrollArea();
 
-  trackArea.addEventListener('scroll', () => {
-    if (isDraggingPlayhead) return;
+  if (!scrollArea) return;
 
-    isUserScrollingTimeline = true;
-    autoFollowPlayhead = false;
+  /*
+   * マウスホイールでタイムラインを操作した場合のみ、
+   * 自動追従を解除する。
+   *
+   * JavaScriptによるscrollLeft変更では
+   * wheelイベントは発生しないため、
+   * 自動スクロールを誤認しない。
+   */
+  scrollArea.addEventListener(
+    'wheel',
+    event => {
+      /*
+       * Command / Ctrl＋ホイールは
+       * タイムラインズーム用なので、
+       * 追従解除には使わない。
+       */
+      if (
+        event.ctrlKey ||
+        event.metaKey
+      ) {
+        return;
+      }
 
-    clearTimeout(timelineScrollTimer);
+      isUserScrollingTimeline = true;
+      autoFollowPlayhead = false;
 
-    timelineScrollTimer = setTimeout(() => {
-      isUserScrollingTimeline = false;
-    }, 300);
-  });
+      clearTimeout(timelineScrollTimer);
+
+      timelineScrollTimer =
+        setTimeout(() => {
+          isUserScrollingTimeline = false;
+        }, 300);
+    },
+    {
+      passive: true
+    }
+  );
+
+  /*
+   * スクロールバーを直接ドラッグした場合にも
+   * 追従を解除する。
+   *
+   * 歌詞ブロックや赤バーを押した操作は除外する。
+   */
+  scrollArea.addEventListener(
+    'mousedown',
+    event => {
+      if (
+        event.target.closest(
+          '.lyricsBlock'
+        )
+      ) {
+        return;
+      }
+
+      if (
+        event.target.closest(
+          '#timelinePlayhead'
+        )
+      ) {
+        return;
+      }
+
+      /*
+       * 横スクロールバー付近を押した場合だけ判定。
+       */
+      const rect =
+        scrollArea.getBoundingClientRect();
+
+      const scrollbarAreaHeight = 18;
+
+      const isScrollbarArea =
+        event.clientY >=
+        rect.bottom - scrollbarAreaHeight;
+
+      if (!isScrollbarArea) return;
+
+      autoFollowPlayhead = false;
+      isUserScrollingTimeline = true;
+    }
+  );
 }
 
 
@@ -2922,15 +3100,25 @@ function getTimelineRulerStep() {
 }
 
 
+
 function renderTimelineRuler() {
-  const ruler = document.querySelector('.timelineRuler');
-  const gridLines=document.getElementById("timelineGridLines");
+  const ruler =
+    document.querySelector('.timelineRuler');
 
-gridLines.innerHTML="";
+  const gridLines =
+    document.getElementById('timelineGridLines');
 
-  if (!ruler || !editorAudio || !Number.isFinite(editorAudio.duration)) return;
+  if (
+    !ruler ||
+    !gridLines ||
+    !editorAudio ||
+    !Number.isFinite(editorAudio.duration)
+  ) {
+    return;
+  }
 
   ruler.innerHTML = '';
+  gridLines.innerHTML = '';
 
   const duration = editorAudio.duration;
   const step = getTimelineRulerStep();
@@ -2944,11 +3132,15 @@ gridLines.innerHTML="";
     const mark = document.createElement('div');
     const line=document.createElement("div");
 
-line.className="timelineGridLine";
+line.className = 'timelineGridLine';
 
-line.style.left=`${time*timelineScale}px`;
+line.style.left =
+  `${time * timelineScale}px`;
+
+line.style.top = '0';
 
 gridLines.appendChild(line);
+
     mark.className = 'timelineRulerMark';
 
     mark.style.position = 'absolute';
@@ -2960,6 +3152,7 @@ gridLines.appendChild(line);
   }
 
   updateTimelineContentWidth();
+  updateTimelineContentHeight();
 }
 
 function getTimelineTotalWidth() {
@@ -2970,6 +3163,123 @@ function getTimelineTotalWidth() {
     editorAudio.duration * timelineScale + 800
   );
 }
+
+
+function updateTimelineContentHeight() {
+  const timelineContent =
+    document.getElementById('timelineContent');
+
+  const lyricsBlockList =
+    document.getElementById('lyricsBlockList');
+
+  const gridLines =
+    document.getElementById('timelineGridLines');
+
+  const playhead =
+    document.getElementById('timelinePlayhead');
+
+  const scrollArea =
+    getTimelineScrollArea
+      ? getTimelineScrollArea()
+      : document.querySelector('.timelineScrollArea');
+
+  const blocks =
+    sectionData[currentSectionName] || [];
+
+  /*
+   * 最後の歌詞ブロックの下端まで含める。
+   */
+  const blocksHeight =
+    Math.max(
+      blocks.length * TIMELINE_ROW_HEIGHT,
+      TIMELINE_ROW_HEIGHT
+    );
+
+  const visibleHeight =
+    scrollArea
+      ? scrollArea.clientHeight
+      : 0;
+
+  /*
+   * 最後のブロック下に余白を追加。
+   */
+  const bottomPadding = 40;
+
+  const contentHeight =
+    Math.max(
+      blocksHeight + bottomPadding,
+      visibleHeight
+    );
+
+  const heightText =
+    `${contentHeight}px`;
+
+    if (scrollArea) {
+   scrollArea.style.overflow = 'auto';
+   scrollArea.style.minHeight = '0';
+}
+
+  /*
+   * タイムライン全体
+   */
+  if (timelineContent) {
+  timelineContent.style.position = 'relative';
+  timelineContent.style.height = heightText;
+  timelineContent.style.minHeight = heightText;
+
+  /*
+   * スクロール領域の内側要素なので、
+   * overflowは指定しない。
+   */
+  timelineContent.style.removeProperty('overflow');
+}
+
+  /*
+   * 歌詞ブロック配置領域
+   */
+  if (lyricsBlockList) {
+  lyricsBlockList.style.position = 'relative';
+  lyricsBlockList.style.height = heightText;
+  lyricsBlockList.style.minHeight = heightText;
+
+  lyricsBlockList.style.removeProperty('overflow');
+}
+
+  /*
+   * 秒数縦ラインのレイヤー
+   */
+  if (gridLines) {
+    gridLines.style.position = 'absolute';
+    gridLines.style.left = '0';
+    gridLines.style.top = '0';
+    gridLines.style.width = '100%';
+    gridLines.style.height = heightText;
+    gridLines.style.minHeight = heightText;
+    gridLines.style.overflow = 'visible';
+    gridLines.style.pointerEvents = 'none';
+
+    /*
+     * 各縦ライン自身にも高さを直接指定する。
+     */
+    gridLines
+      .querySelectorAll('.timelineGridLine')
+      .forEach(line => {
+        line.style.top = '0';
+        line.style.height = heightText;
+      });
+  }
+
+  /*
+   * 赤い再生ヘッド自身にも直接高さを指定。
+   */
+  if (playhead) {
+    playhead.style.top = '0';
+    playhead.style.bottom = 'auto';
+    playhead.style.height = heightText;
+    playhead.style.minHeight = heightText;
+  }
+}
+
 
 function updateTimelineContentWidth() {
   const timelineContent = document.getElementById('timelineContent');
@@ -3260,6 +3570,662 @@ function renameSection(oldName) {
 }
 
 
+function injectTimingGuideStyles() {
+  if (document.getElementById('timingGuideStyles')) return;
+
+  const style = document.createElement('style');
+  style.id = 'timingGuideStyles';
+
+  style.textContent = `
+    #timingGuidePanel {
+      position: fixed;
+      z-index: 10000;
+      width: 300px;
+      box-sizing: border-box;
+      overflow: hidden;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(26, 29, 39, 0.97),
+          rgba(14, 16, 24, 0.97)
+        );
+
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 12px;
+
+      box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+      color: #ffffff;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      user-select: none;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+
+      transition:
+        opacity 0.15s ease,
+        visibility 0.15s ease;
+    }
+
+    #timingGuidePanel.is-visible {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .timingGuideHeader {
+      height: 36px;
+      box-sizing: border-box;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 0 12px;
+
+      background: rgba(255, 255, 255, 0.045);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+      cursor: grab;
+    }
+
+    .timingGuideHeader.is-dragging {
+      cursor: grabbing;
+    }
+
+    .timingGuideTitle {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: rgba(255, 255, 255, 0.76);
+    }
+
+    .timingGuideDragIcon {
+      font-size: 15px;
+      line-height: 1;
+      color: rgba(255, 255, 255, 0.38);
+    }
+
+    .timingGuideBody {
+      padding: 12px;
+    }
+
+    .timingGuideRow + .timingGuideRow {
+      margin-top: 11px;
+      padding-top: 11px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .timingGuideLabel {
+      margin-bottom: 5px;
+
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+
+      color: #9b8cff;
+    }
+
+    .timingGuideLabel.is-last {
+      color: #ffb869;
+    }
+
+    .timingGuideLyrics {
+      min-height: 20px;
+
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.45;
+
+      color: rgba(255, 255, 255, 0.94);
+
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+
+      overflow: hidden;
+      overflow-wrap: anywhere;
+    }
+
+    .timingGuideWaiting {
+      padding: 4px 0 2px;
+      text-align: center;
+    }
+
+    .timingGuideWaitingTitle {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .timingGuideWaitingSection {
+      margin-top: 5px;
+
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .timingGuideWaitingKey {
+      margin-top: 8px;
+
+      font-size: 12px;
+      font-weight: 700;
+      color: #9b8cff;
+    }
+  `;
+
+  document.head.appendChild(style);
+}
+
+
+function createTimingGuidePanel() {
+  const existing =
+    document.getElementById('timingGuidePanel');
+
+  if (existing) {
+    timingGuidePanel = existing;
+    return existing;
+  }
+
+  injectTimingGuideStyles();
+
+  const panel = document.createElement('div');
+
+  panel.id = 'timingGuidePanel';
+
+  panel.innerHTML = `
+    <div class="timingGuideHeader">
+      <span class="timingGuideTitle">
+        TIMING GUIDE
+      </span>
+
+      <span class="timingGuideDragIcon">
+        ⠿
+      </span>
+    </div>
+
+    <div class="timingGuideBody">
+      <div class="timingGuideRow">
+        <div
+          id="timingGuideNowLabel"
+          class="timingGuideLabel"
+        >
+          NOW
+        </div>
+
+        <div
+          id="timingGuideNowLyrics"
+          class="timingGuideLyrics"
+        >
+          歌詞を選択してください
+        </div>
+      </div>
+
+      <div class="timingGuideRow">
+        <div
+          id="timingGuideNextLabel"
+          class="timingGuideLabel"
+        >
+          NEXT
+        </div>
+
+        <div
+          id="timingGuideNextLyrics"
+          class="timingGuideLyrics"
+        >
+          —
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(panel);
+
+  timingGuidePanel = panel;
+
+  restoreTimingGuidePosition();
+  setupTimingGuideDrag();
+
+  return panel;
+}
+
+
+function getDefaultTimingGuidePosition() {
+  const timeline =
+    document.querySelector('.timelineScrollArea') ||
+    document.querySelector('.timelineTrackArea') ||
+    document.getElementById('lyricsBlockList');
+
+  if (timeline) {
+    const rect = timeline.getBoundingClientRect();
+
+    return {
+      left: Math.max(
+        12,
+        Math.min(
+          window.innerWidth - 312,
+          rect.right - 312
+        )
+      ),
+
+      top: Math.max(
+        12,
+        Math.min(
+          window.innerHeight - 160,
+          rect.top + 12
+        )
+      )
+    };
+  }
+
+  return {
+    left: Math.max(12, window.innerWidth - 324),
+    top: Math.max(12, window.innerHeight - 240)
+  };
+}
+
+
+function clampTimingGuidePosition(left, top) {
+  const panel = createTimingGuidePanel();
+
+  const panelWidth =
+    panel.offsetWidth || 300;
+
+  const panelHeight =
+    panel.offsetHeight || 150;
+
+  return {
+    left: Math.max(
+      8,
+      Math.min(
+        Number(left) || 0,
+        window.innerWidth - panelWidth - 8
+      )
+    ),
+
+    top: Math.max(
+      8,
+      Math.min(
+        Number(top) || 0,
+        window.innerHeight - panelHeight - 8
+      )
+    )
+  };
+}
+
+
+function setTimingGuidePosition(left, top) {
+  const panel = createTimingGuidePanel();
+
+  const position =
+    clampTimingGuidePosition(left, top);
+
+  panel.style.left = `${position.left}px`;
+  panel.style.top = `${position.top}px`;
+  panel.style.right = 'auto';
+  panel.style.bottom = 'auto';
+
+  return position;
+}
+
+
+function restoreTimingGuidePosition() {
+  const panel =
+    timingGuidePanel ||
+    document.getElementById('timingGuidePanel');
+
+  if (!panel) return;
+
+  let savedPosition = null;
+
+  try {
+    savedPosition = JSON.parse(
+      localStorage.getItem(
+        TIMING_GUIDE_POSITION_KEY
+      )
+    );
+  } catch (error) {
+    console.warn(
+      'タイミングガイド位置の読み込みに失敗しました',
+      error
+    );
+  }
+
+  if (
+    savedPosition &&
+    Number.isFinite(Number(savedPosition.left)) &&
+    Number.isFinite(Number(savedPosition.top))
+  ) {
+    setTimingGuidePosition(
+      Number(savedPosition.left),
+      Number(savedPosition.top)
+    );
+
+    return;
+  }
+
+  const defaultPosition =
+    getDefaultTimingGuidePosition();
+
+  setTimingGuidePosition(
+    defaultPosition.left,
+    defaultPosition.top
+  );
+}
+
+
+function saveTimingGuidePosition() {
+  const panel = createTimingGuidePanel();
+
+  const left =
+    parseFloat(panel.style.left);
+
+  const top =
+    parseFloat(panel.style.top);
+
+  if (
+    !Number.isFinite(left) ||
+    !Number.isFinite(top)
+  ) {
+    return;
+  }
+
+  localStorage.setItem(
+    TIMING_GUIDE_POSITION_KEY,
+    JSON.stringify({
+      left,
+      top
+    })
+  );
+}
+
+
+function setupTimingGuideDrag() {
+  const panel = createTimingGuidePanel();
+
+  if (panel.dataset.dragReady === 'true') {
+    return;
+  }
+
+  panel.dataset.dragReady = 'true';
+
+  const header =
+    panel.querySelector('.timingGuideHeader');
+
+  if (!header) return;
+
+  let isDragging = false;
+  let startMouseX = 0;
+  let startMouseY = 0;
+  let startLeft = 0;
+  let startTop = 0;
+
+  header.addEventListener('mousedown', event => {
+    if (event.button !== 0) return;
+
+    const rect =
+      panel.getBoundingClientRect();
+
+    isDragging = true;
+
+    startMouseX = event.clientX;
+    startMouseY = event.clientY;
+
+    startLeft = rect.left;
+    startTop = rect.top;
+
+    header.classList.add('is-dragging');
+
+    event.preventDefault();
+    event.stopPropagation();
+  });
+
+  document.addEventListener('mousemove', event => {
+    if (!isDragging) return;
+
+    const nextLeft =
+      startLeft +
+      (event.clientX - startMouseX);
+
+    const nextTop =
+      startTop +
+      (event.clientY - startMouseY);
+
+    setTimingGuidePosition(
+      nextLeft,
+      nextTop
+    );
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!isDragging) return;
+
+    isDragging = false;
+
+    header.classList.remove('is-dragging');
+
+    saveTimingGuidePosition();
+  });
+}
+
+
+function showTimingGuidePanel() {
+  const panel = createTimingGuidePanel();
+
+  panel.classList.add('is-visible');
+
+  updateTimingGuidePanel();
+}
+
+
+function hideTimingGuidePanel() {
+  const panel =
+    timingGuidePanel ||
+    document.getElementById('timingGuidePanel');
+
+  if (!panel) return;
+
+  panel.classList.remove('is-visible');
+}
+
+
+function setTimingGuideStandardContent({
+  nowText = '',
+  nextText = '',
+  nextLabel = 'NEXT'
+} = {}) {
+  const panel = createTimingGuidePanel();
+
+  const body =
+    panel.querySelector('.timingGuideBody');
+
+  if (!body) return;
+
+  body.innerHTML = `
+    <div class="timingGuideRow">
+      <div class="timingGuideLabel">
+        NOW
+      </div>
+
+      <div class="timingGuideLyrics">
+        ${escapeTimingGuideHtml(nowText || '—')}
+      </div>
+    </div>
+
+    <div class="timingGuideRow">
+      <div
+        class="timingGuideLabel ${
+          nextLabel === 'LAST'
+            ? 'is-last'
+            : ''
+        }"
+      >
+        ${escapeTimingGuideHtml(nextLabel)}
+      </div>
+
+      <div class="timingGuideLyrics">
+        ${escapeTimingGuideHtml(nextText || '—')}
+      </div>
+    </div>
+  `;
+}
+
+
+function showTimingGuideWaitingState(
+  nextSectionName
+) {
+  const panel = createTimingGuidePanel();
+
+  const body =
+    panel.querySelector('.timingGuideBody');
+
+  if (!body) return;
+
+  body.innerHTML = `
+    <div class="timingGuideWaiting">
+      <div class="timingGuideWaitingTitle">
+        次のセクション
+      </div>
+
+      <div class="timingGuideWaitingSection">
+        ${escapeTimingGuideHtml(
+          nextSectionName || 'なし'
+        )}
+      </div>
+
+      <div class="timingGuideWaitingKey">
+        Bで開始
+      </div>
+    </div>
+  `;
+}
+
+
+function showTimingGuideCompletedState() {
+  const panel = createTimingGuidePanel();
+
+  const body =
+    panel.querySelector('.timingGuideBody');
+
+  if (!body) return;
+
+  body.innerHTML = `
+    <div class="timingGuideWaiting">
+      <div class="timingGuideWaitingTitle">
+        TIMING INPUT
+      </div>
+
+      <div class="timingGuideWaitingSection">
+        完了
+      </div>
+    </div>
+  `;
+}
+
+
+function escapeTimingGuideHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+
+function updateTimingGuidePanel() {
+  if (!isTimingInputMode) {
+    hideTimingGuidePanel();
+    return;
+  }
+
+  const blocks =
+    sectionData[currentSectionName] || [];
+
+  if (blocks.length === 0) {
+    setTimingGuideStandardContent({
+      nowText: 'このセクションに歌詞がありません',
+      nextText: '—',
+      nextLabel: 'LAST'
+    });
+
+    return;
+  }
+
+  let currentIndex = timingInputBlockIndex;
+
+  if (!timingInputStarted) {
+    const selectedIndex =
+      getSelectedLyricsBlockIndex();
+
+    currentIndex =
+      selectedIndex >= 0
+        ? selectedIndex
+        : 0;
+  }
+
+  currentIndex = Math.max(
+    0,
+    Math.min(currentIndex, blocks.length - 1)
+  );
+
+  const currentBlock =
+    blocks[currentIndex];
+
+  const nextBlock =
+    blocks[currentIndex + 1];
+
+  if (!nextBlock) {
+    setTimingGuideStandardContent({
+      nowText: currentBlock?.text || '—',
+      nextText: 'Eで終了',
+      nextLabel: 'LAST'
+    });
+
+    return;
+  }
+
+  const nextIsLast =
+    currentIndex + 1 === blocks.length - 1;
+
+  setTimingGuideStandardContent({
+    nowText: currentBlock?.text || '—',
+    nextText: nextBlock.text || '—',
+    nextLabel: nextIsLast
+      ? 'LAST'
+      : 'NEXT'
+  });
+}
+
+
+window.addEventListener('resize', () => {
+  const panel =
+    timingGuidePanel ||
+    document.getElementById('timingGuidePanel');
+
+  if (!panel) return;
+
+  const rect =
+    panel.getBoundingClientRect();
+
+  setTimingGuidePosition(
+    rect.left,
+    rect.top
+  );
+
+  saveTimingGuidePosition();
+});
+
+
+
 
 function isTypingInInputElement() {
   const activeElement = document.activeElement;
@@ -3282,21 +4248,138 @@ function getSelectedLyricsBlockIndex() {
   return blocks.findIndex(block => block.id === blockId);
 }
 
+function scrollSelectedLyricsBlockIntoVerticalView(
+  blockElement
+) {
+  if (!blockElement) return;
+
+  const scrollArea =
+    getTimelineScrollArea
+      ? getTimelineScrollArea()
+      : document.querySelector('.timelineScrollArea');
+
+  if (!scrollArea) return;
+
+  const areaRect =
+    scrollArea.getBoundingClientRect();
+
+  const blockRect =
+    blockElement.getBoundingClientRect();
+
+  /*
+   * タイムライン上部には秒数ルーラーがあるため、
+   * そのぶんを表示判定から除外する。
+   */
+  const ruler =
+    scrollArea.querySelector('.timelineRuler');
+
+  const rulerHeight =
+    ruler
+      ? ruler.getBoundingClientRect().height
+      : 0;
+
+  const topMargin = rulerHeight + 12;
+  const bottomMargin = 16;
+
+  const visibleTop =
+    areaRect.top + topMargin;
+
+  const visibleBottom =
+    areaRect.bottom - bottomMargin;
+
+  let nextScrollTop =
+    scrollArea.scrollTop;
+
+  /*
+   * 選択ブロックが上側へ隠れている場合
+   */
+  if (blockRect.top < visibleTop) {
+    nextScrollTop +=
+      blockRect.top - visibleTop;
+  }
+
+  /*
+   * 選択ブロックが下側へ隠れている場合
+   */
+  else if (blockRect.bottom > visibleBottom) {
+    nextScrollTop +=
+      blockRect.bottom - visibleBottom;
+  }
+
+  const maxScrollTop =
+    Math.max(
+      0,
+      scrollArea.scrollHeight -
+      scrollArea.clientHeight
+    );
+
+  nextScrollTop =
+    Math.max(
+      0,
+      Math.min(
+        nextScrollTop,
+        maxScrollTop
+      )
+    );
+
+
+
+    console.log('VERTICAL FOLLOW:', {
+  currentScrollTop: scrollArea.scrollTop,
+  nextScrollTop,
+  maxScrollTop,
+  scrollHeight: scrollArea.scrollHeight,
+  clientHeight: scrollArea.clientHeight,
+  blockTop: blockRect.top,
+  blockBottom: blockRect.bottom,
+  visibleTop,
+  visibleBottom
+});
+
+  /*
+   * smoothは使わない。
+   * 再生中の横スクロール更新と競合するため、
+   * scrollTopを直接変更する。
+   */
+  scrollArea.scrollTop =
+    nextScrollTop;
+}
+
+
+
 function selectLyricsBlockByIndex(index) {
-  const blocks = sectionData[currentSectionName] || [];
-  const blockData = blocks[index];
+  const blocks =
+    sectionData[currentSectionName] || [];
+
+  const blockData =
+    blocks[index];
 
   if (!blockData) return;
 
   renderSectionBlocks();
 
-  const blockElement = document.querySelector(
-    `.lyricsBlock[data-block-id="${blockData.id}"]`
+  const blockElement =
+    document.querySelector(
+      `.lyricsBlock[data-block-id="${blockData.id}"]`
+    );
+
+  if (!blockElement) return;
+
+  selectLyricsBlock(blockElement);
+
+  console.log(
+    'SELECT BLOCK FOR VERTICAL FOLLOW:',
+    index,
+    blockData.id
   );
 
-  if (blockElement) {
-    selectLyricsBlock(blockElement);
-  }
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      scrollSelectedLyricsBlockIntoVerticalView(
+        blockElement
+      );
+    });
+  });
 }
 
 function ensureBlockEndAfterStart(block, startSeconds) {
@@ -3334,10 +4417,12 @@ function handleTimingInputB() {
     selectLyricsBlockByIndex(timingInputBlockIndex);
 
     if (editorAudio.paused) {
-      editorAudio.play();
-    }
+  editorAudio.play();
+}
 
-    return;
+updateTimingGuidePanel();
+
+return;
   }
 
   // 2回目以降のB
@@ -3359,6 +4444,8 @@ function handleTimingInputB() {
   ensureBlockEndAfterStart(nextBlock, currentSeconds);
 
   selectLyricsBlockByIndex(timingInputBlockIndex);
+
+  updateTimingGuidePanel();
 }
 
 
@@ -3393,6 +4480,10 @@ function handleTimingInputE() {
     // 次のセクションへ移動
     showSection(nextSectionName);
 
+    showTimingGuideWaitingState(
+  nextSectionName
+);
+
     const nextBlocks = sectionData[nextSectionName] || [];
 
     // 次セクションの先頭ブロックを選択して待機
@@ -3415,6 +4506,9 @@ function handleTimingInputE() {
 
   // 最終セクションでは最後のブロックを選択したまま終了
   selectLyricsBlockByIndex(completedBlockIndex);
+
+
+  showTimingGuideCompletedState();
 
   console.log('全セクションのタイミング入力が完了しました');
 }
