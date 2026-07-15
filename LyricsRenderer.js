@@ -60,30 +60,26 @@ const motionWrapper =
 motionWrapper.className =
   'lyricsMotionWrapper lyricsInWrapper';
 
-
-/*
- * HOLD専用ラッパー。
- *
- * INとHOLDで別々のtransformを使えるように、
- * 歌詞行をこの内側へ格納する。
- */
 const holdWrapper =
   document.createElement('div');
 
 holdWrapper.className =
   'lyricsHoldWrapper';
 
-
 lines.forEach(line => {
   const div =
     document.createElement('div');
 
-  div.className = 'lyricsLine';
-  div.textContent = line;
+  div.className =
+    'lyricsLine';
 
-  holdWrapper.appendChild(div);
+  div.textContent =
+    line;
+
+  holdWrapper.appendChild(
+    div
+  );
 });
-
 
 motionWrapper.appendChild(
   holdWrapper

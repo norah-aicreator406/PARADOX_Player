@@ -560,6 +560,15 @@ function updateEditorPreview(
 }
   };
 
+  if (payload.id) {
+  previewLyrics.dataset.blockId =
+    payload.id;
+} else {
+  previewLyrics.removeAttribute(
+    'data-block-id'
+  );
+}
+
  window.LyricsRenderer.render(previewLyrics, payload);
 
  if (options.animate !== false) {
@@ -599,6 +608,21 @@ applyEditorLyricsHoldAnimation(
     options.holdElapsedSeconds
   ) || 0
 );
+
+/*
+ * 停止中の通常編集では、
+ * OUT状態を残さず完全表示する。
+ */
+if (
+  !editorAudio ||
+  editorAudio.paused
+) {
+  applyEditorLyricsOutAnimation(
+    previewLyrics,
+    payload.animation,
+    Infinity
+  );
+}
 
  ensureLyricsSelectionBox();
 }
@@ -1191,6 +1215,7 @@ function updateTimelinePlayhead() {
     );
   }
   updateEditorPreviewByTimeline();
+  updateEditorLyricsOutByTimeline();
 }
 
 
@@ -1453,40 +1478,174 @@ applyEditorLyricsHoldAnimation(
 
 
 
-function buildLyricsPayloadForVisualizer(block) {
-  console.log('★★★★ NEW buildLyricsPayloadForVisualizer RUNNING ★★★★', block);
+function buildLyricsPayloadForVisualizer(
+  block
+) {
+  console.log(
+    '★★★★ NEW buildLyricsPayloadForVisualizer RUNNING ★★★★',
+    block
+  );
+
   if (!block) return null;
 
-  const style = block.style || getCurrentInspectorStyle();
+  const style =
+    block.style ||
+    getCurrentInspectorStyle();
+
+
+  /*
+   * 現在の再生時刻。
+   *
+   * 停止中や音源未読込なら0秒。
+   */
+  const currentTime =
+    editorAudio
+      ? Number(
+          editorAudio.currentTime
+        ) || 0
+      : 0;
+
+
+  const blockStart =
+    parseTimeToSeconds(
+      block.start
+    );
+
+  const blockEnd =
+    parseTimeToSeconds(
+      block.end
+    );
+
+
+  /*
+   * 歌詞が始まってから何秒経過したか。
+   * HOLDの位相同期に使う。
+   */
+  const elapsedSeconds =
+    Math.max(
+      0,
+      currentTime -
+        blockStart
+    );
+
+
+  /*
+   * 歌詞終了まで残り何秒か。
+   * OUTの進行計算に使う。
+   */
+  const remainingSeconds =
+    Math.max(
+      0,
+      blockEnd -
+        currentTime
+    );
+
 
   return {
-    id: block.id,
-    sectionName: block.sectionName || currentSectionName,
-    lines: String(block.text || '').split('\n'),
-    text: block.text || '',
+    id:
+      block.id,
 
-    position: block.position || { x: 0, y: 0, z: 0 },
+    sectionName:
+      block.sectionName ||
+      currentSectionName,
 
-    layout: block.layout || { width: 900, rotation: 0 },
+    start:
+      block.start,
 
+    end:
+      block.end,
+
+    elapsedSeconds,
+
+    remainingSeconds,
+
+    lines:
+      String(
+        block.text || ''
+      ).split('\n'),
+
+    text:
+      block.text || '',
+
+    position:
+      block.position ||
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+
+    layout:
+      block.layout ||
+      {
+        width: 900,
+        rotation: 0
+      },
+
+    /*
+     * IN / HOLD / OUTを
+     * 新しい形式で送る。
+     */
     animation:
-  getNormalizedLyricsAnimation(
-    block
-  ),
+      getNormalizedLyricsAnimation(
+        block
+      ),
 
     style: {
-      font: style.font || 'Arial',
-      size: Number(style.size) || 72,
-      color: style.color || '#ffffff',
-      align: style.align || 'center',
-      outlineColor: style.outlineColor || '#000000',
-      outlineWidth: Number(style.outlineWidth) || 0,
-      shadowColor: style.shadowColor || '#000000',
-      shadowBlur: Number(style.shadowBlur) || 0,
-      shadowX: Number(style.shadowX) || 0,
-      shadowY: Number(style.shadowY) || 0,
-      letterSpacing: Number(style.letterSpacing) || 0,
-      lineHeight: Number(style.lineHeight) || 1.2
+      font:
+        style.font ||
+        'Arial',
+
+      size:
+        Number(
+          style.size
+        ) || 72,
+
+      color:
+        style.color ||
+        '#ffffff',
+
+      align:
+        style.align ||
+        'center',
+
+      outlineColor:
+        style.outlineColor ||
+        '#000000',
+
+      outlineWidth:
+        Number(
+          style.outlineWidth
+        ) || 0,
+
+      shadowColor:
+        style.shadowColor ||
+        '#000000',
+
+      shadowBlur:
+        Number(
+          style.shadowBlur
+        ) || 0,
+
+      shadowX:
+        Number(
+          style.shadowX
+        ) || 0,
+
+      shadowY:
+        Number(
+          style.shadowY
+        ) || 0,
+
+      letterSpacing:
+        Number(
+          style.letterSpacing
+        ) || 0,
+
+      lineHeight:
+        Number(
+          style.lineHeight
+        ) || 1.2
     }
   };
 }
@@ -5199,73 +5358,11 @@ function applyEditorLyricsAnimation(
   targetElement,
   animation = {}
 ) {
-  if (!targetElement) return;
-
-  const motionWrapper =
-    targetElement.querySelector(
-      '.lyricsMotionWrapper'
+  window.LyricsAnimationEngine
+    ?.applyIn(
+      targetElement,
+      animation
     );
-
-  if (!motionWrapper) return;
-
-  const inAnimation =
-  animation.in ||
-  animation;
-
-const preset =
-  inAnimation.preset ||
-  'fade';
-
-const duration =
-  Number(
-    inAnimation.duration ??
-    0.5
-  );
-
-  if (preset === 'off') {
-  motionWrapper.style.opacity = '1';
-  motionWrapper.style.transform = 'none';
-  motionWrapper.style.filter = 'none';
-  return;
-}
-
-  const motionClassMap = {
-    fade: 'lyrics-motion-fade',
-    slideUp: 'lyrics-motion-slide-up',
-    slideDown: 'lyrics-motion-slide-down',
-    slideLeft: 'lyrics-motion-slide-left',
-    slideRight: 'lyrics-motion-slide-right',
-    zoom: 'lyrics-motion-zoom',
-    blurIn: 'lyrics-motion-blur-in',
-    rotateIn: 'lyrics-motion-rotate-in',
-    bounceIn: 'lyrics-motion-bounce-in',
-    glitch: 'lyrics-motion-glitch',
-    neonFlicker: 'lyrics-motion-neon-flicker'
-  };
-
-  const allMotionClasses =
-    Object.values(motionClassMap);
-
-  motionWrapper.style.setProperty(
-    '--lyrics-motion-duration',
-    `${duration}s`
-  );
-
-  motionWrapper.classList.remove(
-    ...allMotionClasses
-  );
-
-  motionWrapper.style.opacity = '';
-  motionWrapper.style.transform = '';
-  motionWrapper.style.filter = '';
-
-  void motionWrapper.offsetWidth;
-
-  const nextClass =
-    motionClassMap[preset] ||
-    motionClassMap.fade;
-
-  motionWrapper.classList.add(nextClass);
 }
 
 
@@ -5274,111 +5371,79 @@ function applyEditorLyricsHoldAnimation(
   animation = {},
   elapsedSeconds = 0
 ) {
-  if (!targetElement) return;
-
-  const holdWrapper =
-    targetElement.querySelector(
-      '.lyricsHoldWrapper'
+  window.LyricsAnimationEngine
+    ?.applyHold(
+      targetElement,
+      animation,
+      elapsedSeconds
     );
+}
 
-  if (!holdWrapper) return;
 
-  const hold =
-    animation.hold || {};
 
-  const preset =
-    hold.preset || 'off';
-
-  /*
-   * Speedは数値が大きいほど速くする。
-   *
-   * Speed 1.0 = 2秒で1往復
-   * Speed 2.0 = 1秒で1往復
-   * Speed 0.5 = 4秒で1往復
-   */
-  const speed =
-    Math.max(
-      0.05,
-      Number(hold.speed) || 1
+function applyEditorLyricsOutAnimation(
+  targetElement,
+  animation = {},
+  remainingSeconds = Infinity
+) {
+  window.LyricsAnimationEngine
+    ?.applyOut(
+      targetElement,
+      animation,
+      remainingSeconds
     );
+}
 
-  const duration =
-    2 / speed;
 
-  const strength =
-    Math.max(
-      0,
-      Number(hold.strength) || 12
-    );
 
-  const holdClassMap = {
-    hover: 'lyrics-hold-hover'
-  };
-
-  const allHoldClasses =
-    Object.values(
-      holdClassMap
-    );
-
-  holdWrapper.classList.remove(
-    ...allHoldClasses
-  );
-
-  holdWrapper.style.animation = '';
-  holdWrapper.style.animationDelay = '';
-  holdWrapper.style.transform = '';
-
-  holdWrapper.style.setProperty(
-    '--lyrics-hold-duration',
-    `${duration}s`
-  );
-
-  holdWrapper.style.setProperty(
-    '--lyrics-hold-strength',
-    String(strength)
-  );
-
-  /*
-   * OFFなら通常表示のまま終了。
-   */
-  if (preset === 'off') {
+function updateEditorLyricsOutByTimeline() {
+  if (
+    !editorAudio ||
+    !editorAudioReady
+  ) {
     return;
   }
 
-  const nextClass =
-    holdClassMap[preset];
+  const currentTime =
+    editorAudio.currentTime;
 
-  if (!nextClass) return;
+  const activeBlocks =
+    getCurrentEditorLyricsBlocks();
 
-  /*
-   * 同じ設定を再適用した場合でも
-   * アニメーションを再評価させる。
-   */
-  void holdWrapper.offsetWidth;
+  activeBlocks.forEach(block => {
+    const blockEnd =
+      parseTimeToSeconds(
+        block.end
+      );
 
-  holdWrapper.classList.add(
-    nextClass
-  );
+    const remainingSeconds =
+      blockEnd - currentTime;
 
-/*
- * 歌詞DOMが再生成されても、
- * 曲中の経過時間に対応する位置から
- * HOLDアニメーションを再開する。
- */
-const safeElapsed =
-  Math.max(
-    0,
-    Number(elapsedSeconds) || 0
-  );
+    const animation =
+      getNormalizedLyricsAnimation(
+        block
+      );
 
-const phaseSeconds =
-  duration > 0
-    ? safeElapsed % duration
-    : 0;
+    /*
+     * メイン歌詞または重なり歌詞から
+     * 対応するDOMを探す。
+     */
+    const targetElement =
+      document.querySelector(
+        `#editorPreviewLyrics[data-block-id="${block.id}"]`
+      ) ||
+      document.querySelector(
+        `.editorPreviewLyricsItem[data-block-id="${block.id}"]`
+      );
 
-holdWrapper.style.animationDelay =
-  `-${phaseSeconds}s`;
+    if (!targetElement) return;
 
+    applyEditorLyricsOutAnimation(
+      targetElement,
+      animation,
+      remainingSeconds
+    );
+  });
 }
 
 

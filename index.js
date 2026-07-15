@@ -112,6 +112,66 @@ function parseTimeToSeconds(timeText) {
   return minutes * 60 + seconds;
 }
 
+function normalizePlayerLyricsAnimation(
+  block
+) {
+  const legacyPreset =
+    block?.animationPreset ||
+    'fade';
+
+  return {
+    in: {
+      preset:
+        block?.animation
+          ?.in?.preset ??
+        legacyPreset,
+
+      duration:
+        Number(
+          block?.animation
+            ?.in?.duration ??
+          0.5
+        )
+    },
+
+    hold: {
+      preset:
+        block?.animation
+          ?.hold?.preset ??
+        'off',
+
+      speed:
+        Number(
+          block?.animation
+            ?.hold?.speed ??
+          1
+        ),
+
+      strength:
+        Number(
+          block?.animation
+            ?.hold?.strength ??
+          12
+        )
+    },
+
+    out: {
+      preset:
+        block?.animation
+          ?.out?.preset ??
+        'off',
+
+      duration:
+        Number(
+          block?.animation
+            ?.out?.duration ??
+          0.5
+        )
+    }
+  };
+}
+
+
 function loadLyricsBlocksFromProject(song) {
   currentLyricsBlocks = [];
   currentLyricsBlockSignature = '';
@@ -125,23 +185,71 @@ function loadLyricsBlocksFromProject(song) {
     const project = JSON.parse(fs.readFileSync(song.projectPath, 'utf-8'));
     const sections = project?.project?.lyrics?.sections || {};
 
-    currentLyricsBlocks = Object.values(sections)
-  .flat()
-  .map(block => ({
-    id: block.id,
-    start: parseTimeToSeconds(block.start),
-    end: parseTimeToSeconds(block.end),
-    lines: String(block.text || '').split('\n'),
-    text: block.text || '',
-    style: block.style || {},
-    position: block.position || { x: 0, y: 0, z: 0 },
-    layout: block.layout || { width: 900, rotation: 0 },
-    animation: {
-      preset: block.animationPreset || 'fade',
-      duration: 0.5
-    }
-  }))
-  .sort((a, b) => a.start - b.start);
+    currentLyricsBlocks =
+  Object.values(sections)
+    .flat()
+    .map(block => ({
+      id:
+        block.id,
+
+      /*
+       * プレーヤー内部では秒数で保持。
+       */
+      start:
+        parseTimeToSeconds(
+          block.start
+        ),
+
+      end:
+        parseTimeToSeconds(
+          block.end
+        ),
+
+      startText:
+        block.start ||
+        '00:00.00',
+
+      endText:
+        block.end ||
+        '00:03.00',
+
+      lines:
+        String(
+          block.text || ''
+        ).split('\n'),
+
+      text:
+        block.text || '',
+
+      style:
+        block.style || {},
+
+      position:
+        block.position || {
+          x: 0,
+          y: 0,
+          z: 0
+        },
+
+      layout:
+        block.layout || {
+          width: 900,
+          rotation: 0
+        },
+
+      /*
+       * 保存されたIN / HOLD / OUTを
+       * そのまま読み込む。
+       */
+      animation:
+        normalizePlayerLyricsAnimation(
+          block
+        )
+    }))
+    .sort(
+      (a, b) =>
+        a.start - b.start
+    );
 
     ipcRenderer.invoke('send-lyrics-to-visualizer', null);
   } catch (error) {
@@ -165,36 +273,114 @@ function getCurrentLyricsBlocks(currentTime) {
 }
 
 function updateLyricsByTime() {
+  const currentTime =
+    Number(audio.currentTime) || 0;
+
   const activeBlocks =
-    getCurrentLyricsBlocks(audio.currentTime);
-
-  const signature = activeBlocks
-    .map(block => block.id)
-    .join('|');
-
-  // 表示対象が前回と同じなら送信しない
-  if (signature === currentLyricsBlockSignature) {
-    return;
-  }
-
-  currentLyricsBlockSignature = signature;
-
-  // 現在時刻に歌詞がない
-  if (activeBlocks.length === 0) {
-    ipcRenderer.invoke(
-      'send-lyrics-to-visualizer',
-      null
+    getCurrentLyricsBlocks(
+      currentTime
     );
 
+  const signature =
+    activeBlocks
+      .map(block => block.id)
+      .join('|');
+
+
+  /*
+   * 歌詞がなくなった瞬間だけ
+   * Visualizerをクリアする。
+   */
+  if (activeBlocks.length === 0) {
+    if (
+      currentLyricsBlockSignature !==
+      ''
+    ) {
+      currentLyricsBlockSignature =
+        '';
+
+      ipcRenderer.invoke(
+        'send-lyrics-to-visualizer',
+        {
+          source: 'player',
+          blocks: []
+        }
+      );
+    }
+
     return;
   }
 
-  // 現在時刻に該当する歌詞をすべて送る
+
+  currentLyricsBlockSignature =
+    signature;
+
+
+  /*
+   * Visualizerへ送るPayload。
+   *
+   * elapsedSeconds：
+   * HOLDの位相同期用。
+   *
+   * remainingSeconds：
+   * OUTの進行計算用。
+   */
+  const payloads =
+    activeBlocks.map(block => ({
+      id:
+        block.id,
+
+      start:
+        block.startText,
+
+      end:
+        block.endText,
+
+      lines:
+        block.lines,
+
+      text:
+        block.text,
+
+      style:
+        block.style,
+
+      position:
+        block.position,
+
+      layout:
+        block.layout,
+
+      animation:
+        block.animation,
+
+      elapsedSeconds:
+        Math.max(
+          0,
+          currentTime -
+            block.start
+        ),
+
+      remainingSeconds:
+        Math.max(
+          0,
+          block.end -
+            currentTime
+        )
+    }));
+
+
+  /*
+   * IDが同じでも送信する。
+   *
+   * HOLDの位相とOUTの残り時間は
+   * 再生中ずっと変化するため。
+   */
   ipcRenderer.invoke(
     'send-lyrics-to-visualizer',
     {
       source: 'player',
-      blocks: activeBlocks
+      blocks: payloads
     }
   );
 }

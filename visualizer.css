@@ -997,3 +997,70 @@ html, body {
 /*---------------
 ここまでエフェクト
 ---------------*/
+
+
+/* ==================================================
+   Shared HOLD Animation
+================================================== */
+
+.lyricsHoldWrapper {
+  width: 100%;
+
+  transform-origin:
+    center center;
+
+  --lyrics-hold-duration: 2s;
+  --lyrics-hold-strength: 12;
+
+  will-change: transform;
+}
+
+@keyframes lyricsHoldHover {
+  0%,
+  100% {
+    transform:
+      translateY(
+        calc(
+          var(
+            --lyrics-hold-strength,
+            12
+          ) * -1px
+        )
+      );
+  }
+
+  50% {
+    transform:
+      translateY(
+        calc(
+          var(
+            --lyrics-hold-strength,
+            12
+          ) * 1px
+        )
+      );
+  }
+}
+
+.lyricsHoldWrapper.lyrics-hold-hover {
+  animation:
+    lyricsHoldHover
+    var(
+      --lyrics-hold-duration,
+      2s
+    )
+    ease-in-out
+    infinite;
+}
+
+.lyricsMotionWrapper {
+  transition:
+    opacity 0.035s linear,
+    filter 0.035s linear;
+}
+
+.lyricsMotionWrapper.lyrics-is-out {
+  will-change:
+    opacity,
+    filter;
+}

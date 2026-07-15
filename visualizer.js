@@ -1222,34 +1222,122 @@ function setLyricsBlocks(blocks) {
           `.visualizerLyricsBlock[data-block-id="${CSS.escape(blockId)}"]`
         );
 
-      const isNewBlock = !lyricsBlock;
+      const isNewBlock =
+  !lyricsBlock;
 
-      if (!lyricsBlock) {
-        lyricsBlock = document.createElement('div');
-        lyricsBlock.className = 'visualizerLyricsBlock';
-        lyricsBlock.dataset.blockId = blockId;
+if (!lyricsBlock) {
+  lyricsBlock =
+    document.createElement(
+      'div'
+    );
 
-        lyricsBlocksLayer.appendChild(lyricsBlock);
-      }
+  lyricsBlock.className =
+    'visualizerLyricsBlock';
 
-      lyricsBlock.style.zIndex =
-        String(Number(block?.position?.z) || 0);
+  lyricsBlock.dataset.blockId =
+    blockId;
 
-      window.LyricsRenderer.render(
-        lyricsBlock,
-        block
-      );
+  lyricsBlocksLayer.appendChild(
+    lyricsBlock
+  );
+}
 
-      // 新しく表示された歌詞だけアニメーション
-      if (isNewBlock) {
-        applyLyricsAnimation(
-          lyricsBlock,
-          block.animation || {
-            preset: 'fade',
-            duration: 0.5
-          }
-        );
-      }
+lyricsBlock.style.zIndex =
+  String(
+    Number(
+      block?.position?.z
+    ) || 0
+  );
+
+
+/*
+ * 歌詞内容や見た目が変更されたかを判定する。
+ */
+const renderSignature =
+  JSON.stringify({
+    text:
+      block.text ||
+      block.lines,
+
+    style:
+      block.style,
+
+    position:
+      block.position,
+
+    layout:
+      block.layout,
+
+    animation:
+      block.animation
+  });
+
+
+const previousSignature =
+  lyricsBlock.dataset
+    .renderSignature || '';
+
+
+const needsRender =
+  isNewBlock ||
+  previousSignature !==
+    renderSignature;
+
+
+/*
+ * 新規追加、または内容変更時だけ
+ * LyricsRendererでDOMを作り直す。
+ */
+if (needsRender) {
+  window.LyricsRenderer.render(
+    lyricsBlock,
+    block
+  );
+
+  lyricsBlock.dataset
+    .renderSignature =
+      renderSignature;
+}
+
+
+/*
+ * INは新しく表示された瞬間だけ実行。
+ */
+if (isNewBlock) {
+  applyLyricsAnimation(
+    lyricsBlock,
+    block.animation || {}
+  );
+}
+
+
+/*
+ * HOLDはCSSアニメーションなので、
+ * 毎回リセットせず、新規表示・設定変更時だけ適用。
+ */
+if (isNewBlock || needsRender) {
+  window.LyricsAnimationEngine.applyHold(
+    lyricsBlock,
+    block.animation || {},
+    Number(block.elapsedSeconds) || 0
+  );
+}
+
+
+/*
+ * OUTだけは残り時間が変化するため、
+ * Payload受信ごとに更新する。
+ */
+window.LyricsAnimationEngine.applyOut(
+  lyricsBlock,
+  block.animation || {},
+  Number.isFinite(
+    Number(block.remainingSeconds)
+  )
+    ? Number(block.remainingSeconds)
+    : Infinity
+);
+
     });
 }
 
@@ -1258,60 +1346,38 @@ function applyLyricsAnimation(
   targetElement,
   animation = {}
 ) {
-  if (!targetElement) return;
-
-  const motionWrapper =
-    targetElement.querySelector(
-      '.lyricsMotionWrapper'
+  window.LyricsAnimationEngine
+    ?.applyIn(
+      targetElement,
+      animation
     );
+}
 
-  if (!motionWrapper) return;
+function applyLyricsHoldAnimation(
+  targetElement,
+  animation = {},
+  elapsedSeconds = 0
+) {
+  window.LyricsAnimationEngine
+    ?.applyHold(
+      targetElement,
+      animation,
+      elapsedSeconds
+    );
+}
 
-  const preset =
-    animation.preset || 'fade';
 
-  const duration =
-    Number(animation.duration ?? 0.5);
-
-  const motionClassMap = {
-    fade: 'lyrics-motion-fade',
-    slideUp: 'lyrics-motion-slide-up',
-    slideDown: 'lyrics-motion-slide-down',
-    slideLeft: 'lyrics-motion-slide-left',
-    slideRight: 'lyrics-motion-slide-right',
-    zoom: 'lyrics-motion-zoom',
-    blurIn: 'lyrics-motion-blur-in',
-    rotateIn: 'lyrics-motion-rotate-in',
-    bounceIn: 'lyrics-motion-bounce-in',
-    glitch: 'lyrics-motion-glitch',
-    neonFlicker: 'lyrics-motion-neon-flicker'
-  };
-
-  const allMotionClasses =
-    Object.values(motionClassMap);
-
-  motionWrapper.style.setProperty(
-    '--lyrics-motion-duration',
-    `${duration}s`
-  );
-
-  motionWrapper.classList.remove(
-    ...allMotionClasses
-  );
-
-  // 前回のアニメーション状態を完全に解除
-  motionWrapper.style.opacity = '';
-  motionWrapper.style.transform = '';
-  motionWrapper.style.filter = '';
-
-  // 同じ演出を再度実行できるように再計算
-  void motionWrapper.offsetWidth;
-
-  const nextClass =
-    motionClassMap[preset] ||
-    motionClassMap.fade;
-
-  motionWrapper.classList.add(nextClass);
+function applyLyricsOutAnimation(
+  targetElement,
+  animation = {},
+  remainingSeconds = Infinity
+) {
+  window.LyricsAnimationEngine
+    ?.applyOut(
+      targetElement,
+      animation,
+      remainingSeconds
+    );
 }
 
 
@@ -1659,46 +1725,152 @@ ipcRenderer.on('visualizer-effect-settings', (event, settings) => {
 
 let lyricsEditorControlsVisualizer = false;
 
-ipcRenderer.on('visualizer-lyrics', (event, lyricsPayload) => {
-  if (!lyricsPayload) {
-    clearLyrics();
-    return;
-  }
+ipcRenderer.on(
+  'visualizer-lyrics',
+  (event, lyricsPayload) => {
+    const hasBlocks =
+      Array.isArray(
+        lyricsPayload?.blocks
+      );
 
-  // 配列が直接送られた場合
-  if (Array.isArray(lyricsPayload)) {
-    setLyricsBlocks(lyricsPayload);
-    showLyrics();
-    return;
-  }
+    const source =
+      lyricsPayload?.source ||
+      'unknown';
 
-  // { blocks: [...] } 形式
-  if (Array.isArray(lyricsPayload.blocks)) {
-    setLyricsBlocks(lyricsPayload.blocks);
-    showLyrics();
-    return;
-  }
-
-  // 従来の単体形式
-  if (
-    Array.isArray(lyricsPayload.lines) ||
-    typeof lyricsPayload.text === 'string'
-  ) {
-    setLyrics(
-      lyricsPayload.lines ||
-        String(lyricsPayload.text || '').split('\n'),
-      lyricsPayload.animation,
-      lyricsPayload.style,
-      lyricsPayload.position,
-      lyricsPayload.layout
+    console.log(
+      'VISUALIZER RECEIVED:',
+      source,
+      hasBlocks
+        ? lyricsPayload.blocks.length
+        : 1,
+      lyricsPayload
     );
 
-    showLyrics();
-    return;
-  }
 
-  clearLyrics();
-});
+    /*
+     * Editorから新形式で届いた場合
+     */
+    if (
+      source === 'lyrics-editor' &&
+      hasBlocks
+    ) {
+      lyricsEditorControlsVisualizer =
+        true;
+
+      setLyricsBlocks(
+        lyricsPayload.blocks
+      );
+
+      showLyrics();
+      return;
+    }
+
+
+    /*
+     * Playerから新形式で届いた場合
+     */
+    if (
+      source === 'player' &&
+      hasBlocks
+    ) {
+      lyricsEditorControlsVisualizer =
+        false;
+
+      setLyricsBlocks(
+        lyricsPayload.blocks
+      );
+
+      showLyrics();
+      return;
+    }
+
+
+    /*
+     * Editor操作中は、
+     * Playerの旧形式で上書きしない。
+     */
+    if (
+      lyricsEditorControlsVisualizer
+    ) {
+      return;
+    }
+
+
+    /*
+     * 歌詞なし
+     */
+    if (!lyricsPayload) {
+      clearLyrics();
+      return;
+    }
+
+
+    /*
+     * 配列が直接届く旧形式
+     */
+    if (
+      Array.isArray(
+        lyricsPayload
+      )
+    ) {
+      setLyricsBlocks(
+        lyricsPayload
+      );
+
+      showLyrics();
+      return;
+    }
+
+
+    /*
+     * sourceなしでも
+     * blocks形式なら表示する。
+     */
+    if (
+      Array.isArray(
+        lyricsPayload.blocks
+      )
+    ) {
+      setLyricsBlocks(
+        lyricsPayload.blocks
+      );
+
+      showLyrics();
+      return;
+    }
+
+
+    /*
+     * 後方互換用の単体形式。
+     * これは現状INのみ。
+     */
+    if (
+      Array.isArray(
+        lyricsPayload.lines
+      ) ||
+      typeof lyricsPayload.text ===
+        'string'
+    ) {
+      setLyrics(
+        lyricsPayload.lines ||
+          String(
+            lyricsPayload.text || ''
+          ).split('\n'),
+
+        lyricsPayload.animation,
+        lyricsPayload.style,
+        lyricsPayload.position,
+        lyricsPayload.layout
+      );
+
+      showLyrics();
+      return;
+    }
+
+
+    clearLyrics();
+  }
+);
 
 
 let currentVisualTheme = 'none';

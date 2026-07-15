@@ -4563,6 +4563,27 @@ input[type="range"] {
 
 
 /* ==================================================
+   OUT Animation
+================================================== */
+
+.lyricsMotionWrapper {
+  /*
+   * 手動計算したopacityの変化を
+   * 少し滑らかに見せる。
+   */
+  transition:
+    opacity 0.035s linear,
+    filter 0.035s linear;
+}
+
+.lyricsMotionWrapper.lyrics-is-out {
+  will-change:
+    opacity,
+    filter;
+}
+
+
+/* ==================================================
    TODO:
    UI v2完成後に以下を整理する
 
