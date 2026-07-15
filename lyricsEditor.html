@@ -483,97 +483,226 @@
 
 
   <section id="timelinePanel">
-  <div id="timelineEditor">
+  <div id="sectionTabs" class="sectionTabs"></div>
 
-    <div id="sectionTabs" class="sectionTabs"></div>
+<div class="timelineControlBar">
 
-    <div class="timelineTopbar">
+  <!-- 再生と時間 -->
+  <div class="timelineControlGroup timelinePlaybackGroup">
 
+    <button
+      id="editorPlayPauseButton"
+      class="timelinePlayButton"
+      type="button"
+      aria-label="再生・停止"
+    >
+      ▶
+    </button>
 
-  <div class="timelineActions">
-<button id="editorPlayPauseButton">▶</button>
+    <div class="timelineTimeBlock">
+      <div class="timelineTimeDisplay">
+        <span id="editorCurrentTime">
+          00:00.00
+        </span>
 
-  <div class="timelineTimeDisplay">
-    <span id="editorCurrentTime">00:00.00</span>
-    <span class="timeSeparator">/</span>
-    <span id="editorDuration">00:00.00</span>
+        <span class="timeSeparator">
+          /
+        </span>
+
+        <span id="editorDuration">
+          00:00.00
+        </span>
+      </div>
+
+      <div class="timelineTimeCaption">
+        現在時間 / 総再生時間
+      </div>
+    </div>
+
   </div>
 
-  <button id="openLyricsImportButton" type="button">歌詞取り込み</button>
-  <button id="addLyricsBlockButton">ブロック追加</button>
-  <button id="duplicateLyricsBlockButton">複製</button>
-  <button id="deleteLyricsBlockButton">削除</button>
 
-  <div id="previewRatioControls">
-  <span class="controlGroupLabel">
-    画面比率
-  </span>
+  <!-- 歌詞操作 -->
+  <div class="timelineControlGroup timelineLyricsActions">
 
-  <button
-    class="ratioButton is-active"
-    data-ratio="16:9"
-    type="button"
+    <button
+      id="openLyricsImportButton"
+      class="timelineActionButton"
+      type="button"
+    >
+      <span class="timelineButtonIcon">♫</span>
+      <span>歌詞取り込み</span>
+    </button>
+
+    <button
+      id="addLyricsBlockButton"
+      class="timelineActionButton"
+      type="button"
+    >
+      <span class="timelineButtonIcon">＋</span>
+      <span>ブロック追加</span>
+    </button>
+
+    <button
+      id="duplicateLyricsBlockButton"
+      class="timelineActionButton"
+      type="button"
+    >
+      <span class="timelineButtonIcon">▣</span>
+      <span>複製</span>
+    </button>
+
+    <button
+      id="deleteLyricsBlockButton"
+      class="timelineActionButton is-danger"
+      type="button"
+    >
+      <span class="timelineButtonIcon">♲</span>
+      <span>削除</span>
+    </button>
+
+  </div>
+
+
+  <div class="timelineControlDivider"></div>
+
+
+  <!-- 画面比率 -->
+  <div
+    id="previewRatioControls"
+    class="timelineControlGroup timelineRatioGroup"
   >
-    16:9
-  </button>
+    <span class="timelineControlLabel">
+      画面比率
+    </span>
 
-  <button
-    class="ratioButton"
-    data-ratio="9:16"
-    type="button"
-  >
-    9:16
-  </button>
-</div>
+    <button
+      class="ratioButton is-active"
+      data-ratio="16:9"
+      type="button"
+    >
+      16:9
+    </button>
 
-<button
-  id="saveEditorButton"
-  class="timelineSaveButton"
-  type="button"
->
-  保存
-</button>
-
-  <div class="timelineModeToggle">
-    <span class="modeLabel">タイミング入力</span>
-    <button id="timingInputToggle" class="modeToggleButton" type="button">
-      OFF
+    <button
+      class="ratioButton"
+      data-ratio="9:16"
+      type="button"
+    >
+      9:16
     </button>
   </div>
 
-  <div id="timingShortcutGuide" class="timingShortcutGuide">
-    <span>Space：再生/停止</span>
-    <span>B：ブロック頭区切り</span>
-    <span>E：終了</span>
-  </div>
-</div>
-</div>
+
+  <div class="timelineControlDivider"></div>
 
 
-<div class="timelineZoomControls">
-  <button id="timelineZoomOutButton" type="button">−</button>
-
-  <input
-    id="timelineZoomSlider"
-    type="range"
-    min="20"
-    max="260"
-    step="10"
-    value="90"
+  <!-- 保存 -->
+  <button
+    id="saveEditorButton"
+    class="timelineSaveButton"
+    type="button"
   >
+    <span class="timelineButtonIcon">▣</span>
+    <span>保存</span>
+  </button>
 
-  <button id="timelineZoomInButton" type="button">＋</button>
 
-  <span id="timelineZoomValue">90px/s</span>
+  <div class="timelineControlDivider"></div>
+
+
+  <!-- タイミング入力 -->
+  <div class="timelineModeToggle">
+
+    <span class="modeLabel">
+      タイミング入力
+    </span>
+
+    <button
+      id="timingInputToggle"
+      class="modeToggleButton"
+      type="button"
+    >
+      OFF
+    </button>
+
+    <div
+      id="timingShortcutGuide"
+      class="timingShortcutGuide"
+    >
+      <div class="timingShortcutGuideTitle">
+        タイミング入力ショートカット
+      </div>
+
+      <div class="timingShortcutGuideKeys">
+        <span>
+          <kbd>Space</kbd>
+          再生 / 停止
+        </span>
+
+        <span>
+          <kbd>B</kbd>
+          次の歌詞
+        </span>
+
+        <span>
+          <kbd>E</kbd>
+          終了
+        </span>
+      </div>
+    </div>
+
+  </div>
+
+
+  <div class="timelineControlDivider"></div>
+
+
+  <!-- ズーム -->
+  <div class="timelineZoomControls">
+
+    <button
+      id="timelineZoomOutButton"
+      type="button"
+      aria-label="タイムラインを縮小"
+    >
+      −
+    </button>
+
+    <input
+      id="timelineZoomSlider"
+      type="range"
+      min="20"
+      max="260"
+      step="10"
+      value="90"
+    >
+
+    <button
+      id="timelineZoomInButton"
+      type="button"
+      aria-label="タイムラインを拡大"
+    >
+      ＋
+    </button>
+
+    <span id="timelineZoomValue">
+      90px/s
+    </span>
+
+  </div>
+
 </div>
 
-
-
-
-
-  <div class="timelineTransportSeek">
-    <input id="editorSeekBar" type="range" min="0" max="100" value="0">
-  </div>
+<div class="timelineTransportSeek">
+  <input
+    id="editorSeekBar"
+    type="range"
+    min="0"
+    max="100"
+    value="0"
+  >
+</div>
 
 
     <div class="timelineGrid">
