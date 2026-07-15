@@ -4060,3 +4060,463 @@ input[type="range"] {
   min-width: 0;
   max-width: none;
 }
+
+
+/* ==================================================
+   Lyrics Inspector Tabs
+================================================== */
+
+#lyricsInspector {
+  padding: 0;
+
+  display: none;
+
+  min-width: 0;
+  min-height: 0;
+
+  overflow: hidden;
+}
+
+#lyricsInspector.is-active {
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* タブバー */
+
+.lyricsInspectorTabs {
+  position: relative;
+  z-index: 20;
+
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: center;
+  gap: 3px;
+
+  min-height: 54px;
+
+  padding: 10px 10px 8px;
+
+  box-sizing: border-box;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  white-space: nowrap;
+
+  border-bottom:
+    1px solid rgba(255, 255, 255, 0.07);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(17, 23, 34, 0.99),
+      rgba(13, 18, 27, 0.99)
+    );
+
+  scrollbar-width: none;
+}
+
+.lyricsInspectorTabs::-webkit-scrollbar {
+  display: none;
+}
+
+
+.lyricsInspectorTab {
+  flex: 0 0 auto;
+
+  height: 34px;
+
+  padding: 0 11px;
+
+  border: 0;
+  border-bottom:
+    2px solid transparent;
+
+  background: transparent;
+
+  color: #8995a8;
+
+  font-size: 11px;
+  font-weight: 760;
+
+  cursor: pointer;
+
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+
+.lyricsInspectorTab:hover {
+  color: #dfe9f6;
+
+  background:
+    rgba(255, 255, 255, 0.035);
+}
+
+
+.lyricsInspectorTab.is-active {
+  color: #5fd7ff;
+
+  border-bottom-color:
+    #5cc8ff;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(92, 200, 255, 0.08),
+      transparent
+    );
+}
+
+
+/* タブ内容 */
+
+.lyricsInspectorTabContent {
+  flex: 1;
+
+  min-width: 0;
+  min-height: 0;
+
+  overflow: hidden;
+}
+
+
+.lyricsInspectorPane {
+  display: none;
+
+  width: 100%;
+  height: 100%;
+
+  padding: 0 16px 22px;
+
+  box-sizing: border-box;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+
+.lyricsInspectorPane.is-active {
+  display: block;
+}
+
+
+/* セクションを少しコンパクトに */
+
+.lyricsInspectorPane .editorSection {
+  margin-top: 14px;
+  padding: 14px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.09);
+
+  border-radius: 13px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(25, 25, 25, 0.98),
+      rgba(19, 20, 23, 0.98)
+    );
+}
+
+
+.lyricsInspectorPane .editorSectionTitle {
+  margin-bottom: 11px;
+
+  color: #5ee0c5;
+
+  font-size: 11px;
+  letter-spacing: 0.075em;
+}
+
+
+/* 時間設定 */
+
+.lyricsTimingGrid {
+  margin-top: 2px;
+}
+
+
+.inspectorSecondaryButton {
+  width: 100%;
+  min-height: 34px;
+
+  margin-top: 7px;
+  padding: 5px 8px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.12);
+
+  border-radius: 8px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #f4f5f7,
+      #dcdee2
+    );
+
+  color: #16191f;
+
+  font-size: 10px;
+  font-weight: 750;
+
+  cursor: pointer;
+}
+
+
+.inspectorSecondaryButton:hover {
+  filter: brightness(1.04);
+}
+
+
+/* 適用ボタン */
+
+.inspectorPrimaryButton {
+  width: 100%;
+  min-height: 38px;
+
+  margin-top: 12px;
+
+  border:
+    1px solid rgba(92, 200, 255, 0.44);
+
+  border-radius: 9px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(28, 74, 100, 0.98),
+      rgba(18, 48, 68, 0.98)
+    );
+
+  color: #aeeaff;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+
+.inspectorPrimaryButton:hover {
+  border-color:
+    rgba(92, 200, 255, 0.76);
+
+  color: #ffffff;
+}
+
+
+/* 補足文 */
+
+.inspectorHelpText {
+  margin: 0;
+
+  color: #8692a4;
+
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+
+/* 将来機能表示 */
+
+.inspectorFutureSection {
+  opacity: 0.78;
+}
+
+
+.futureFeatureTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  margin-top: 12px;
+}
+
+
+.futureFeatureTags span {
+  padding: 5px 8px;
+
+  border:
+    1px solid rgba(92, 200, 255, 0.15);
+
+  border-radius: 999px;
+
+  background:
+    rgba(92, 200, 255, 0.05);
+
+  color: #7ebed4;
+
+  font-size: 9px;
+  font-weight: 750;
+}
+
+
+/* ==================================================
+   IN / HOLD / OUT Animation UI
+================================================== */
+
+.animationScopePanel {
+  margin: 14px 16px 0;
+  padding: 12px;
+
+  border:
+    1px solid rgba(92, 200, 255, 0.15);
+
+  border-radius: 12px;
+
+  background:
+    rgba(92, 200, 255, 0.045);
+}
+
+.animationScopeTitle {
+  margin-bottom: 9px;
+
+  color: #76dfff;
+
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.animationScopeOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.animationScopeOption {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+
+  margin: 0;
+
+  cursor: pointer;
+}
+
+.animationScopeOption input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.animationScopeOption span {
+  min-height: 29px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 10px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.1);
+
+  border-radius: 999px;
+
+  background:
+    rgba(255, 255, 255, 0.035);
+
+  color: #8f9caf;
+
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.animationScopeOption input:checked + span {
+  border-color:
+    rgba(92, 200, 255, 0.7);
+
+  background:
+    rgba(92, 200, 255, 0.16);
+
+  color: #bdefff;
+
+  box-shadow:
+    0 0 12px rgba(92, 200, 255, 0.12);
+}
+
+
+.animationPhaseSection {
+  position: relative;
+}
+
+.animationPhaseHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 11px;
+}
+
+.animationPhaseName {
+  color: #5edaff;
+
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.animationPhaseCaption {
+  margin-top: 2px;
+
+  color: #718096;
+
+  font-size: 9px;
+  font-weight: 700;
+}
+
+
+.animationApplyButton {
+  min-width: 56px;
+  height: 30px;
+
+  padding: 0 10px;
+
+  border:
+    1px solid rgba(92, 200, 255, 0.36);
+
+  border-radius: 8px;
+
+  background:
+    rgba(92, 200, 255, 0.08);
+
+  color: #8fe7ff;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.animationApplyButton:hover {
+  border-color:
+    rgba(92, 200, 255, 0.72);
+
+  background:
+    rgba(92, 200, 255, 0.16);
+
+  color: #ffffff;
+}
+
+
+/* ==================================================
+   TODO:
+   UI v2完成後に以下を整理する
+
+   - 重複した #editorWorkspace
+   - 重複した #layerPanel
+   - 重複した #timelinePanel
+   - 重複した .timelineZoomControls
+   - 重複した .timingShortcutGuide
+   - 旧Timeline Rebuild v1
+   - UI v2上書き部分の統合
+================================================== */

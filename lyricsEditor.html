@@ -326,284 +326,788 @@
     <h1>Lyrics Editor</h1>
   </div>
 
-  <div id="lyricsInspector" class="editorContent inspectorContent is-active">
+  <div
+  id="lyricsInspector"
+  class="editorContent inspectorContent is-active"
+>
 
-    <div class="editorSection">
-      <div class="editorSectionTitle">テキスト</div>
+  <!-- インスペクタ上部タブ -->
+  <div class="lyricsInspectorTabs">
 
-      <label>歌詞テキスト</label>
-      <textarea id="lyricsText" rows="5">NORAH Studio</textarea>
-      <div class="controlGrid">
-
-  <div>
-  <label>開始時間</label>
-  <input id="lyricsStartTime" type="text" value="00:00.00">
-  <button id="setLyricsStartNowButton" type="button">
-    現在時刻を開始にする
-  </button>
-</div>
-
-<div>
-  <label>終了時間</label>
-  <input id="lyricsEndTime" type="text" value="00:03.20">
-  <button id="setLyricsEndNowButton" type="button">
-    現在時刻を終了にする
-  </button>
-</div>
-
-  <div class="controlGrid">
-
-  <div class="controlFull">
-    <label>アニメーション</label>
-    <select id="lyricsAnimationPreset">
-  <option value="fade">Fade</option>
-  <option value="slideUp">Slide Up</option>
-  <option value="slideDown">Slide Down</option>
-  <option value="slideLeft">Slide Left</option>
-  <option value="slideRight">Slide Right</option>
-  <option value="zoom">Zoom In</option>
-  <option value="blurIn">Blur In</option>
-  <option value="rotateIn">Rotate In</option>
-  <option value="bounceIn">Bounce In</option>
-  <option value="glitch">Glitch</option>
-  <option value="neonFlicker">Neon Flicker</option>
-</select>
-
-<div id="lyricsAnimationDescription" class="animationDescription">
-  透明から表示
-</div>
-
-        <button
-      id="applyAnimationToSelectedButton"
+    <button
+      class="lyricsInspectorTab is-active"
+      data-inspector-tab="text"
       type="button"
     >
-      選択中に適用
+      テキスト
     </button>
 
+    <button
+      class="lyricsInspectorTab"
+      data-inspector-tab="style"
+      type="button"
+    >
+      スタイル
+    </button>
+
+    <button
+      class="lyricsInspectorTab"
+      data-inspector-tab="layout"
+      type="button"
+    >
+      配置
+    </button>
+
+    <button
+      class="lyricsInspectorTab"
+      data-inspector-tab="animation"
+      type="button"
+    >
+      アニメーション
+    </button>
+
+    <button
+      class="lyricsInspectorTab"
+      data-inspector-tab="effects"
+      type="button"
+    >
+      効果
+    </button>
+
+  </div>
+
+
+  <div class="lyricsInspectorTabContent">
+
+    <!-- =========================
+         テキスト
+    ========================== -->
+    <div
+      class="lyricsInspectorPane is-active"
+      data-inspector-pane="text"
+    >
+
+      <div class="editorSection">
+
+        <div class="editorSectionTitle">
+          歌詞
+        </div>
+
+        <label for="lyricsText">
+          歌詞テキスト
+        </label>
+
+        <textarea
+          id="lyricsText"
+          rows="5"
+        >NORAH Studio</textarea>
+
+
+        <div class="controlGrid lyricsTimingGrid">
+
+          <div>
+            <label for="lyricsStartTime">
+              開始時間
+            </label>
+
+            <input
+              id="lyricsStartTime"
+              type="text"
+              value="00:00.00"
+            >
+
+            <button
+              id="setLyricsStartNowButton"
+              class="inspectorSecondaryButton"
+              type="button"
+            >
+              現在時刻を開始にする
+            </button>
+          </div>
+
+
+          <div>
+            <label for="lyricsEndTime">
+              終了時間
+            </label>
+
+            <input
+              id="lyricsEndTime"
+              type="text"
+              value="00:03.20"
+            >
+
+            <button
+              id="setLyricsEndNowButton"
+              class="inspectorSecondaryButton"
+              type="button"
+            >
+              現在時刻を終了にする
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         スタイル
+    ========================== -->
+    <div
+      class="lyricsInspectorPane"
+      data-inspector-pane="style"
+    >
+
+      <div class="editorSection">
+
+        <div class="editorSectionTitle">
+          基本スタイル
+        </div>
+
+        <div class="controlGrid">
+
+          <div class="controlFull">
+            <label for="lyricsStylePreset">
+              スタイルプリセット
+            </label>
+
+            <select id="lyricsStylePreset">
+              <option value="default">標準</option>
+              <option value="pop">Pop</option>
+              <option value="rock">Rock</option>
+              <option value="metal">Metal</option>
+              <option value="neon">Neon</option>
+              <option value="cinematic">Cinematic</option>
+            </select>
+          </div>
+
+
+          <div class="controlFull">
+            <label for="lyricsFont">
+              フォント
+            </label>
+
+            <select id="lyricsFont"></select>
+          </div>
+
+
+          <div>
+            <label for="lyricsColor">
+              文字色
+            </label>
+
+            <input
+              id="lyricsColor"
+              type="color"
+              value="#ffffff"
+            >
+          </div>
+
+
+          <div class="controlFull">
+            <label for="lyricsSize">
+              サイズ
+            </label>
+
+            <div class="sliderRow">
+              <input
+                id="lyricsSize"
+                type="range"
+                min="24"
+                max="180"
+                value="72"
+              >
+
+              <span
+                id="lyricsSizeValue"
+                class="valueBadge"
+              >
+                72
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="editorSection">
+
+        <div class="editorSectionTitle">
+          アウトライン
+        </div>
+
+        <div class="controlGrid">
+
+          <div>
+            <label for="lyricsOutlineColor">
+              色
+            </label>
+
+            <input
+              id="lyricsOutlineColor"
+              type="color"
+              value="#000000"
+            >
+          </div>
+
+
+          <div class="controlFull">
+            <label for="lyricsOutlineWidth">
+              幅
+            </label>
+
+            <div class="sliderRow">
+
+              <input
+                id="lyricsOutlineWidth"
+                type="range"
+                min="0"
+                max="12"
+                value="0"
+              >
+
+              <span
+                id="outlineWidthValue"
+                class="valueBadge"
+              >
+                0
+              </span>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         配置
+    ========================== -->
+    <div
+      class="lyricsInspectorPane"
+      data-inspector-pane="layout"
+    >
+
+      <div class="editorSection">
+
+        <div class="editorSectionTitle">
+          文字配置
+        </div>
+
+        <div class="controlGrid">
+
+          <div class="controlFull">
+            <label for="lyricsAlign">
+              揃え
+            </label>
+
+            <select id="lyricsAlign">
+              <option value="left">左揃え</option>
+              <option value="center">中央揃え</option>
+              <option value="right">右揃え</option>
+            </select>
+          </div>
+
+
+          <div class="controlFull">
+            <label for="lyricsLetterSpacing">
+              文字間隔
+            </label>
+
+            <div class="sliderRow">
+
+              <input
+                id="lyricsLetterSpacing"
+                type="range"
+                min="-10"
+                max="30"
+                value="0"
+              >
+
+              <span
+                id="letterSpacingValue"
+                class="valueBadge"
+              >
+                0
+              </span>
+
+            </div>
+          </div>
+
+
+          <div class="controlFull">
+            <label for="lyricsLineHeight">
+              行間
+            </label>
+
+            <div class="sliderRow">
+
+              <input
+                id="lyricsLineHeight"
+                type="range"
+                min="0.8"
+                max="2.5"
+                step="0.05"
+                value="1.2"
+              >
+
+              <span
+                id="lineHeightValue"
+                class="valueBadge"
+              >
+                1.2
+              </span>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="editorSection">
+
+        <div class="editorSectionTitle">
+          キャンバス操作
+        </div>
+
+        <p class="inspectorHelpText">
+          プレビュー上で歌詞をドラッグして移動できます。
+          左右のハンドルで幅、四隅のハンドルでサイズや回転を調整できます。
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         アニメーション
+    ========================== -->
+    <div
+      class="lyricsInspectorPane"
+      data-inspector-pane="animation"
+    >
+
+      <!-- 適用先 -->
+<div class="animationScopePanel">
+
+  <div class="animationScopeTitle">
+    適用先
+  </div>
+
+  <div class="animationScopeOptions">
+
+    <label class="animationScopeOption">
+      <input
+        type="radio"
+        name="animationApplyScope"
+        value="selected"
+        checked
+      >
+      <span>選択中</span>
+    </label>
+
+    <label class="animationScopeOption">
+      <input
+        type="radio"
+        name="animationApplyScope"
+        value="section"
+      >
+      <span>このセクション</span>
+    </label>
+
+    <label class="animationScopeOption">
+      <input
+        type="radio"
+        name="animationApplyScope"
+        value="song"
+      >
+      <span>曲全体</span>
+    </label>
 
   </div>
 
 </div>
 
-</div>
+
+<!-- IN -->
+<div class="editorSection animationPhaseSection">
+
+  <div class="animationPhaseHeader">
+    <div>
+      <div class="animationPhaseName">
+        IN
+      </div>
+
+      <div class="animationPhaseCaption">
+        登場
+      </div>
     </div>
 
-    <div class="editorSection">
-      <div class="editorSectionTitle">スタイル</div>
+    <button
+      id="applyInAnimationButton"
+      class="animationApplyButton"
+      type="button"
+    >
+      適用
+    </button>
+  </div>
 
-      <div class="controlGrid">
 
-<div class="controlFull">
-  <label>スタイルプリセット</label>
-  <select id="lyricsStylePreset">
-    <option value="default">Default</option>
-    <option value="pop">Pop</option>
-    <option value="rock">Rock</option>
-    <option value="metal">Metal</option>
-    <option value="neon">Neon</option>
-    <option value="cinematic">Cinematic</option>
+  <label for="lyricsAnimationPreset">
+    登場プリセット
+  </label>
+
+  <select id="lyricsAnimationPreset">
+    <option value="off">OFF</option>
+    <option value="fade">フェード</option>
+    <option value="slideUp">下からスライド</option>
+    <option value="slideDown">上からスライド</option>
+    <option value="slideLeft">右からスライド</option>
+    <option value="slideRight">左からスライド</option>
+    <option value="zoom">ズーム</option>
+    <option value="blurIn">ブラー</option>
+    <option value="rotateIn">回転</option>
+    <option value="bounceIn">バウンス</option>
+    <option value="glitch">グリッチ</option>
+    <option value="neonFlicker">ネオン点滅</option>
   </select>
-</div>
 
-        <div>
-          <label>フォント</label>
 
-          <select id="lyricsFont"></select>
-
-        </div>
-
-        <div>
-          <label>文字色</label>
-          <input id="lyricsColor" type="color" value="#ffffff">
-        </div>
-
-        <div class="controlFull">
-          <label>サイズ</label>
-
-<div class="sliderRow">
-  <input
-    id="lyricsSize"
-    type="range"
-    min="24"
-    max="180"
-    value="72">
-
-  <span
-    id="lyricsSizeValue"
-    class="valueBadge">
-    72
-  </span>
-</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="editorSection">
-      <div class="editorSectionTitle">アウトライン</div>
-
-      <div class="controlGrid">
-        <div>
-          <label>アウトライン色</label>
-          <input id="lyricsOutlineColor" type="color" value="#000000">
-        </div>
-
-        <div class="controlFull">
-          <label>アウトライン幅</label>
-
-<div class="sliderRow">
-
-<input
-    id="lyricsOutlineWidth"
-    type="range"
-    min="0"
-    max="12"
-    value="0">
-
-<span
-    id="outlineWidthValue"
-    class="valueBadge">
-0
-</span>
-
-</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="editorSection">
-      <div class="editorSectionTitle">シャドウ</div>
-
-      <div class="controlGrid">
-        <div class="controlFull">
-          <label>シャドウプリセット</label>
-          <select id="shadowPreset">
-            <option value="off">OFF</option>
-            <option value="soft">Soft</option>
-            <option value="hard">Hard</option>
-            <option value="glow">Glow</option>
-            <option value="neon">Neon</option>
-          </select>
-        </div>
-
-        <div>
-          <label>シャドウカラー</label>
-          <input id="lyricsShadowColor" type="color" value="#000000">
-        </div>
-
-        <div>
-  <label>ぼかし</label>
-
-  <div class="sliderRow">
-    <input
-      id="lyricsShadowBlur"
-      type="range"
-      min="0"
-      max="40"
-      value="0">
-
-    <span
-      id="shadowBlurValue"
-      class="valueBadge">
-      0
-    </span>
+  <div
+    id="lyricsAnimationDescription"
+    class="animationDescription"
+  >
+    透明な状態から表示します。
   </div>
-</div>
 
-<div>
-  <label>横位置</label>
 
-  <div class="sliderRow">
-    <input
-      id="lyricsShadowX"
-      type="range"
-      min="-30"
-      max="30"
-      value="0">
-
-    <span
-      id="shadowXValue"
-      class="valueBadge">
-      0
-    </span>
-  </div>
-</div>
-
-<div>
-  <label>縦位置</label>
+  <label for="lyricsInDuration">
+    持続時間
+  </label>
 
   <div class="sliderRow">
+
     <input
-      id="lyricsShadowY"
+      id="lyricsInDuration"
       type="range"
-      min="-30"
-      max="30"
-      value="0">
-
-    <span
-      id="shadowYValue"
-      class="valueBadge">
-      0
-    </span>
-  </div>
-</div>
-      </div>
-    </div>
-
-    <div class="editorSection">
-      <div class="editorSectionTitle">レイアウト</div>
-
-      <div class="controlGrid">
-        <div>
-          <label>揃え</label>
-          <select id="lyricsAlign">
-            <option value="left">左揃え</option>
-            <option value="center">中央揃え</option>
-            <option value="right">右揃え</option>
-          </select>
-        </div>
-
-        <div>
-  <label>文字間隔</label>
-
-  <div class="sliderRow">
-    <input
-      id="lyricsLetterSpacing"
-      type="range"
-      min="-10"
-      max="30"
-      value="0">
-
-    <span
-      id="letterSpacingValue"
-      class="valueBadge">
-      0
-    </span>
-  </div>
-</div>
-
-<div class="controlFull">
-  <label>行間</label>
-
-  <div class="sliderRow">
-    <input
-      id="lyricsLineHeight"
-      type="range"
-      min="0.8"
-      max="2.5"
+      min="0.1"
+      max="3"
       step="0.05"
-      value="1.2">
+      value="0.5"
+    >
 
     <span
-      id="lineHeightValue"
-      class="valueBadge">
-      1.2
+      id="lyricsInDurationValue"
+      class="valueBadge"
+    >
+      0.50秒
     </span>
+
   </div>
+
 </div>
+
+
+<!-- HOLD -->
+<div class="editorSection animationPhaseSection">
+
+  <div class="animationPhaseHeader">
+    <div>
+      <div class="animationPhaseName">
+        HOLD
+      </div>
+
+      <div class="animationPhaseCaption">
+        表示中
       </div>
     </div>
 
+    <button
+      id="applyHoldAnimationButton"
+      class="animationApplyButton"
+      type="button"
+    >
+      適用
+    </button>
   </div>
+
+
+  <label for="lyricsHoldPreset">
+    表示中エフェクト
+  </label>
+
+  <select id="lyricsHoldPreset">
+    <option value="off">OFF</option>
+    <option value="hover">浮遊</option>
+  </select>
+
+
+  <div class="animationDescription">
+    表示中に繰り返すモーションです。
+  </div>
+
+
+  <label for="lyricsHoldSpeed">
+    速さ
+  </label>
+
+  <div class="sliderRow">
+
+    <input
+      id="lyricsHoldSpeed"
+      type="range"
+      min="0.2"
+      max="3"
+      step="0.05"
+      value="1"
+    >
+
+    <span
+      id="lyricsHoldSpeedValue"
+      class="valueBadge"
+    >
+      1.00
+    </span>
+
+  </div>
+
+
+  <label for="lyricsHoldStrength">
+    強さ
+  </label>
+
+  <div class="sliderRow">
+
+    <input
+      id="lyricsHoldStrength"
+      type="range"
+      min="1"
+      max="50"
+      step="1"
+      value="12"
+    >
+
+    <span
+      id="lyricsHoldStrengthValue"
+      class="valueBadge"
+    >
+      12
+    </span>
+
+  </div>
+
+</div>
+
+
+<!-- OUT -->
+<div class="editorSection animationPhaseSection">
+
+  <div class="animationPhaseHeader">
+    <div>
+      <div class="animationPhaseName">
+        OUT
+      </div>
+
+      <div class="animationPhaseCaption">
+        退場
+      </div>
+    </div>
+
+    <button
+      id="applyOutAnimationButton"
+      class="animationApplyButton"
+      type="button"
+    >
+      適用
+    </button>
+  </div>
+
+
+  <label for="lyricsOutPreset">
+    退場プリセット
+  </label>
+
+  <select id="lyricsOutPreset">
+    <option value="off">OFF</option>
+    <option value="fade">フェード</option>
+  </select>
+
+
+  <div class="animationDescription">
+    歌詞の終了直前に一度だけ実行します。
+  </div>
+
+
+  <label for="lyricsOutDuration">
+    持続時間
+  </label>
+
+  <div class="sliderRow">
+
+    <input
+      id="lyricsOutDuration"
+      type="range"
+      min="0.1"
+      max="3"
+      step="0.05"
+      value="0.5"
+    >
+
+    <span
+      id="lyricsOutDurationValue"
+      class="valueBadge"
+    >
+      0.50秒
+    </span>
+
+  </div>
+
+</div>
+
+    </div>
+
+
+    <!-- =========================
+         効果
+    ========================== -->
+    <div
+      class="lyricsInspectorPane"
+      data-inspector-pane="effects"
+    >
+
+      <div class="editorSection">
+
+        <div class="editorSectionTitle">
+          影
+        </div>
+
+        <div class="controlGrid">
+
+          <div class="controlFull">
+            <label for="shadowPreset">
+              影プリセット
+            </label>
+
+            <select id="shadowPreset">
+              <option value="off">OFF</option>
+              <option value="soft">Soft</option>
+              <option value="hard">Hard</option>
+              <option value="glow">Glow</option>
+              <option value="neon">Neon</option>
+            </select>
+          </div>
+
+
+          <div>
+            <label for="lyricsShadowColor">
+              色
+            </label>
+
+            <input
+              id="lyricsShadowColor"
+              type="color"
+              value="#000000"
+            >
+          </div>
+
+
+          <div class="controlFull">
+            <label for="lyricsShadowBlur">
+              ぼかし
+            </label>
+
+            <div class="sliderRow">
+
+              <input
+                id="lyricsShadowBlur"
+                type="range"
+                min="0"
+                max="40"
+                value="0"
+              >
+
+              <span
+                id="shadowBlurValue"
+                class="valueBadge"
+              >
+                0
+              </span>
+
+            </div>
+          </div>
+
+
+          <div class="controlFull">
+            <label for="lyricsShadowX">
+              横位置
+            </label>
+
+            <div class="sliderRow">
+
+              <input
+                id="lyricsShadowX"
+                type="range"
+                min="-30"
+                max="30"
+                value="0"
+              >
+
+              <span
+                id="shadowXValue"
+                class="valueBadge"
+              >
+                0
+              </span>
+
+            </div>
+          </div>
+
+
+          <div class="controlFull">
+            <label for="lyricsShadowY">
+              縦位置
+            </label>
+
+            <div class="sliderRow">
+
+              <input
+                id="lyricsShadowY"
+                type="range"
+                min="-30"
+                max="30"
+                value="0"
+              >
+
+              <span
+                id="shadowYValue"
+                class="valueBadge"
+              >
+                0
+              </span>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
 
 <div id="backgroundInspector" class="inspectorContent">
   <div class="editorSection">

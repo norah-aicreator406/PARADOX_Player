@@ -10,7 +10,6 @@ const lyricsImportDialog = document.getElementById('lyricsImportDialog');
 const openLyricsImportButton = document.getElementById('openLyricsImportButton');
 const cancelLyricsImportButton = document.getElementById('cancelLyricsImportButton');
 const applyLyricsImportButton = document.getElementById('applyLyricsImportButton');
-const applyAnimationToSelectedButton = document.getElementById('applyAnimationToSelectedButton');
 const animationDescription = document.getElementById('lyricsAnimationDescription');
 
 function openLyricsImportDialog() {
@@ -294,6 +293,70 @@ const textInput = document.getElementById('lyricsText');
 const startTimeInput = document.getElementById('lyricsStartTime');
 const endTimeInput = document.getElementById('lyricsEndTime');
 const animationPresetInput = document.getElementById('lyricsAnimationPreset');
+const inDurationInput =
+  document.getElementById(
+    'lyricsInDuration'
+  );
+
+const inDurationValue =
+  document.getElementById(
+    'lyricsInDurationValue'
+  );
+
+const holdPresetInput =
+  document.getElementById(
+    'lyricsHoldPreset'
+  );
+
+const holdSpeedInput =
+  document.getElementById(
+    'lyricsHoldSpeed'
+  );
+
+const holdSpeedValue =
+  document.getElementById(
+    'lyricsHoldSpeedValue'
+  );
+
+const holdStrengthInput =
+  document.getElementById(
+    'lyricsHoldStrength'
+  );
+
+const holdStrengthValue =
+  document.getElementById(
+    'lyricsHoldStrengthValue'
+  );
+
+const outPresetInput =
+  document.getElementById(
+    'lyricsOutPreset'
+  );
+
+const outDurationInput =
+  document.getElementById(
+    'lyricsOutDuration'
+  );
+
+const outDurationValue =
+  document.getElementById(
+    'lyricsOutDurationValue'
+  );
+
+const applyInAnimationButton =
+  document.getElementById(
+    'applyInAnimationButton'
+  );
+
+const applyHoldAnimationButton =
+  document.getElementById(
+    'applyHoldAnimationButton'
+  );
+
+const applyOutAnimationButton =
+  document.getElementById(
+    'applyOutAnimationButton'
+  );
 const sizeInput = document.getElementById('lyricsSize');
 const colorInput = document.getElementById('lyricsColor');
 const fontInput = document.getElementById('lyricsFont');
@@ -390,6 +453,20 @@ if (selectedBlock) {
     blockData.start = startTimeInput.value;
     blockData.end = endTimeInput.value;
     blockData.animationPreset = animationPresetInput.value;
+    blockData.animation =
+  getNormalizedLyricsAnimation(
+    blockData
+  );
+
+blockData.animation.in = {
+  preset:
+    animationPresetInput.value,
+
+  duration:
+    Number(
+      inDurationInput.value
+    ) || 0.5
+};
     blockData.style = {
   font: fontInput.value,
   size: Number(sizeInput.value),
@@ -437,9 +514,50 @@ function updateEditorPreview(
     position: blockData?.position || { x: 0, y: 0, z: 0 },
     layout: blockData?.layout || { width: 900, rotation: 0 },
     animation: {
-      preset: blockData?.animationPreset || animationPresetInput.value || 'fade',
-      duration: 0.5
+  ...getNormalizedLyricsAnimation(
+    blockData || {
+      animationPreset:
+        animationPresetInput.value,
+
+      animation: {
+        in: {
+          preset:
+            animationPresetInput.value,
+
+          duration:
+            Number(
+              inDurationInput.value
+            ) || 0.5
+        },
+
+        hold: {
+          preset:
+            holdPresetInput.value,
+
+          speed:
+            Number(
+              holdSpeedInput.value
+            ) || 1,
+
+          strength:
+            Number(
+              holdStrengthInput.value
+            ) || 12
+        },
+
+        out: {
+          preset:
+            outPresetInput.value,
+
+          duration:
+            Number(
+              outDurationInput.value
+            ) || 0.5
+        }
+      }
     }
+  )
+}
   };
 
  window.LyricsRenderer.render(previewLyrics, payload);
@@ -871,6 +989,30 @@ letterSpacingInput.addEventListener(
 lineHeightInput.addEventListener('input', sendLyricsUpdate);
 
 console.log('Lyrics Editor Loaded');
+
+inDurationInput?.addEventListener(
+  'input',
+  updateAnimationControlValues
+);
+
+holdSpeedInput?.addEventListener(
+  'input',
+  updateAnimationControlValues
+);
+
+holdStrengthInput?.addEventListener(
+  'input',
+  updateAnimationControlValues
+);
+
+outDurationInput?.addEventListener(
+  'input',
+  updateAnimationControlValues
+);
+
+updateAnimationControlValues();
+
+
 
 const saveEditorButton = document.getElementById('saveEditorButton');
 
@@ -1751,7 +1893,34 @@ function loadLyricsBlockToInspector(block) {
   textInput.value = blockData.text || '';
   startTimeInput.value = blockData.start || '00:00.00';
   endTimeInput.value = blockData.end || '00:03.00';
-  animationPresetInput.value = blockData.animationPreset || 'fade';
+  const animation =
+  getNormalizedLyricsAnimation(
+    blockData
+  );
+
+animationPresetInput.value =
+  animation.in.preset;
+
+inDurationInput.value =
+  String(animation.in.duration);
+
+holdPresetInput.value =
+  animation.hold.preset;
+
+holdSpeedInput.value =
+  String(animation.hold.speed);
+
+holdStrengthInput.value =
+  String(animation.hold.strength);
+
+outPresetInput.value =
+  animation.out.preset;
+
+outDurationInput.value =
+  String(animation.out.duration);
+
+updateAnimationControlValues();
+updateAnimationDescription();
 
   const style = blockData.style || {};
 
@@ -1830,6 +1999,23 @@ function createLyricsBlockData(text = '新しい歌詞') {
     end: '00:03.00',
     text,
     animationPreset: 'fade',
+    animation: {
+  in: {
+    preset: 'fade',
+    duration: 0.5
+  },
+
+  hold: {
+    preset: 'off',
+    speed: 1,
+    strength: 12
+  },
+
+  out: {
+    preset: 'off',
+    duration: 0.5
+  }
+},
 
     style: {
       font: fontInput.value || 'Arial',
@@ -2377,21 +2563,75 @@ if (duplicateLyricsBlockButton && lyricsBlockList) {
 }
 
 
-if (applyAnimationToSelectedButton) {
-  applyAnimationToSelectedButton.addEventListener(
-    'click',
-    () => {
+applyInAnimationButton?.addEventListener(
+  'click',
+  () => {
+    applyAnimationValueToScope(
+      block => {
+        block.animation.in = {
+          preset:
+            animationPresetInput.value,
 
-      const preset =
-        animationPresetInput.value;
+          duration:
+            Number(
+              inDurationInput.value
+            ) || 0.5
+        };
 
-      applyValueToSelectedBlocks(block => {
-        block.animationPreset = preset;
-      });
+        /*
+         * 旧形式との互換用
+         */
+        block.animationPreset =
+          block.animation.in.preset;
+      }
+    );
+  }
+);
 
-    }
-  );
-}
+
+applyHoldAnimationButton?.addEventListener(
+  'click',
+  () => {
+    applyAnimationValueToScope(
+      block => {
+        block.animation.hold = {
+          preset:
+            holdPresetInput.value,
+
+          speed:
+            Number(
+              holdSpeedInput.value
+            ) || 1,
+
+          strength:
+            Number(
+              holdStrengthInput.value
+            ) || 12
+        };
+      }
+    );
+  }
+);
+
+
+applyOutAnimationButton?.addEventListener(
+  'click',
+  () => {
+    applyAnimationValueToScope(
+      block => {
+        block.animation.out = {
+          preset:
+            outPresetInput.value,
+
+          duration:
+            Number(
+              outDurationInput.value
+            ) || 0.5
+        };
+      }
+    );
+  }
+);
 
 
 
@@ -2659,6 +2899,45 @@ function syncSelectedBlockDataFromInspector() {
       block.start = startTimeInput.value;
       block.end = endTimeInput.value;
       block.animationPreset = animationPresetInput.value;
+      block.animation =
+  getNormalizedLyricsAnimation(
+    block
+  );
+
+block.animation.in = {
+  preset:
+    animationPresetInput.value,
+
+  duration:
+    Number(
+      inDurationInput.value
+    ) || 0.5
+};
+
+block.animation.hold = {
+  preset:
+    holdPresetInput.value,
+
+  speed:
+    Number(
+      holdSpeedInput.value
+    ) || 1,
+
+  strength:
+    Number(
+      holdStrengthInput.value
+    ) || 12
+};
+
+block.animation.out = {
+  preset:
+    outPresetInput.value,
+
+  duration:
+    Number(
+      outDurationInput.value
+    ) || 0.5
+};
       block.style = getCurrentInspectorStyle();
 
       if (!block.position) {
@@ -4819,6 +5098,59 @@ function applyValueToSelectedBlocks(callback) {
 }
 
 
+function getNormalizedLyricsAnimation(
+  block
+) {
+  const legacyPreset =
+    block?.animationPreset ||
+    'fade';
+
+  return {
+    in: {
+      preset:
+        block?.animation?.in?.preset ??
+        legacyPreset,
+
+      duration:
+        Number(
+          block?.animation?.in?.duration ??
+          0.5
+        )
+    },
+
+    hold: {
+      preset:
+        block?.animation?.hold?.preset ??
+        'off',
+
+      speed:
+        Number(
+          block?.animation?.hold?.speed ??
+          1
+        ),
+
+      strength:
+        Number(
+          block?.animation?.hold?.strength ??
+          12
+        )
+    },
+
+    out: {
+      preset:
+        block?.animation?.out?.preset ??
+        'off',
+
+      duration:
+        Number(
+          block?.animation?.out?.duration ??
+          0.5
+        )
+    }
+  };
+}
+
+
 
 function applyEditorLyricsAnimation(
   targetElement,
@@ -4833,11 +5165,26 @@ function applyEditorLyricsAnimation(
 
   if (!motionWrapper) return;
 
-  const preset =
-    animation.preset || 'fade';
+  const inAnimation =
+  animation.in ||
+  animation;
 
-  const duration =
-    Number(animation.duration ?? 0.5);
+const preset =
+  inAnimation.preset ||
+  'fade';
+
+const duration =
+  Number(
+    inAnimation.duration ??
+    0.5
+  );
+
+  if (preset === 'off') {
+  motionWrapper.style.opacity = '1';
+  motionWrapper.style.transform = 'none';
+  motionWrapper.style.filter = 'none';
+  return;
+}
 
   const motionClassMap = {
     fade: 'lyrics-motion-fade',
@@ -5014,6 +5361,348 @@ function setupLayerCollapse(){
 }
 
 setupLayerCollapse();
+
+
+function setupLyricsInspectorTabs() {
+  const tabs =
+    document.querySelectorAll(
+      '.lyricsInspectorTab'
+    );
+
+  const panes =
+    document.querySelectorAll(
+      '.lyricsInspectorPane'
+    );
+
+  if (
+    !tabs.length ||
+    !panes.length
+  ) {
+    return;
+  }
+
+  const storageKey =
+    'norahLyricsInspectorTab';
+
+  function activateTab(tabName) {
+    tabs.forEach(tab => {
+      tab.classList.toggle(
+        'is-active',
+        tab.dataset.inspectorTab ===
+          tabName
+      );
+    });
+
+    panes.forEach(pane => {
+      pane.classList.toggle(
+        'is-active',
+        pane.dataset.inspectorPane ===
+          tabName
+      );
+    });
+
+    localStorage.setItem(
+      storageKey,
+      tabName
+    );
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener(
+      'click',
+      () => {
+        activateTab(
+          tab.dataset.inspectorTab
+        );
+      }
+    );
+  });
+
+  const savedTab =
+    localStorage.getItem(
+      storageKey
+    );
+
+  const validTab =
+    [...tabs].some(
+      tab =>
+        tab.dataset.inspectorTab ===
+        savedTab
+    );
+
+  activateTab(
+    validTab
+      ? savedTab
+      : 'text'
+  );
+}
+
+setupLyricsInspectorTabs();
+
+
+/* ==================================================
+   Editor Aspect Ratio Persistence
+================================================== */
+
+const EDITOR_ASPECT_RATIO_STORAGE_KEY =
+  'norahEditorAspectRatio';
+
+function getCurrentEditorAspectRatio() {
+  const activeButton =
+    document.querySelector(
+      '#previewRatioControls .ratioButton.is-active'
+    );
+
+  return (
+    activeButton?.dataset.ratio ||
+    '16:9'
+  );
+}
+
+function saveEditorAspectRatio(ratio) {
+  if (
+    ratio !== '16:9' &&
+    ratio !== '9:16'
+  ) {
+    return;
+  }
+
+  localStorage.setItem(
+    EDITOR_ASPECT_RATIO_STORAGE_KEY,
+    ratio
+  );
+}
+
+function applyEditorAspectRatio(
+  ratio,
+  {
+    save = true
+  } = {}
+) {
+  const previewStage =
+    document.getElementById(
+      'editorPreviewStage'
+    );
+
+  const ratioButtons =
+    document.querySelectorAll(
+      '#previewRatioControls .ratioButton'
+    );
+
+  if (
+    !previewStage ||
+    !ratioButtons.length
+  ) {
+    return;
+  }
+
+  const normalizedRatio =
+    ratio === '9:16'
+      ? '9:16'
+      : '16:9';
+
+  previewStage.classList.toggle(
+    'ratio-16-9',
+    normalizedRatio === '16:9'
+  );
+
+  previewStage.classList.toggle(
+    'ratio-9-16',
+    normalizedRatio === '9:16'
+  );
+
+  ratioButtons.forEach(button => {
+    button.classList.toggle(
+      'is-active',
+      button.dataset.ratio ===
+        normalizedRatio
+    );
+  });
+
+  if (save) {
+    saveEditorAspectRatio(
+      normalizedRatio
+    );
+  }
+
+  requestAnimationFrame(() => {
+    if (
+      typeof resizeEditorPreviewCanvas ===
+      'function'
+    ) {
+      resizeEditorPreviewCanvas();
+    }
+
+    window.dispatchEvent(
+      new Event('resize')
+    );
+  });
+}
+
+function setupEditorAspectRatioPersistence() {
+  const ratioButtons =
+    document.querySelectorAll(
+      '#previewRatioControls .ratioButton'
+    );
+
+  if (!ratioButtons.length) return;
+
+  ratioButtons.forEach(button => {
+    button.addEventListener(
+      'click',
+      () => {
+        applyEditorAspectRatio(
+          button.dataset.ratio
+        );
+      }
+    );
+  });
+
+  const savedRatio =
+    localStorage.getItem(
+      EDITOR_ASPECT_RATIO_STORAGE_KEY
+    );
+
+  applyEditorAspectRatio(
+    savedRatio || '16:9',
+    {
+      save: false
+    }
+  );
+}
+
+setupEditorAspectRatioPersistence();
+
+
+function getAnimationApplyScope() {
+  return (
+    document.querySelector(
+      'input[name="animationApplyScope"]:checked'
+    )?.value ||
+    'selected'
+  );
+}
+
+
+function getLyricsBlocksByApplyScope(
+  scope
+) {
+  if (scope === 'selected') {
+    return (
+      sectionData[currentSectionName] ||
+      []
+    ).filter(block =>
+      selectedLyricsBlockIds.has(
+        block.id
+      )
+    );
+  }
+
+  if (scope === 'section') {
+    return (
+      sectionData[currentSectionName] ||
+      []
+    );
+  }
+
+  if (scope === 'song') {
+    return Object
+      .values(sectionData)
+      .flatMap(blocks =>
+        blocks || []
+      );
+  }
+
+  return [];
+}
+
+
+function applyAnimationValueToScope(
+  callback
+) {
+  const scope =
+    getAnimationApplyScope();
+
+  const targetBlocks =
+    getLyricsBlocksByApplyScope(
+      scope
+    );
+
+  if (!targetBlocks.length) {
+    alert(
+      scope === 'selected'
+        ? '歌詞ブロックを選択してください。'
+        : '適用できる歌詞ブロックがありません。'
+    );
+
+    return;
+  }
+
+  targetBlocks.forEach(block => {
+    block.animation =
+      getNormalizedLyricsAnimation(
+        block
+      );
+
+    callback(block);
+  });
+
+  renderSectionBlocks();
+  applyLyricsBlockSelectionClasses();
+
+  const selectedData =
+    getSelectedLyricsBlockData();
+
+  if (selectedData) {
+    const element =
+      document.querySelector(
+        `.lyricsBlock[data-block-id="${selectedData.id}"]`
+      );
+
+    if (element) {
+      loadLyricsBlockToInspector(
+        element
+      );
+    }
+
+    updateEditorPreview(
+      selectedData
+    );
+  }
+}
+
+
+function updateAnimationControlValues() {
+  if (inDurationValue) {
+    inDurationValue.textContent =
+      `${Number(
+        inDurationInput?.value || 0.5
+      ).toFixed(2)}秒`;
+  }
+
+  if (holdSpeedValue) {
+    holdSpeedValue.textContent =
+      Number(
+        holdSpeedInput?.value || 1
+      ).toFixed(2);
+  }
+
+  if (holdStrengthValue) {
+    holdStrengthValue.textContent =
+      String(
+        Number(
+          holdStrengthInput?.value || 12
+        )
+      );
+  }
+
+  if (outDurationValue) {
+    outDurationValue.textContent =
+      `${Number(
+        outDurationInput?.value || 0.5
+      ).toFixed(2)}秒`;
+  }
+}
 
 
 
