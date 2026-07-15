@@ -1602,3 +1602,339 @@ input[type="range"] {
   flex: 0 0 auto;
   white-space: nowrap;
 }
+
+
+
+
+/*---------------
+対象変更CSS
+---------------*/
+
+.lyricsMotionWrapper {
+  width: 100%;
+  --lyrics-motion-duration: 0.5s;
+  will-change: transform, opacity;
+}
+
+/*---------------
+ここからエフェクト
+---------------*/
+
+
+.visualizerLyricsBlock,
+#editorPreviewLyrics,
+.editorPreviewLyricsItem {
+  --lyrics-motion-duration: 0.5s;
+  will-change: transform, opacity;
+}
+
+/* Fade */
+@keyframes lyricsFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-fade {
+  animation:
+    lyricsFadeIn
+    var(--lyrics-motion-duration)
+    ease-out
+    both;
+}
+
+/* Slide Up */
+@keyframes lyricsSlideUpIn {
+  from {
+    opacity: 0;
+    transform: translateY(36px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-slide-up {
+  animation:
+    lyricsSlideUpIn
+    var(--lyrics-motion-duration)
+    cubic-bezier(.22, .8, .32, 1)
+    both;
+}
+
+/* Zoom */
+@keyframes lyricsZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(.82);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-zoom {
+  animation:
+    lyricsZoomIn
+    var(--lyrics-motion-duration)
+    cubic-bezier(.22, .8, .32, 1)
+    both;
+}
+
+
+/* Slide Down */
+
+@keyframes lyricsSlideDownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-36px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-slide-down {
+  animation:
+    lyricsSlideDownIn
+    var(--lyrics-motion-duration)
+    cubic-bezier(.22, .8, .32, 1)
+    both;
+}
+
+
+/* Slide Left
+   右側から左方向へ入る */
+
+@keyframes lyricsSlideLeftIn {
+  from {
+    opacity: 0;
+    transform: translateX(48px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-slide-left {
+  animation:
+    lyricsSlideLeftIn
+    var(--lyrics-motion-duration)
+    cubic-bezier(.22, .8, .32, 1)
+    both;
+}
+
+
+/* Slide Right
+   左側から右方向へ入る */
+
+@keyframes lyricsSlideRightIn {
+  from {
+    opacity: 0;
+    transform: translateX(-48px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-slide-right {
+  animation:
+    lyricsSlideRightIn
+    var(--lyrics-motion-duration)
+    cubic-bezier(.22, .8, .32, 1)
+    both;
+}
+
+
+/* Blur In */
+
+@keyframes lyricsBlurIn {
+  from {
+    opacity: 0;
+    filter: blur(18px);
+    transform: scale(1.06);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-blur-in {
+  animation:
+    lyricsBlurIn
+    var(--lyrics-motion-duration)
+    ease-out
+    both;
+}
+
+
+/* Rotate In */
+
+@keyframes lyricsRotateIn {
+  from {
+    opacity: 0;
+    transform:
+      rotate(-8deg)
+      scale(.88);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      rotate(0deg)
+      scale(1);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-rotate-in {
+  transform-origin: center;
+  animation:
+    lyricsRotateIn
+    var(--lyrics-motion-duration)
+    cubic-bezier(.22, .8, .32, 1)
+    both;
+}
+
+
+@keyframes lyricsBounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(.55);
+  }
+
+  55% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+
+  75% {
+    transform: scale(.94);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-bounce-in {
+  animation:
+    lyricsBounceIn
+    var(--lyrics-motion-duration)
+    cubic-bezier(.22, .9, .28, 1.2)
+    both;
+}
+
+@keyframes lyricsGlitchIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-18px) skewX(-8deg);
+    filter: hue-rotate(90deg);
+    text-shadow:
+      6px 0 #00ffff,
+      -6px 0 #ff00aa;
+  }
+
+  25% {
+    opacity: 1;
+    transform: translateX(12px) skewX(5deg);
+  }
+
+  45% {
+    transform: translateX(-8px);
+    text-shadow:
+      -4px 0 #00ffff,
+      4px 0 #ff00aa;
+  }
+
+  70% {
+    transform: translateX(4px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0) skewX(0);
+    filter: none;
+    text-shadow: inherit;
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-glitch {
+  animation:
+    lyricsGlitchIn
+    var(--lyrics-motion-duration)
+    steps(2, end)
+    both;
+}
+
+@keyframes lyricsNeonFlickerIn {
+  0%,
+  12%,
+  22% {
+    opacity: 0;
+    filter: brightness(.35);
+  }
+
+  6%,
+  18%,
+  28% {
+    opacity: 1;
+    filter: brightness(2.2);
+  }
+
+  42% {
+    opacity: .4;
+    filter: brightness(.8);
+  }
+
+  58% {
+    opacity: 1;
+    filter: brightness(2.6);
+  }
+
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-neon-flicker {
+  animation:
+    lyricsNeonFlickerIn
+    var(--lyrics-motion-duration)
+    linear
+    both;
+}
+
+/*---------------
+ここまでエフェクト
+---------------*/
+
+
+.animationDescription {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #9ea8b8;
+  font-size: 12px;
+  line-height: 1.5;
+}

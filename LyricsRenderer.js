@@ -52,11 +52,19 @@ window.LyricsRenderer = {
     targetElement.style.textShadow =
       `${Number(style.shadowX) || 0}px ${Number(style.shadowY) || 0}px ${Number(style.shadowBlur) || 0}px ${style.shadowColor || '#000000'}`;
 
-    lines.forEach(line => {
-      const div = document.createElement('div');
-      div.className = 'lyricsLine';
-      div.textContent = line;
-      targetElement.appendChild(div);
-    });
+    targetElement.innerHTML = '';
+
+const motionWrapper = document.createElement('div');
+motionWrapper.className = 'lyricsMotionWrapper';
+
+lines.forEach(line => {
+  const div = document.createElement('div');
+  div.className = 'lyricsLine';
+  div.textContent = line;
+
+  motionWrapper.appendChild(div);
+});
+
+targetElement.appendChild(motionWrapper);
   }
 };

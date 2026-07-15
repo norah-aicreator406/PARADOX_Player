@@ -1187,11 +1187,24 @@ function setLyricsBlocks(blocks) {
     return;
   }
 
-  lyricsBlocksLayer.innerHTML = '';
-
   const safeBlocks = Array.isArray(blocks)
     ? blocks.filter(Boolean)
     : [];
+
+  const activeIds = new Set(
+    safeBlocks.map(block => String(block.id || ''))
+  );
+
+  // 終了した歌詞だけ削除
+  lyricsBlocksLayer
+    .querySelectorAll('.visualizerLyricsBlock')
+    .forEach(element => {
+      const blockId = element.dataset.blockId || '';
+
+      if (!activeIds.has(blockId)) {
+        element.remove();
+      }
+    });
 
   safeBlocks
     .slice()
@@ -1201,58 +1214,104 @@ function setLyricsBlocks(blocks) {
 
       return zA - zB;
     })
-    .forEach((block) => {
-      const lyricsBlock = document.createElement('div');
+    .forEach(block => {
+      const blockId = String(block.id || '');
 
-      lyricsBlock.className = 'visualizerLyricsBlock';
-      lyricsBlock.dataset.blockId = block.id || '';
+      let lyricsBlock =
+        lyricsBlocksLayer.querySelector(
+          `.visualizerLyricsBlock[data-block-id="${CSS.escape(blockId)}"]`
+        );
+
+      const isNewBlock = !lyricsBlock;
+
+      if (!lyricsBlock) {
+        lyricsBlock = document.createElement('div');
+        lyricsBlock.className = 'visualizerLyricsBlock';
+        lyricsBlock.dataset.blockId = blockId;
+
+        lyricsBlocksLayer.appendChild(lyricsBlock);
+      }
+
       lyricsBlock.style.zIndex =
         String(Number(block?.position?.z) || 0);
-
-      lyricsBlocksLayer.appendChild(lyricsBlock);
 
       window.LyricsRenderer.render(
         lyricsBlock,
         block
       );
 
-      applyLyricsAnimation(
-        lyricsBlock,
-        block.animation || {
-          preset: 'fade',
-          duration: 0.5
-        }
-      );
+      // 新しく表示された歌詞だけアニメーション
+      if (isNewBlock) {
+        applyLyricsAnimation(
+          lyricsBlock,
+          block.animation || {
+            preset: 'fade',
+            duration: 0.5
+          }
+        );
+      }
     });
 }
 
 
-function applyLyricsAnimation(targetElement, animation = {}) {
+function applyLyricsAnimation(
+  targetElement,
+  animation = {}
+) {
   if (!targetElement) return;
 
-  const preset = animation.preset || 'fade';
-  const duration = Number(animation.duration ?? 0.5);
+  const motionWrapper =
+    targetElement.querySelector(
+      '.lyricsMotionWrapper'
+    );
 
-  targetElement.style.setProperty(
+  if (!motionWrapper) return;
+
+  const preset =
+    animation.preset || 'fade';
+
+  const duration =
+    Number(animation.duration ?? 0.5);
+
+  const motionClassMap = {
+    fade: 'lyrics-motion-fade',
+    slideUp: 'lyrics-motion-slide-up',
+    slideDown: 'lyrics-motion-slide-down',
+    slideLeft: 'lyrics-motion-slide-left',
+    slideRight: 'lyrics-motion-slide-right',
+    zoom: 'lyrics-motion-zoom',
+    blurIn: 'lyrics-motion-blur-in',
+    rotateIn: 'lyrics-motion-rotate-in',
+    bounceIn: 'lyrics-motion-bounce-in',
+    glitch: 'lyrics-motion-glitch',
+    neonFlicker: 'lyrics-motion-neon-flicker'
+  };
+
+  const allMotionClasses =
+    Object.values(motionClassMap);
+
+  motionWrapper.style.setProperty(
     '--lyrics-motion-duration',
     `${duration}s`
   );
 
-  targetElement.classList.remove(
-    'lyrics-motion-fade',
-    'lyrics-motion-slide-up',
-    'lyrics-motion-zoom'
+  motionWrapper.classList.remove(
+    ...allMotionClasses
   );
 
-  void targetElement.offsetWidth;
+  // 前回のアニメーション状態を完全に解除
+  motionWrapper.style.opacity = '';
+  motionWrapper.style.transform = '';
+  motionWrapper.style.filter = '';
 
-  if (preset === 'slideUp') {
-    targetElement.classList.add('lyrics-motion-slide-up');
-  } else if (preset === 'zoom') {
-    targetElement.classList.add('lyrics-motion-zoom');
-  } else {
-    targetElement.classList.add('lyrics-motion-fade');
-  }
+  // 同じ演出を再度実行できるように再計算
+  void motionWrapper.offsetWidth;
+
+  const nextClass =
+    motionClassMap[preset] ||
+    motionClassMap.fade;
+
+  motionWrapper.classList.add(nextClass);
 }
 
 
