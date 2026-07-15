@@ -1956,6 +1956,24 @@ console.log('timeline block style:', {
     range
   });
 
+  /*
+   * タイミング入力ON中に
+   * 通常クリックした場合だけ、
+   * その歌詞から再開準備する。
+   *
+   * Command / Ctrl / Shiftによる
+   * 複数選択時は再開させない。
+   */
+  if (
+    isTimingInputMode &&
+    !additive &&
+    !range
+  ) {
+    prepareTimingRestartFromBlock(
+      block
+    );
+  }
+
   event.stopPropagation();
 });
 
@@ -4238,6 +4256,79 @@ function isTypingInInputElement() {
   );
 }
 
+
+function prepareTimingRestartFromBlock(
+  blockElement
+) {
+  if (!isTimingInputMode) return;
+  if (!blockElement) return;
+
+  const blockId =
+    blockElement.dataset.blockId;
+
+  const blocks =
+    sectionData[currentSectionName] || [];
+
+  const selectedIndex =
+    blocks.findIndex(
+      block => block.id === blockId
+    );
+
+  if (selectedIndex < 0) return;
+
+  const selectedBlock =
+    blocks[selectedIndex];
+
+  /*
+   * 現在進行中のタイミング入力を終了し、
+   * 次のBを「最初のB」として扱わせる。
+   */
+  timingInputStarted = false;
+  timingInputBlockIndex = selectedIndex;
+
+  /*
+   * 選択ブロックの既存開始位置へ
+   * 再生ヘッドを移動して待機する。
+   */
+  if (
+    editorAudio &&
+    editorAudioReady
+  ) {
+    editorAudio.pause();
+
+    editorAudio.currentTime =
+      Math.max(
+        0,
+        parseTimeToSeconds(
+          selectedBlock.start
+        )
+      );
+
+    autoFollowPlayhead = true;
+
+    lastEditorActiveLyricsSignature = '';
+
+    updateTimelinePlayhead();
+    updateEditorPreviewByTimeline();
+  }
+
+  /*
+   * NOW / NEXTを選択位置に更新。
+   */
+  updateTimingGuidePanel();
+
+  console.log(
+    'TIMING RESTART READY:',
+    {
+      sectionName: currentSectionName,
+      blockIndex: selectedIndex,
+      blockId,
+      start: selectedBlock.start
+    }
+  );
+}
+
+
 function getSelectedLyricsBlockIndex() {
   const selectedBlock = document.querySelector('.lyricsBlock.selected');
   if (!selectedBlock) return -1;
@@ -4407,10 +4498,21 @@ function handleTimingInputB() {
 
   // 最初のB
   if (!timingInputStarted) {
-    const selectedIndex = getSelectedLyricsBlockIndex();
+  const selectedIndex =
+    getSelectedLyricsBlockIndex();
 
-    timingInputBlockIndex =
-      selectedIndex >= 0 ? selectedIndex : 0;
+  timingInputBlockIndex =
+    Math.max(
+      0,
+      Math.min(
+        selectedIndex >= 0
+          ? selectedIndex
+          : timingInputBlockIndex >= 0
+            ? timingInputBlockIndex
+            : 0,
+        blocks.length - 1
+      )
+    );
 
     const block = blocks[timingInputBlockIndex];
 
