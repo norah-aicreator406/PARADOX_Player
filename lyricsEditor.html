@@ -50,12 +50,7 @@
 
 <div id="editorApp">
 
-  <header id="editorTopbar">
-    <div>NORAH Studio Editor</div>
-    <button id="saveEditorButton">
-  Save
-</button>
-  </header>
+
 
   <main id="editorWorkspace">
 
@@ -153,11 +148,6 @@
     </aside>
 
     <section id="previewPanel">
-
-  <div id="previewRatioControls">
-  <button class="ratioButton is-active" data-ratio="16:9">16:9</button>
-  <button class="ratioButton" data-ratio="9:16">9:16</button>
-</div>
 
   <div id="editorPreviewStage">
   <div id="editorPreviewCanvas">
@@ -498,7 +488,7 @@
     <div id="sectionTabs" class="sectionTabs"></div>
 
     <div class="timelineTopbar">
-  <div class="timelineTitle">Timeline</div>
+
 
   <div class="timelineActions">
 <button id="editorPlayPauseButton">▶</button>
@@ -510,11 +500,39 @@
   </div>
 
   <button id="openLyricsImportButton" type="button">歌詞取り込み</button>
-  <button id="addLyricsBlockButton">+ Block</button>
+  <button id="addLyricsBlockButton">ブロック追加</button>
   <button id="duplicateLyricsBlockButton">複製</button>
   <button id="deleteLyricsBlockButton">削除</button>
 
-  
+  <div id="previewRatioControls">
+  <span class="controlGroupLabel">
+    画面比率
+  </span>
+
+  <button
+    class="ratioButton is-active"
+    data-ratio="16:9"
+    type="button"
+  >
+    16:9
+  </button>
+
+  <button
+    class="ratioButton"
+    data-ratio="9:16"
+    type="button"
+  >
+    9:16
+  </button>
+</div>
+
+<button
+  id="saveEditorButton"
+  class="timelineSaveButton"
+  type="button"
+>
+  保存
+</button>
 
   <div class="timelineModeToggle">
     <span class="modeLabel">タイミング入力</span>
@@ -560,7 +578,7 @@
 
     <div class="timelineGrid">
   <div class="timelineCorner"></div>
-  <div class="timelineTrackLabel">Lyrics</div>
+  <div class="timelineTrackLabel">歌詞</div>
 
   <div class="timelineScrollArea">
     <div id="timelineContent">

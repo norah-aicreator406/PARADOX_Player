@@ -129,14 +129,6 @@ input[type="range"] {
 }
 
 
-#editorApp {
-  width: 100vw;
-  height: 100vh;
-  display: grid;
-  grid-template-rows: 52px 1fr 150px;
-  background: #0e0f14;
-}
-
 #editorTopbar {
   display: flex;
   align-items: center;
@@ -202,6 +194,9 @@ input[type="range"] {
 #editorPreviewStage {
   position: relative;
   overflow: hidden;
+    flex-shrink: 1;
+  min-width: 0;
+  min-height: 0;
 }
 
 
@@ -560,24 +555,61 @@ input[type="range"] {
 
 #previewRatioControls {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
+
+  margin-left: 4px;
+  padding-left: 14px;
+
+  border-left:
+    1px solid rgba(255, 255, 255, 0.12);
+}
+
+.controlGroupLabel {
+  margin-right: 2px;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  color: #8f98a9;
 }
 
 .ratioButton {
   height: 30px;
-  padding: 0 12px;
-  border: none;
+  min-width: 48px;
+
+  padding: 0 11px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.1);
+
   border-radius: 8px;
+
   background: #242832;
   color: #cfd6e6;
+
+  font-size: 12px;
+  font-weight: 800;
+
   cursor: pointer;
 }
 
-.ratioButton.is-active {
-  background: #5CC8FF;
-  color: #071018;
+.ratioButton:hover {
+  background: #303642;
 }
 
+.ratioButton.is-active {
+  background: #5cc8ff;
+  color: #071018;
+
+  border-color: transparent;
+
+  box-shadow:
+    0 0 12px rgba(92, 200, 255, 0.35);
+}
+
+
+/*
 #editorPreviewStage.ratio-16-9 {
   width: min(70%, 720px);
   aspect-ratio: 16 / 9;
@@ -588,16 +620,40 @@ input[type="range"] {
   aspect-ratio: 9 / 16;
   width: auto;
 }
+*/
 
 
 #previewPanel {
+  position: relative;
+
+  display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 14px;
+
+  min-width: 0;
+  min-height: 0;
+
+  padding: 18px;
+  box-sizing: border-box;
+
+  background:
+    radial-gradient(
+      circle at center,
+      #1b2233,
+      #08090d
+    );
+
+  border-right:
+    1px solid #2b2f3a;
+
+  overflow: hidden;
 }
 
 #timelinePanel {
   padding: 18px 22px;
   overflow: hidden;
+  grid-row: 3;
+  min-height: 0;
 }
 
 #timelinePanel #sectionEditor {
@@ -617,6 +673,7 @@ input[type="range"] {
   border-top: 1px solid #2b2f3a;
   border-bottom: 1px solid #2b2f3a;
   cursor: row-resize;
+  grid-row: 2;
 }
 
 #timelineResizeHandle:hover {
@@ -624,17 +681,35 @@ input[type="range"] {
 }
 
 #editorApp {
-  grid-template-rows: 52px 1fr 8px 260px;
+  width: 100vw;
+  height: 100vh;
+
+  display: grid;
+
+  grid-template-rows:
+    minmax(0, 1fr)
+    8px
+    260px;
+
+  overflow: hidden;
+  background: #0e0f14;
 }
 
 
 .lyricsBlock::before {
   content: "";
   position: absolute;
-  inset: 0 auto 0 0;
-  width: 4px;
+
+  left: 0;
+  top: 0;
+  bottom: 0;
+
+  width: 3px;
+
   background: #5CC8FF;
   opacity: 0.55;
+
+  pointer-events: none;
 }
 
 .lyricsBlock:hover {
@@ -721,15 +796,31 @@ input[type="range"] {
 }
 
 #saveEditorButton {
-  border: none;
-  background: transparent;
-  color: white;
-  font-size: 14px;
+  height: 30px;
+
+  padding: 0 14px;
+
+  border:
+    1px solid rgba(92, 200, 255, 0.34);
+
+  border-radius: 8px;
+
+  background:
+    rgba(92, 200, 255, 0.1);
+
+  color: #9be7ff;
+
+  font-size: 12px;
+  font-weight: 800;
+
   cursor: pointer;
 }
 
 #saveEditorButton:hover {
-  color: #5CC8FF;
+  background:
+    rgba(92, 200, 255, 0.2);
+
+  color: #ffffff;
 }
 
 .importOverlay {
@@ -1082,31 +1173,53 @@ input[type="range"] {
     0 0 28px rgba(92, 200, 255, 0.3);
 }
 
+/* =========================
+   Timeline Block Resize Handles
+========================= */
+
 .lyricsResizeHandle {
   position: absolute;
-  right: -6px;
   top: 4px;
   bottom: 4px;
-
   width: 14px;
   z-index: 999;
-
   cursor: ew-resize;
-
   border-radius: 999px;
   background: rgba(92, 200, 255, 0.25);
   opacity: 0;
-  transition: opacity 0.15s ease, background 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    background 0.15s ease;
+}
+
+/*
+ * ブロックに overflow: hidden があるため、
+ * ハンドルは外側へはみ出させず内側に配置する。
+ */
+.lyricsResizeHandleLeft {
+  left: 2px;
+}
+
+.lyricsResizeHandleRight {
+  right: 2px;
 }
 
 .lyricsBlock:hover .lyricsResizeHandle,
-.lyricsBlock.selected .lyricsResizeHandle {
+.lyricsBlock.selected .lyricsResizeHandle,
+.lyricsBlock.resizing .lyricsResizeHandle {
   opacity: 1;
 }
 
 .lyricsResizeHandle:hover {
   background: rgba(92, 200, 255, 0.85);
 }
+
+.lyricsBlock.resizing {
+  cursor: ew-resize;
+}
+
+
+
 
 
 #timelinePlayhead {
@@ -1157,14 +1270,17 @@ input[type="range"] {
 }
 
 #editorPreviewStage.ratio-16-9 {
-  width: min(70%, 720px);
+  height: min(92%, 720px);
+  width: auto;
+  max-width: 94%;
   aspect-ratio: 16 / 9;
 }
 
 #editorPreviewStage.ratio-9-16 {
-  height: min(52vh, 680px);
-  aspect-ratio: 9 / 16;
+  height: min(92%, 820px);
   width: auto;
+  max-width: 94%;
+  aspect-ratio: 9 / 16;
 }
 
 #editorPreviewLyrics {
@@ -1937,4 +2053,37 @@ input[type="range"] {
   color: #9ea8b8;
   font-size: 12px;
   line-height: 1.5;
+}
+
+
+#editorWorkspace {
+  grid-row: 1;
+
+  display: grid;
+  grid-template-columns:
+    220px
+    minmax(0, 1fr)
+    360px;
+
+  min-width: 0;
+  min-height: 0;
+
+  overflow: hidden;
+}
+
+#layerPanel,
+#inspectorPanel {
+  min-height: 0;
+  overflow: hidden;
+}
+
+#layerList {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.inspectorContent {
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
 }

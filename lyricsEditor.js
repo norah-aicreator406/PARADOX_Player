@@ -1514,22 +1514,29 @@ if (timelineResizeHandle && editorApp) {
     document.body.style.cursor = 'row-resize';
   });
 
-  document.addEventListener('mousemove', (event) => {
-    if (!isResizingTimeline) return;
+  document.addEventListener('mousemove', event => {
+  if (!isResizingTimeline) return;
 
-    const windowHeight = window.innerHeight;
-    const newTimelineHeight = windowHeight - event.clientY;
+  const windowHeight =
+    window.innerHeight;
 
-    const clampedHeight =
-      Math.min(Math.max(newTimelineHeight, 180), 560);
+  const newTimelineHeight =
+    windowHeight - event.clientY;
 
-    editorApp.style.gridTemplateRows =
-      `52px 1fr 8px ${clampedHeight}px`;
+  const clampedHeight =
+    Math.min(
+      Math.max(newTimelineHeight, 180),
+      560
+    );
 
-      requestAnimationFrame(() => {
-      updateTimelineContentHeight();
-});
+  editorApp.style.gridTemplateRows =
+    `minmax(0, 1fr) 8px ${clampedHeight}px`;
+
+  requestAnimationFrame(() => {
+    updateTimelineContentHeight();
+    resizeEditorPreviewCanvas();
   });
+});
 
   document.addEventListener('mouseup', () => {
     isResizingTimeline = false;
@@ -1940,7 +1947,8 @@ console.log('timeline block style:', {
     <div class="lyricsBlockMeta">
       <span>Position X:${blockData.position.x} Y:${blockData.position.y} Z:${blockData.position.z}</span>
     </div>
-    <div class="lyricsResizeHandle"></div>
+    <div class="lyricsResizeHandle lyricsResizeHandleLeft"></div>
+    <div class="lyricsResizeHandle lyricsResizeHandleRight"></div>
   `;
 
   block.addEventListener('click', event => {
@@ -2051,82 +2059,210 @@ function setupTimelineBlockDrag(block, blockData) {
 
 
 
-function setupTimelineResize(block, blockData){
+function setupTimelineResize(
+  block,
+  blockData
+) {
+  const leftHandle =
+    block.querySelector(
+      '.lyricsResizeHandleLeft'
+    );
 
-    const handle =
-    block.querySelector('.lyricsResizeHandle');
+  const rightHandle =
+    block.querySelector(
+      '.lyricsResizeHandleRight'
+    );
 
-    if(!handle) return;
+  if (!leftHandle || !rightHandle) {
+    console.warn(
+      '左右のリサイズハンドルが見つかりません',
+      {
+        leftHandle,
+        rightHandle,
+        blockId: blockData?.id
+      }
+    );
 
-    let resizing=false;
+    return;
+  }
 
-    let startMouseX=0;
+  let resizing = false;
+  let resizeSide = null;
 
-    let startWidth=0;
+  let startMouseX = 0;
+  let startLeft = 0;
+  let startWidth = 0;
 
-    let startSeconds=0;
+  let originalStartSeconds = 0;
+  let originalEndSeconds = 0;
 
-    handle.addEventListener("mousedown",(event)=>{
+  function beginResize(event, side) {
+    if (event.button !== 0) return;
 
-        resizing=true;
+    resizing = true;
+    resizeSide = side;
 
-        startMouseX=
-        event.clientX;
+    startMouseX =
+      event.clientX;
 
-        startWidth=
-        block.offsetWidth;
+    startLeft =
+      parseFloat(block.style.left) || 0;
 
-        startSeconds=
-        parseTimeToSeconds(blockData.start);
+    startWidth =
+      parseFloat(block.style.width) ||
+      block.offsetWidth;
 
-        event.stopPropagation();
+    originalStartSeconds =
+      parseTimeToSeconds(
+        blockData.start
+      );
 
-        event.preventDefault();
+    originalEndSeconds =
+      parseTimeToSeconds(
+        blockData.end
+      );
 
-    });
+    block.classList.add('resizing');
 
-    document.addEventListener("mousemove",(event)=>{
+    event.preventDefault();
+    event.stopPropagation();
+  }
 
-        if(!resizing) return;
+  leftHandle.addEventListener(
+    'mousedown',
+    event => {
+      beginResize(event, 'left');
+    }
+  );
 
-        const delta=
-        event.clientX-startMouseX;
+  rightHandle.addEventListener(
+    'mousedown',
+    event => {
+      beginResize(event, 'right');
+    }
+  );
 
-        const width=
-        Math.max(
+  document.addEventListener(
+    'mousemove',
+    event => {
+      if (!resizing) return;
+
+      const deltaX =
+        event.clientX - startMouseX;
+
+      if (resizeSide === 'right') {
+        const nextWidth =
+          Math.max(
             TIMELINE_MIN_BLOCK_WIDTH,
-            startWidth+delta
-        );
+            startWidth + deltaX
+          );
 
-        block.style.width=
-        width+"px";
+        block.style.width =
+          `${nextWidth}px`;
 
-    });
+        return;
+      }
 
-    document.addEventListener("mouseup",()=>{
+      if (resizeSide === 'left') {
+        const fixedRight =
+          startLeft + startWidth;
 
-        if(!resizing) return;
+        const maximumLeft =
+          fixedRight -
+          TIMELINE_MIN_BLOCK_WIDTH;
 
-        resizing=false;
+        const nextLeft =
+          Math.max(
+            0,
+            Math.min(
+              startLeft + deltaX,
+              maximumLeft
+            )
+          );
 
-        const width=
-        parseFloat(block.style.width);
+        const nextWidth =
+          fixedRight - nextLeft;
 
-        const duration=
-        width/timelineScale;
+        block.style.left =
+          `${nextLeft}px`;
 
-        blockData.end=
-        formatSecondsToTime(
-            startSeconds+duration
-        );
+        block.style.width =
+          `${nextWidth}px`;
+      }
+    }
+  );
 
-        endTimeInput.value=
-        blockData.end;
+  document.addEventListener(
+    'mouseup',
+    () => {
+      if (!resizing) return;
 
-        updateEditorPreview();
+      resizing = false;
 
-    });
+      block.classList.remove('resizing');
 
+      const finalLeft =
+        parseFloat(block.style.left) || 0;
+
+      const finalWidth =
+        parseFloat(block.style.width) ||
+        TIMELINE_MIN_BLOCK_WIDTH;
+
+      if (resizeSide === 'right') {
+        const nextEndSeconds =
+          originalStartSeconds +
+          finalWidth / timelineScale;
+
+        blockData.end =
+          formatSecondsToTime(
+            nextEndSeconds
+          );
+
+        endTimeInput.value =
+          blockData.end;
+      }
+
+      if (resizeSide === 'left') {
+        const nextStartSeconds =
+          finalLeft / timelineScale;
+
+        blockData.start =
+          formatSecondsToTime(
+            Math.min(
+              nextStartSeconds,
+              originalEndSeconds
+            )
+          );
+
+        /*
+         * 左ハンドルでは終了時刻を変更しない。
+         */
+        blockData.end =
+          formatSecondsToTime(
+            originalEndSeconds
+          );
+
+        startTimeInput.value =
+          blockData.start;
+
+        endTimeInput.value =
+          blockData.end;
+      }
+
+      resizeSide = null;
+
+      updateEditorPreview(
+        blockData,
+        {
+          animate: false
+        }
+      );
+
+      sendLyricsBlockToVisualizer(
+        blockData
+      );
+    }
+  );
 }
 
 
