@@ -10,6 +10,7 @@ const lyricsImportDialog = document.getElementById('lyricsImportDialog');
 const openLyricsImportButton = document.getElementById('openLyricsImportButton');
 const cancelLyricsImportButton = document.getElementById('cancelLyricsImportButton');
 const applyLyricsImportButton = document.getElementById('applyLyricsImportButton');
+const applyAnimationToSelectedButton = document.getElementById('applyAnimationToSelectedButton');
 
 function openLyricsImportDialog() {
   lyricsImportDialog?.classList.remove('is-hidden');
@@ -785,7 +786,16 @@ let editorAudioReady = false;
 const EDITOR_STORAGE_KEY = 'norahStudioEditorData';
 
 textInput.addEventListener('input', sendLyricsUpdate);
-animationPresetInput.addEventListener('change', sendLyricsUpdate);
+animationPresetInput.addEventListener('change', () => {
+  const selectedCount = selectedLyricsBlockIds.size;
+
+  // 複数選択中は、ボタンを押すまで保存しない
+  if (selectedCount > 1) {
+    return;
+  }
+
+  sendLyricsUpdate();
+});
 startTimeInput.addEventListener('input', sendLyricsUpdate);
 endTimeInput.addEventListener('input', sendLyricsUpdate);
 sizeInput.addEventListener('input', sendLyricsUpdate);
@@ -2007,6 +2017,25 @@ if (duplicateLyricsBlockButton && lyricsBlockList) {
     }
   });
 }
+
+
+if (applyAnimationToSelectedButton) {
+  applyAnimationToSelectedButton.addEventListener(
+    'click',
+    () => {
+
+      const preset =
+        animationPresetInput.value;
+
+      applyValueToSelectedBlocks(block => {
+        block.animationPreset = preset;
+      });
+
+    }
+  );
+}
+
+
 
 if (deleteLyricsBlockButton) {
   deleteLyricsBlockButton.addEventListener('click', () => {
@@ -3316,6 +3345,26 @@ document.addEventListener('keydown', (event) => {
     handleTimingInputE();
   }
 });
+
+
+function applyValueToSelectedBlocks(callback) {
+  if (selectedLyricsBlockIds.size === 0) {
+    alert('歌詞ブロックを選択してください。');
+    return;
+  }
+
+  const blocks =
+    sectionData[currentSectionName] || [];
+
+  blocks.forEach(block => {
+    if (!selectedLyricsBlockIds.has(block.id)) return;
+
+    callback(block);
+  });
+
+  renderSectionBlocks();
+  applyLyricsBlockSelectionClasses();
+}
 
 
 
