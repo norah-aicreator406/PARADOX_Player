@@ -4347,7 +4347,12 @@ function scrollSelectedLyricsBlockIntoVerticalView(
 
 
 
-function selectLyricsBlockByIndex(index) {
+function selectLyricsBlockByIndex(
+  index,
+  {
+    followVertical = false
+  } = {}
+) {
   const blocks =
     sectionData[currentSectionName] || [];
 
@@ -4367,11 +4372,11 @@ function selectLyricsBlockByIndex(index) {
 
   selectLyricsBlock(blockElement);
 
-  console.log(
-    'SELECT BLOCK FOR VERTICAL FOLLOW:',
-    index,
-    blockData.id
-  );
+  /*
+   * B入力から明示的に指定された場合だけ
+   * 縦方向へ追従する。
+   */
+  if (!followVertical) return;
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
@@ -4414,7 +4419,12 @@ function handleTimingInputB() {
 
     timingInputStarted = true;
 
-    selectLyricsBlockByIndex(timingInputBlockIndex);
+    selectLyricsBlockByIndex(
+  timingInputBlockIndex,
+  {
+    followVertical: true
+  }
+);
 
     if (editorAudio.paused) {
   editorAudio.play();
@@ -4443,7 +4453,12 @@ return;
   nextBlock.start = currentTimeText;
   ensureBlockEndAfterStart(nextBlock, currentSeconds);
 
-  selectLyricsBlockByIndex(timingInputBlockIndex);
+  selectLyricsBlockByIndex(
+  timingInputBlockIndex,
+  {
+    followVertical: true
+  }
+);
 
   updateTimingGuidePanel();
 }
