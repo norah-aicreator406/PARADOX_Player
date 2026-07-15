@@ -592,6 +592,14 @@ motionWrapper.style.filter = 'none';
   }
 }
  
+applyEditorLyricsHoldAnimation(
+  previewLyrics,
+  payload.animation,
+  Number(
+    options.holdElapsedSeconds
+  ) || 0
+);
+
  ensureLyricsSelectionBox();
 }
 
@@ -1349,12 +1357,29 @@ function renderEditorActiveLyrics(blocks) {
    * サブ表示からメイン表示へ移っただけなら、
    * アニメーションを再実行しない。
    */
-  updateEditorPreview(
-    primaryBlock,
-    {
-      animate: newlyActiveIds.has(primaryBlock.id)
-    }
-  );
+  const primaryElapsedSeconds =
+  editorAudio
+    ? Math.max(
+        0,
+        editorAudio.currentTime -
+        parseTimeToSeconds(
+          primaryBlock.start
+        )
+      )
+    : 0;
+
+updateEditorPreview(
+  primaryBlock,
+  {
+    animate:
+      newlyActiveIds.has(
+        primaryBlock.id
+      ),
+
+    holdElapsedSeconds:
+      primaryElapsedSeconds
+  }
+);
 
   textInput.value = primaryBlock.text || '';
   startTimeInput.value =
@@ -1402,6 +1427,24 @@ function renderEditorActiveLyrics(blocks) {
         motionWrapper.style.transform = 'none';
       }
     }
+
+   const elapsedSeconds =
+  editorAudio
+    ? Math.max(
+        0,
+        editorAudio.currentTime -
+        parseTimeToSeconds(
+          block.start
+        )
+      )
+    : 0;
+
+applyEditorLyricsHoldAnimation(
+  item,
+  payload.animation,
+  elapsedSeconds
+);
+
   });
 
   previousEditorActiveLyricsIds =
@@ -1426,10 +1469,10 @@ function buildLyricsPayloadForVisualizer(block) {
 
     layout: block.layout || { width: 900, rotation: 0 },
 
-    animation: {
-      preset: block.animationPreset || 'fade',
-      duration: 0.5
-    },
+    animation:
+  getNormalizedLyricsAnimation(
+    block
+  ),
 
     style: {
       font: style.font || 'Arial',
@@ -5223,6 +5266,119 @@ const duration =
     motionClassMap.fade;
 
   motionWrapper.classList.add(nextClass);
+}
+
+
+function applyEditorLyricsHoldAnimation(
+  targetElement,
+  animation = {},
+  elapsedSeconds = 0
+) {
+  if (!targetElement) return;
+
+  const holdWrapper =
+    targetElement.querySelector(
+      '.lyricsHoldWrapper'
+    );
+
+  if (!holdWrapper) return;
+
+  const hold =
+    animation.hold || {};
+
+  const preset =
+    hold.preset || 'off';
+
+  /*
+   * Speedは数値が大きいほど速くする。
+   *
+   * Speed 1.0 = 2秒で1往復
+   * Speed 2.0 = 1秒で1往復
+   * Speed 0.5 = 4秒で1往復
+   */
+  const speed =
+    Math.max(
+      0.05,
+      Number(hold.speed) || 1
+    );
+
+  const duration =
+    2 / speed;
+
+  const strength =
+    Math.max(
+      0,
+      Number(hold.strength) || 12
+    );
+
+  const holdClassMap = {
+    hover: 'lyrics-hold-hover'
+  };
+
+  const allHoldClasses =
+    Object.values(
+      holdClassMap
+    );
+
+  holdWrapper.classList.remove(
+    ...allHoldClasses
+  );
+
+  holdWrapper.style.animation = '';
+  holdWrapper.style.animationDelay = '';
+  holdWrapper.style.transform = '';
+
+  holdWrapper.style.setProperty(
+    '--lyrics-hold-duration',
+    `${duration}s`
+  );
+
+  holdWrapper.style.setProperty(
+    '--lyrics-hold-strength',
+    String(strength)
+  );
+
+  /*
+   * OFFなら通常表示のまま終了。
+   */
+  if (preset === 'off') {
+    return;
+  }
+
+  const nextClass =
+    holdClassMap[preset];
+
+  if (!nextClass) return;
+
+  /*
+   * 同じ設定を再適用した場合でも
+   * アニメーションを再評価させる。
+   */
+  void holdWrapper.offsetWidth;
+
+  holdWrapper.classList.add(
+    nextClass
+  );
+
+/*
+ * 歌詞DOMが再生成されても、
+ * 曲中の経過時間に対応する位置から
+ * HOLDアニメーションを再開する。
+ */
+const safeElapsed =
+  Math.max(
+    0,
+    Number(elapsedSeconds) || 0
+  );
+
+const phaseSeconds =
+  duration > 0
+    ? safeElapsed % duration
+    : 0;
+
+holdWrapper.style.animationDelay =
+  `-${phaseSeconds}s`;
+
 }
 
 

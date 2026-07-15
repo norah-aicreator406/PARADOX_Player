@@ -54,17 +54,43 @@ window.LyricsRenderer = {
 
     targetElement.innerHTML = '';
 
-const motionWrapper = document.createElement('div');
-motionWrapper.className = 'lyricsMotionWrapper';
+const motionWrapper =
+  document.createElement('div');
+
+motionWrapper.className =
+  'lyricsMotionWrapper lyricsInWrapper';
+
+
+/*
+ * HOLD専用ラッパー。
+ *
+ * INとHOLDで別々のtransformを使えるように、
+ * 歌詞行をこの内側へ格納する。
+ */
+const holdWrapper =
+  document.createElement('div');
+
+holdWrapper.className =
+  'lyricsHoldWrapper';
+
 
 lines.forEach(line => {
-  const div = document.createElement('div');
+  const div =
+    document.createElement('div');
+
   div.className = 'lyricsLine';
   div.textContent = line;
 
-  motionWrapper.appendChild(div);
+  holdWrapper.appendChild(div);
 });
 
-targetElement.appendChild(motionWrapper);
+
+motionWrapper.appendChild(
+  holdWrapper
+);
+
+targetElement.appendChild(
+  motionWrapper
+);
   }
 };

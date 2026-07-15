@@ -4509,6 +4509,60 @@ input[type="range"] {
 
 
 /* ==================================================
+   HOLD Effect
+================================================== */
+
+.lyricsHoldWrapper {
+  width: 100%;
+
+  transform-origin: center center;
+
+  /*
+   * 初期値
+   */
+  --lyrics-hold-duration: 2s;
+  --lyrics-hold-strength: 12;
+
+  will-change: transform;
+}
+
+
+/* 浮遊 */
+
+@keyframes lyricsHoldHover {
+  0%,
+  100% {
+    transform:
+      translateY(
+        calc(
+          var(--lyrics-hold-strength, 12) *
+          -1px
+        )
+      );
+  }
+
+  50% {
+    transform:
+      translateY(
+        calc(
+          var(--lyrics-hold-strength, 12) *
+          1px
+        )
+      );
+  }
+}
+
+
+.lyricsHoldWrapper.lyrics-hold-hover {
+  animation:
+    lyricsHoldHover
+    var(--lyrics-hold-duration, 2s)
+    ease-in-out
+    infinite;
+}
+
+
+/* ==================================================
    TODO:
    UI v2完成後に以下を整理する
 
