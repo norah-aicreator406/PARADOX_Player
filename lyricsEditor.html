@@ -55,97 +55,258 @@
   <main id="editorWorkspace">
 
     <aside id="layerPanel">
-     <h3 class="layerTitle">Layers</h3>
 
-<button id="addLayerButton">
-  + レイヤーを追加
-</button>
+  <div class="layerPanelHeader">
 
-<div id="addLayerMenu" class="addLayerMenu">
- 
-  <button data-layer-type="image">画像</button>
-  <button data-layer-type="video">動画</button>
-  <button data-layer-type="lyrics">歌詞</button>
-  <button data-layer-type="particle">パーティクル</button>
-</div>
+    <div class="layerPanelTabs">
 
- <button id="deleteLayerButton">
-  Delete Layer
-</button>
+      <button
+        class="layerPanelTab is-active"
+        data-layer-panel-tab="layers"
+        type="button"
+      >
+        レイヤー
+      </button>
 
-<div id="layerList">
+      <button
+        class="layerPanelTab"
+        data-layer-panel-tab="assets"
+        type="button"
+      >
+        素材
+      </button>
 
-  <div class="layerGroup">
-
-    <div class="layerGroupHeader">
-      ▼ ビジュアル
     </div>
 
-    <div class="layerItem selected">
-      <div class="layerAccent"></div>
-      <div class="layerInfo">
-        <div class="layerName">背景</div>
-        <div class="layerType">背景</div>
-      </div>
+    <button
+      id="layerPanelCollapseButton"
+      class="layerPanelCollapseButton"
+      type="button"
+      aria-label="左パネルを閉じる"
+      title="左パネルを閉じる"
+    >
+      ‹
+    </button>
+
+  </div>
+
+
+  <!-- レイヤータブ -->
+  <div
+    id="layerPanelLayers"
+    class="layerPanelView is-active"
+  >
+
+    <div class="layerPanelActions">
+
+      <button
+        id="addLayerButton"
+        class="layerPanelAddButton"
+        type="button"
+      >
+        <span>＋</span>
+        レイヤー追加
+      </button>
+
+      <button
+        id="deleteLayerButton"
+        class="layerPanelDeleteButton"
+        type="button"
+      >
+        削除
+      </button>
+
     </div>
 
-    <div class="layerSubGroup">
-      <div class="layerSubGroupHeader">
-        ▼ 画像
-      </div>
 
-      <div class="layerItem">
-        <div class="layerAccent"></div>
-        <div class="layerInfo">
-          <div class="layerName">画像 1</div>
-          <div class="layerType">画像</div>
+    <div
+      id="addLayerMenu"
+      class="addLayerMenu"
+    >
+
+      <button
+        data-layer-type="image"
+        type="button"
+      >
+        画像
+      </button>
+
+      <button
+        data-layer-type="video"
+        type="button"
+      >
+        動画
+      </button>
+
+      <button
+        data-layer-type="lyrics"
+        type="button"
+      >
+        歌詞
+      </button>
+
+      <button
+        data-layer-type="particle"
+        type="button"
+      >
+        パーティクル
+      </button>
+
+    </div>
+
+
+    <div id="layerList">
+
+      <div class="layerGroup">
+
+        <div class="layerGroupHeader">
+          ▼ ビジュアル
         </div>
-      </div>
-    </div>
 
-    <div class="layerSubGroup">
-      <div class="layerSubGroupHeader">
-        ▼ 動画
-      </div>
-    </div>
+        <div class="layerItem selected">
 
-    <div class="layerSubGroup">
-      <div class="layerSubGroupHeader">
-        ▼ パーティクル
+          <div class="layerAccent"></div>
+
+          <div class="layerInfo">
+            <div class="layerName">
+              背景
+            </div>
+
+            <div class="layerType">
+              背景
+            </div>
+          </div>
+
+        </div>
+
+
+        <div class="layerSubGroup">
+
+          <div class="layerSubGroupHeader">
+            ▼ 画像
+          </div>
+
+          <div class="layerItem">
+
+            <div class="layerAccent"></div>
+
+            <div class="layerInfo">
+              <div class="layerName">
+                画像 1
+              </div>
+
+              <div class="layerType">
+                画像
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="layerSubGroup">
+
+          <div class="layerSubGroupHeader">
+            ▼ 動画
+          </div>
+
+        </div>
+
+
+        <div class="layerSubGroup">
+
+          <div class="layerSubGroupHeader">
+            ▼ パーティクル
+          </div>
+
+        </div>
+
       </div>
+
+
+      <div class="layerGroup">
+
+        <div class="layerGroupHeader">
+          ▼ 歌詞
+        </div>
+
+        <div
+          class="layerItem lyricSectionItem selected"
+          data-section-name="Verse 1"
+        >
+
+          <div class="layerAccent"></div>
+
+          <div class="layerInfo">
+            <div class="layerName">
+              Verse 1
+            </div>
+
+            <div class="layerType">
+              歌詞
+            </div>
+          </div>
+
+        </div>
+
+
+        <div
+          class="layerItem lyricSectionItem"
+          data-section-name="Chorus"
+        >
+
+          <div class="layerAccent"></div>
+
+          <div class="layerInfo">
+            <div class="layerName">
+              Chorus
+            </div>
+
+            <div class="layerType">
+              歌詞
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
 
   </div>
 
-  <div class="layerGroup">
 
-    <div class="layerGroupHeader">
-      ▼ 歌詞
-    </div>
+  <!-- 素材タブ -->
+  <div
+    id="layerPanelAssets"
+    class="layerPanelView"
+  >
 
-    <div class="layerItem lyricSectionItem selected" data-section-name="Verse 1">
-      <div class="layerAccent"></div>
-      <div class="layerInfo">
-        <div class="layerName">Verse 1</div>
-        <div class="layerType">歌詞</div>
+    <div class="assetsEmptyState">
+
+      <div class="assetsEmptyIcon">
+        ◇
       </div>
-    </div>
 
-    <div class="layerItem lyricSectionItem" data-section-name="Chorus">
-      <div class="layerAccent"></div>
-      <div class="layerInfo">
-        <div class="layerName">Chorus</div>
-        <div class="layerType">歌詞</div>
+      <div class="assetsEmptyTitle">
+        素材ライブラリ
       </div>
+
+      <div class="assetsEmptyText">
+        画像・動画・オーバーレイなどを<br>
+        ここから追加できるようになります。
+      </div>
+
+      <div class="assetsEmptyBadge">
+        今後実装
+      </div>
+
     </div>
 
   </div>
 
-</div>
-
-
-
-    </aside>
+</aside>
 
     <section id="previewPanel">
 

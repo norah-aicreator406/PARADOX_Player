@@ -4904,6 +4904,119 @@ function updateAnimationDescription() {
 
 
 
+function setupLayerPanelTabs() {
+  const tabs =
+    document.querySelectorAll(
+      '.layerPanelTab'
+    );
+
+  const layersView =
+    document.getElementById(
+      'layerPanelLayers'
+    );
+
+  const assetsView =
+    document.getElementById(
+      'layerPanelAssets'
+    );
+
+  if (
+    !tabs.length ||
+    !layersView ||
+    !assetsView
+  ) {
+    return;
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target =
+        tab.dataset.layerPanelTab;
+
+      tabs.forEach(item => {
+        item.classList.toggle(
+          'is-active',
+          item === tab
+        );
+      });
+
+      layersView.classList.toggle(
+        'is-active',
+        target === 'layers'
+      );
+
+      assetsView.classList.toggle(
+        'is-active',
+        target === 'assets'
+      );
+    });
+  });
+}
+
+setupLayerPanelTabs();
+
+
+function setupLayerCollapse(){
+
+    const workspace=
+    document.getElementById(
+        "editorWorkspace"
+    );
+
+    const button=
+    document.getElementById(
+        "layerPanelCollapseButton"
+    );
+
+    if(!workspace||!button)return;
+
+    const saved=
+    localStorage.getItem(
+        "editorLeftCollapsed"
+    );
+
+    if(saved==="true"){
+
+        workspace.classList.add(
+            "leftCollapsed"
+        );
+
+        button.textContent="›";
+    }
+
+    button.onclick=()=>{
+
+        const collapsed=
+        workspace.classList.toggle(
+            "leftCollapsed"
+        );
+
+        button.textContent=
+        collapsed?"›":"‹";
+
+        localStorage.setItem(
+            "editorLeftCollapsed",
+            collapsed
+        );
+
+        requestAnimationFrame(()=>{
+
+            resizeEditorPreviewCanvas();
+
+        });
+
+        window.dispatchEvent(
+    new Event("resize")
+);
+
+    };
+
+}
+
+setupLayerCollapse();
+
+
+
 setupPreviewLyricsDrag();
 resizeEditorPreviewCanvas();
 setupLyricsSelectionResize();

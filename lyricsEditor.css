@@ -138,11 +138,6 @@ input[type="range"] {
   border-bottom: 1px solid #2b2f3a;
 }
 
-#editorWorkspace {
-  display: grid;
-  grid-template-columns: 220px 1fr 360px;
-  min-height: 0;
-}
 
 #layerPanel,
 #previewPanel,
@@ -2052,21 +2047,6 @@ input[type="range"] {
 }
 
 
-#editorWorkspace {
-  grid-row: 1;
-
-  display: grid;
-  grid-template-columns:
-    220px
-    minmax(0, 1fr)
-    360px;
-
-  min-width: 0;
-  min-height: 0;
-
-  overflow: hidden;
-}
-
 #layerPanel,
 #inspectorPanel {
   min-height: 0;
@@ -3389,4 +3369,694 @@ input[type="range"] {
 
   visibility: visible;
   opacity: 1;
+}
+
+/* ==================================================
+   Left Panel UI v2
+================================================== */
+
+#layerPanel {
+  padding: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+  min-height: 0;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      180deg,
+      #111722,
+      #0d121b
+    );
+
+  border-right:
+    1px solid rgba(255, 255, 255, 0.07);
+}
+
+
+/* 上部タブ */
+
+.layerPanelHeader {
+  flex: 0 0 auto;
+
+  min-height: 58px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  padding: 11px 12px;
+
+  box-sizing: border-box;
+
+  border-bottom:
+    1px solid rgba(255, 255, 255, 0.065);
+
+  background:
+    rgba(255, 255, 255, 0.018);
+}
+
+
+.layerPanelTabs {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  min-width: 0;
+}
+
+
+.layerPanelTab {
+  height: 34px;
+
+  padding: 0 14px;
+
+  border:
+    1px solid rgba(132, 156, 193, 0.14);
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(35, 44, 60, 0.96),
+      rgba(23, 30, 43, 0.96)
+    );
+
+  color: #aeb9ca;
+
+  font-size: 12px;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+
+.layerPanelTab:hover {
+  color: #ffffff;
+
+  border-color:
+    rgba(92, 200, 255, 0.35);
+}
+
+
+.layerPanelTab.is-active {
+  border-color:
+    rgba(92, 200, 255, 0.82);
+
+  background:
+    linear-gradient(
+      180deg,
+      #65d5ff,
+      #3bbcf3
+    );
+
+  color: #07131e;
+
+  box-shadow:
+    0 0 16px rgba(92, 200, 255, 0.34);
+}
+
+
+/* 折りたたみボタン */
+
+.layerPanelCollapseButton {
+  flex: 0 0 auto;
+
+  width: 32px;
+  height: 32px;
+
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.1);
+
+  border-radius: 9px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #252e3d,
+      #181f2b
+    );
+
+  color: #c7d0df;
+
+  font-size: 22px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+
+.layerPanelCollapseButton:hover {
+  color: #ffffff;
+
+  border-color:
+    rgba(92, 200, 255, 0.4);
+
+  background:
+    linear-gradient(
+      180deg,
+      #303b4e,
+      #202a39
+    );
+}
+
+
+/* タブ内容 */
+
+.layerPanelView {
+  display: none;
+
+  flex: 1;
+  min-height: 0;
+
+  overflow: hidden;
+}
+
+
+.layerPanelView.is-active {
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* 操作ボタン */
+
+.layerPanelActions {
+  flex: 0 0 auto;
+
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto;
+
+  gap: 7px;
+
+  padding: 12px 12px 8px;
+}
+
+
+.layerPanelAddButton {
+  height: 36px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  margin: 0;
+
+  border:
+    1px solid rgba(92, 200, 255, 0.24);
+
+  border-radius: 9px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(27, 49, 68, 0.94),
+      rgba(18, 34, 49, 0.94)
+    );
+
+  color: #a9eaff;
+
+  font-size: 12px;
+  font-weight: 750;
+
+  cursor: pointer;
+}
+
+
+.layerPanelAddButton:hover {
+  border-color:
+    rgba(92, 200, 255, 0.56);
+
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(35, 67, 92, 0.98),
+      rgba(22, 45, 65, 0.98)
+    );
+}
+
+
+.layerPanelDeleteButton {
+  width: auto;
+  height: 36px;
+
+  margin: 0;
+  padding: 0 11px;
+
+  border:
+    1px solid rgba(255, 85, 112, 0.28);
+
+  border-radius: 9px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(63, 29, 39, 0.94),
+      rgba(39, 20, 27, 0.94)
+    );
+
+  color: #ff8296;
+
+  font-size: 11px;
+  font-weight: 750;
+
+  cursor: pointer;
+}
+
+
+.layerPanelDeleteButton:hover {
+  border-color:
+    rgba(255, 100, 126, 0.58);
+
+  color: #ffb0bd;
+}
+
+
+/* 既存追加メニュー */
+
+#layerPanel .addLayerMenu {
+  flex: 0 0 auto;
+
+  margin: 0 12px 8px;
+}
+
+
+/* レイヤー一覧 */
+
+#layerPanel #layerList {
+  flex: 1;
+
+  min-height: 0;
+
+  padding: 4px 10px 14px 12px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  box-sizing: border-box;
+}
+
+
+#layerPanel .layerGroup {
+  margin-bottom: 16px;
+}
+
+
+#layerPanel .layerGroupHeader {
+  margin: 7px 4px 8px;
+
+  color: #828ea2;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 0.065em;
+}
+
+
+#layerPanel .layerSubGroup {
+  margin-top: 7px;
+  margin-left: 7px;
+}
+
+
+#layerPanel .layerSubGroupHeader {
+  margin: 0 3px 6px;
+
+  color: #68758b;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+
+#layerPanel .layerItem {
+  min-height: 50px;
+  height: 50px;
+
+  margin-bottom: 6px;
+
+  border:
+    1px solid transparent;
+
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(27, 34, 47, 0.96),
+      rgba(20, 26, 37, 0.96)
+    );
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+
+#layerPanel .layerItem:hover {
+  border-color:
+    rgba(92, 200, 255, 0.2);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(35, 44, 59, 0.98),
+      rgba(25, 33, 46, 0.98)
+    );
+}
+
+
+#layerPanel .layerItem.selected {
+  border-color:
+    rgba(92, 200, 255, 0.52);
+
+  box-shadow:
+    inset 3px 0 0 #5cc8ff,
+    0 0 16px rgba(92, 200, 255, 0.1);
+}
+
+
+#layerPanel .layerAccent {
+  display: none;
+}
+
+
+#layerPanel .layerInfo {
+  padding-left: 13px;
+}
+
+
+#layerPanel .layerName {
+  font-size: 12px;
+  font-weight: 750;
+}
+
+
+#layerPanel .layerType {
+  margin-top: 3px;
+
+  color: #718096;
+
+  font-size: 9px;
+}
+
+
+/* 素材空表示 */
+
+.assetsEmptyState {
+  margin: auto;
+
+  padding: 28px 18px;
+
+  text-align: center;
+}
+
+
+.assetsEmptyIcon {
+  width: 44px;
+  height: 44px;
+
+  margin: 0 auto 13px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border:
+    1px solid rgba(92, 200, 255, 0.24);
+
+  border-radius: 13px;
+
+  background:
+    rgba(92, 200, 255, 0.06);
+
+  color: #5cc8ff;
+
+  font-size: 22px;
+}
+
+
+.assetsEmptyTitle {
+  color: #dce5f2;
+
+  font-size: 13px;
+  font-weight: 800;
+}
+
+
+.assetsEmptyText {
+  margin-top: 8px;
+
+  color: #778499;
+
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+
+.assetsEmptyBadge {
+  display: inline-flex;
+
+  margin-top: 13px;
+  padding: 4px 9px;
+
+  border-radius: 999px;
+
+  background:
+    rgba(255, 255, 255, 0.05);
+
+  color: #788598;
+
+  font-size: 9px;
+  font-weight: 750;
+}
+
+/*=============================
+ Left Panel Collapse
+=============================*/
+
+#editorWorkspace{
+
+    transition:grid-template-columns .22s ease;
+}
+
+#editorWorkspace.leftCollapsed{
+
+--left-panel-width:44px;
+}
+
+#editorWorkspace.leftCollapsed
+#layerPanel{
+
+    overflow:hidden;
+}
+
+#editorWorkspace.leftCollapsed
+.layerPanelTabs,
+
+#editorWorkspace.leftCollapsed
+.layerPanelActions,
+
+#editorWorkspace.leftCollapsed
+.layerPanelView{
+
+    display:none;
+}
+
+#editorWorkspace.leftCollapsed
+.layerPanelHeader{
+
+    justify-content:center;
+
+    padding:10px 0;
+
+    border:none;
+}
+
+#editorWorkspace.leftCollapsed
+.layerPanelCollapseButton{
+
+    width:30px;
+
+    height:30px;
+
+    margin:0;
+}
+
+
+/* ==================================================
+   左パネル折りたたみ幅・最終確定
+================================================== */
+
+#editorWorkspace {
+  --left-panel-width: 220px;
+
+  grid-template-columns:
+    var(--left-panel-width)
+    minmax(0, 1fr)
+    360px;
+
+  transition:
+    grid-template-columns 0.22s ease;
+}
+
+#editorWorkspace.leftCollapsed {
+  --left-panel-width: 44px;
+
+  grid-template-columns:
+    44px
+    minmax(0, 1fr)
+    360px !important;
+}
+
+#editorWorkspace.leftCollapsed #layerPanel {
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
+
+  padding: 0;
+  overflow: hidden;
+}
+
+#editorWorkspace.leftCollapsed .layerPanelHeader {
+  width: 44px;
+  min-width: 44px;
+
+  padding: 10px 0;
+
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+#editorWorkspace.leftCollapsed .layerPanelCollapseButton {
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+
+  margin: 0;
+}
+
+
+/* ==================================================
+   Editor Workspace Layout — 復旧・最終確定
+================================================== */
+
+#editorWorkspace {
+  grid-row: 1;
+
+  display: grid !important;
+
+  grid-template-columns:
+    220px
+    minmax(0, 1fr)
+    360px;
+
+  grid-template-rows:
+    minmax(0, 1fr);
+
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+  min-height: 0;
+
+  overflow: hidden;
+
+  transition:
+    grid-template-columns 0.22s ease;
+}
+
+
+/* 左ペイン */
+
+#layerPanel {
+  grid-column: 1;
+  grid-row: 1;
+
+  width: auto;
+  min-width: 0;
+  max-width: none;
+
+  min-height: 0;
+
+  overflow: hidden;
+}
+
+
+/* 中央プレビュー */
+
+#previewPanel {
+  grid-column: 2;
+  grid-row: 1;
+
+  min-width: 0;
+  min-height: 0;
+
+  overflow: hidden;
+}
+
+
+/* 右インスペクタ */
+
+#inspectorPanel {
+  grid-column: 3;
+  grid-row: 1;
+
+  min-width: 0;
+  min-height: 0;
+
+  overflow: hidden;
+}
+
+
+/* 左ペインを閉じた状態 */
+
+#editorWorkspace.leftCollapsed {
+  grid-template-columns:
+    44px
+    minmax(0, 1fr)
+    360px;
+}
+
+#editorWorkspace.leftCollapsed #layerPanel {
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
+}
+
+
+/* 開いた状態では固定幅を解除 */
+
+#editorWorkspace:not(.leftCollapsed) #layerPanel {
+  width: auto;
+  min-width: 0;
+  max-width: none;
 }
