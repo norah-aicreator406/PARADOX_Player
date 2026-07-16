@@ -448,13 +448,229 @@ if (trackArea) {
         updateContentHeight();
       }
 
+      function setupBlockDrag({
+  block,
+  blockData,
+
+  captureHistory,
+  commitHistory,
+
+  parseTime,
+  formatTime,
+
+  getScale,
+
+  selectBlock,
+  updatePreview,
+
+  startTimeInput,
+  endTimeInput
+}) {
+  if (
+    !block ||
+    !blockData
+  ) {
+    return;
+  }
+
+  let isDragging = false;
+  let hasMoved = false;
+
+  let startMouseX = 0;
+  let startLeft = 0;
+  let durationSeconds = 0;
+
+  let beforeDragState = null;
+
+
+  block.addEventListener(
+    'mousedown',
+    event => {
+      if (
+        event.target.closest(
+          '.lyricsResizeHandle'
+        )
+      ) {
+        return;
+      }
+
+      if (event.button !== 0) {
+        return;
+      }
+
+
+      isDragging = true;
+      hasMoved = false;
+
+
+      beforeDragState =
+        captureHistory?.();
+
+
+      startMouseX =
+        event.clientX;
+
+      startLeft =
+        parseFloat(
+          block.style.left
+        ) || 0;
+
+
+      const startSeconds =
+        parseTime(
+          blockData.start
+        );
+
+      const endSeconds =
+        parseTime(
+          blockData.end
+        );
+
+
+      durationSeconds =
+        Math.max(
+          endSeconds -
+            startSeconds,
+          0.5
+        );
+
+
+      block.classList.add(
+        'dragging'
+      );
+
+
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  );
+
+
+  document.addEventListener(
+    'mousemove',
+    event => {
+      if (!isDragging) {
+        return;
+      }
+
+
+      const deltaX =
+        event.clientX -
+        startMouseX;
+
+
+      if (
+        Math.abs(deltaX) > 3
+      ) {
+        hasMoved = true;
+      }
+
+
+      const nextLeft =
+        Math.max(
+          0,
+          startLeft + deltaX
+        );
+
+
+      block.style.left =
+        `${nextLeft}px`;
+    }
+  );
+
+
+  document.addEventListener(
+    'mouseup',
+    () => {
+      if (!isDragging) {
+        return;
+      }
+
+
+      isDragging = false;
+
+      block.classList.remove(
+        'dragging'
+      );
+
+
+      if (!hasMoved) {
+        beforeDragState = null;
+        return;
+      }
+
+
+      const finalLeft =
+        parseFloat(
+          block.style.left
+        ) || 0;
+
+
+      const timelineScale =
+        Number(
+          getScale?.()
+        ) || 90;
+
+
+      const nextStartSeconds =
+        finalLeft /
+        timelineScale;
+
+
+      const nextEndSeconds =
+        nextStartSeconds +
+        durationSeconds;
+
+
+      blockData.start =
+        formatTime(
+          nextStartSeconds
+        );
+
+      blockData.end =
+        formatTime(
+          nextEndSeconds
+        );
+
+
+      if (startTimeInput) {
+        startTimeInput.value =
+          blockData.start;
+      }
+
+
+      if (endTimeInput) {
+        endTimeInput.value =
+          blockData.end;
+      }
+
+
+      selectBlock?.(
+        block
+      );
+
+
+      updatePreview?.();
+
+
+      commitHistory?.(
+        beforeDragState
+      );
+
+
+      beforeDragState = null;
+    }
+  );
+}
+
 
       return {
-        getTotalWidth,
-        updateContentWidth,
-        updateContentHeight,
-        renderRuler
-      };
+  getTotalWidth,
+  updateContentWidth,
+  updateContentHeight,
+  renderRuler,
+  setupBlockDrag
+  }; 
     }
 
 

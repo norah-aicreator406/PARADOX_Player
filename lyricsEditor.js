@@ -3628,78 +3628,40 @@ console.log('timeline block style:', {
 }
 
 
-function setupTimelineBlockDrag(block, blockData) {
-  let isDragging = false;
-  let startMouseX = 0;
-  let startLeft = 0;
-  let durationSeconds = 0;
-  let hasMoved = false;
-  let beforeDragState = null;
+function setupTimelineBlockDrag(
+  block,
+  blockData
+) {
+  lyricsEditorTimeline
+    .setupBlockDrag({
+      block,
+      blockData,
 
-  block.addEventListener('mousedown', (event) => {
-    if (event.target.closest('.lyricsResizeHandle')) return;
-    if (event.button !== 0) return;
+      captureHistory:
+        captureEditorState,
 
-    isDragging = true;
-    hasMoved = false;
+      commitHistory:
+        commitEditorHistory,
 
-    beforeDragState =
-  captureEditorState();
+      parseTime:
+        parseTimeToSeconds,
 
-    startMouseX = event.clientX;
-    startLeft = parseFloat(block.style.left) || 0;
+      formatTime:
+        formatSecondsToTime,
 
-    const startSeconds = parseTimeToSeconds(blockData.start);
-    const endSeconds = parseTimeToSeconds(blockData.end);
+      getScale() {
+        return timelineScale;
+      },
 
-    durationSeconds = Math.max(endSeconds - startSeconds, 0.5);
+      selectBlock:
+        selectLyricsBlock,
 
-    block.classList.add('dragging');
+      updatePreview:
+        updateEditorPreview,
 
-    event.preventDefault();
-    event.stopPropagation();
-  });
-
-  document.addEventListener('mousemove', (event) => {
-    if (!isDragging) return;
-
-    const deltaX = event.clientX - startMouseX;
-
-    if (Math.abs(deltaX) > 3) {
-      hasMoved = true;
-    }
-
-    const nextLeft = Math.max(0, startLeft + deltaX);
-    block.style.left = `${nextLeft}px`;
-  });
-
-  document.addEventListener('mouseup', () => {
-    if (!isDragging) return;
-
-    isDragging = false;
-    block.classList.remove('dragging');
-
-    if (!hasMoved) return;
-
-    const finalLeft = parseFloat(block.style.left) || 0;
-    const nextStartSeconds = finalLeft / timelineScale;
-    const nextEndSeconds = nextStartSeconds + durationSeconds;
-
-    blockData.start = formatSecondsToTime(nextStartSeconds);
-    blockData.end = formatSecondsToTime(nextEndSeconds);
-
-    startTimeInput.value = blockData.start;
-    endTimeInput.value = blockData.end;
-
-    selectLyricsBlock(block);
-    updateEditorPreview();
-
-    commitEditorHistory(
-  beforeDragState
-);
-
-beforeDragState = null;
-  });
+      startTimeInput,
+      endTimeInput
+    });
 }
 
 
@@ -3998,18 +3960,6 @@ function setupTimelineResize(
           );
       }
 
-
-     if (
-  resizeSide === 'right'
-) {
-  // 終了時間更新
-}
-
-if (
-  resizeSide === 'left'
-) {
-  // 開始時間更新
-}
 
 /*
  * 選択IDを変更する処理は置かない。
