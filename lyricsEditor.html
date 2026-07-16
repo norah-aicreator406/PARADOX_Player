@@ -848,13 +848,19 @@
   </label>
 
   <select id="lyricsHoldPreset">
-    <option value="off">OFF</option>
-    <option value="hover">浮遊</option>
+  <option value="off">OFF</option>
+  <option value="hover">浮遊</option>
+  <option value="pulse">脈動</option>
+  <option value="breathing">呼吸</option>
+  <option value="shake">揺れ</option>
   </select>
 
 
-  <div class="animationDescription">
-    表示中に繰り返すモーションです。
+  <div
+  id="lyricsHoldDescription"
+  class="animationDescription"
+  >
+  表示中に繰り返すモーションです。
   </div>
 
 
@@ -939,14 +945,20 @@
   </label>
 
   <select id="lyricsOutPreset">
-    <option value="off">OFF</option>
-    <option value="fade">フェード</option>
+  <option value="off">OFF</option>
+  <option value="fade">フェード</option>
+  <option value="scaleDown">縮小</option>
+  <option value="blurOut">ブラー</option>
+  <option value="dropOut">落下</option>
   </select>
 
 
-  <div class="animationDescription">
-    歌詞の終了直前に一度だけ実行します。
-  </div>
+  <div
+  id="lyricsOutDescription"
+  class="animationDescription"
+>
+  歌詞の終了直前に一度だけ実行します。
+</div>
 
 
   <label for="lyricsOutDuration">
@@ -1374,7 +1386,10 @@
   <div class="timelineCorner"></div>
   <div class="timelineTrackLabel">歌詞</div>
 
-  <div class="timelineScrollArea">
+  <div
+  class="timelineScrollArea"
+  tabindex="-1"
+>
     <div id="timelineContent">
       <div id="timelineRuler" class="timelineRuler"></div>
 
@@ -1434,6 +1449,7 @@
 </div>
 <script src="./LyricsRenderer.js"></script>
 <script src="./LyricsAnimationEngine.js"></script>
+<script src="./lyricsEditorHistory.js"></script>
 <script src="./lyricsEditor.js"></script>
 
 

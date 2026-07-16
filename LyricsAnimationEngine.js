@@ -20,8 +20,18 @@ window.LyricsAnimationEngine = (() => {
   };
 
   const HOLD_CLASS_MAP = {
-    hover: 'lyrics-hold-hover'
-  };
+  hover:
+    'lyrics-hold-hover',
+
+  pulse:
+    'lyrics-hold-pulse',
+
+  breathing:
+    'lyrics-hold-breathing',
+
+  shake:
+    'lyrics-hold-shake'
+};
 
   function normalize(
     animation = {},
@@ -380,23 +390,27 @@ window.LyricsAnimationEngine = (() => {
         : Infinity;
 
     if (
-      preset === 'off' ||
-      safeRemaining > duration
-    ) {
-      wrapper.classList.remove(
-        'lyrics-is-out'
-      );
+  preset === 'off' ||
+  safeRemaining > duration
+) {
+  wrapper.classList.remove(
+    'lyrics-is-out'
+  );
 
-      wrapper.style.removeProperty(
-        'opacity'
-      );
+  wrapper.style.removeProperty(
+    'opacity'
+  );
 
-      wrapper.style.removeProperty(
-        'filter'
-      );
+  wrapper.style.removeProperty(
+    'transform'
+  );
 
-      return;
-    }
+  wrapper.style.removeProperty(
+    'filter'
+  );
+
+  return;
+}
 
     const progress =
       Math.min(
@@ -428,13 +442,74 @@ window.LyricsAnimationEngine = (() => {
         'none';
     }
 
-    if (preset === 'fade') {
-      wrapper.style.opacity =
-        String(1 - progress);
+   if (preset === 'fade') {
+  wrapper.style.opacity =
+    String(1 - progress);
 
-      wrapper.style.filter =
-        'none';
-    }
+  wrapper.style.transform =
+    'none';
+
+  wrapper.style.filter =
+    'none';
+
+  return;
+}
+
+
+if (preset === 'scaleDown') {
+  const scale =
+    Math.max(
+      0,
+      1 - progress
+    );
+
+  wrapper.style.opacity =
+    String(1 - progress);
+
+  wrapper.style.transform =
+    `scale(${scale})`;
+
+  wrapper.style.filter =
+    'none';
+
+  return;
+}
+
+
+if (preset === 'blurOut') {
+  const blur =
+    progress * 30;
+
+  wrapper.style.opacity =
+    String(1 - progress);
+
+  wrapper.style.transform =
+    'none';
+
+  wrapper.style.filter =
+    `blur(${blur}px)`;
+
+  return;
+}
+
+
+if (preset === 'dropOut') {
+  const distance =
+    progress * 140;
+
+  const rotation =
+    progress * 8;
+
+  wrapper.style.opacity =
+    String(1 - progress);
+
+  wrapper.style.transform =
+    `translateY(${distance}px)
+     rotate(${rotation}deg)`;
+
+  wrapper.style.filter =
+    'none';
+}
   }
 
 

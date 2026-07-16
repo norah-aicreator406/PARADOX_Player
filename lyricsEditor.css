@@ -4583,6 +4583,238 @@ input[type="range"] {
 }
 
 
+
+/* ==================================================
+   HOLD Presets
+================================================== */
+
+/* ---------- 脈動 ---------- */
+
+@keyframes lyricsHoldPulse {
+  0%,
+  100% {
+    transform:
+      scale(1);
+  }
+
+  50% {
+    transform:
+      scale(
+        calc(
+          1 +
+          var(
+            --lyrics-hold-strength,
+            12
+          ) / 200
+        )
+      );
+  }
+}
+
+.lyricsHoldWrapper.lyrics-hold-pulse {
+  animation:
+    lyricsHoldPulse
+    var(
+      --lyrics-hold-duration,
+      2s
+    )
+    ease-in-out
+    infinite;
+}
+
+
+/* ---------- 呼吸 ---------- */
+
+@keyframes lyricsHoldBreathing {
+  0%,
+  100% {
+    transform:
+      scale(1);
+
+    opacity: 0.82;
+  }
+
+  50% {
+    transform:
+      scale(
+        calc(
+          1 +
+          var(
+            --lyrics-hold-strength,
+            12
+          ) / 300
+        )
+      );
+
+    opacity: 1;
+  }
+}
+
+.lyricsHoldWrapper.lyrics-hold-breathing {
+  animation:
+    lyricsHoldBreathing
+    var(
+      --lyrics-hold-duration,
+      2s
+    )
+    ease-in-out
+    infinite;
+}
+
+
+/* ---------- 揺れ ---------- */
+
+@keyframes lyricsHoldShake {
+  0%,
+  100% {
+    transform:
+      translateX(0)
+      rotate(0deg);
+  }
+
+  20% {
+    transform:
+      translateX(
+        calc(
+          var(
+            --lyrics-hold-strength,
+            12
+          ) * -0.35px
+        )
+      )
+      rotate(-0.35deg);
+  }
+
+  40% {
+    transform:
+      translateX(
+        calc(
+          var(
+            --lyrics-hold-strength,
+            12
+          ) * 0.28px
+        )
+      )
+      rotate(0.3deg);
+  }
+
+  60% {
+    transform:
+      translateX(
+        calc(
+          var(
+            --lyrics-hold-strength,
+            12
+          ) * -0.2px
+        )
+      )
+      rotate(-0.2deg);
+  }
+
+  80% {
+    transform:
+      translateX(
+        calc(
+          var(
+            --lyrics-hold-strength,
+            12
+          ) * 0.16px
+        )
+      )
+      rotate(0.15deg);
+  }
+}
+
+.lyricsHoldWrapper.lyrics-hold-shake {
+  animation:
+    lyricsHoldShake
+    var(
+      --lyrics-hold-duration,
+      0.6s
+    )
+    linear
+    infinite;
+}
+
+
+
+/* ==================================================
+   Lyrics Block State
+================================================== */
+
+/*
+ * 編集対象
+ */
+.lyricsBlock.selected {
+  border-color:
+    rgba(92, 210, 255, 0.95);
+
+  background:
+    rgba(45, 92, 128, 0.92) !important;
+
+  box-shadow:
+    inset 0 0 0 1px
+      rgba(120, 225, 255, 0.8),
+    0 0 14px
+      rgba(92, 210, 255, 0.22);
+
+  z-index: 20;
+}
+
+
+/*
+ * 編集中ラベル
+ */
+/* 選択中の小さなマーク */
+.lyricsBlock.selected::before {
+  content: "";
+
+  position: absolute;
+  top: 8px;
+  left: 8px;
+
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #6fe3ff;
+
+  box-shadow:
+    0 0 8px rgba(111, 227, 255, 0.85);
+
+  pointer-events: none;
+  z-index: 30;
+}
+
+
+/*
+ * 現在再生中
+ */
+.lyricsBlock.is-playing {
+  box-shadow:
+    inset 0 -3px 0
+      rgba(255, 92, 112, 0.95),
+    0 0 12px
+      rgba(255, 92, 112, 0.16);
+}
+
+
+/*
+ * 選択中かつ再生中
+ */
+.lyricsBlock.selected.is-playing {
+  box-shadow:
+    inset 0 0 0 1px
+      rgba(92, 210, 255, 0.76),
+    inset 0 -3px 0
+      rgba(255, 92, 112, 0.95),
+    0 0 14px
+      rgba(92, 210, 255, 0.2);
+}
+
+
+
 /* ==================================================
    TODO:
    UI v2完成後に以下を整理する
