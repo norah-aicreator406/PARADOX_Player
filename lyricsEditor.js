@@ -317,23 +317,92 @@ function formatSecondsToTime(seconds) {
 
 
 function setupFontOptions() {
+  if (!fontInput) {
+    return;
+  }
+
+  const fontOptions = [
+    {
+      value: 'Arial',
+      label: 'Arial'
+    },
+
+    {
+      value: 'Noto Sans JP',
+      label: 'Noto Sans JP'
+    },
+
+    {
+      value: 'Zen Kaku Gothic New',
+      label: 'Zen Kaku Gothic New'
+    },
+
+    {
+      value: 'Dela Gothic One',
+      label: 'Dela Gothic One'
+    },
+
+    {
+      value: 'DotGothic16',
+      label: 'DotGothic16'
+    },
+
+    {
+      value: 'Orbitron',
+      label: 'Orbitron'
+    }
+  ];
+
+
+  /*
+   * 現在選択中の値を維持する。
+   */
+  const previousValue =
+    fontInput.value;
+
+
   fontInput.innerHTML = '';
 
-  fontGroups.forEach((group) => {
-    const optgroup = document.createElement('optgroup');
-    optgroup.label = group.label;
 
-    group.fonts.forEach((fontName) => {
-      const option = document.createElement('option');
-      option.value = fontName;
-      option.textContent = fontName;
-      option.style.fontFamily = fontName;
+  fontOptions.forEach(
+    fontData => {
+      const option =
+        document.createElement(
+          'option'
+        );
 
-      optgroup.appendChild(option);
-    });
+      option.value =
+        fontData.value;
 
-    fontInput.appendChild(optgroup);
-  });
+      option.textContent =
+        fontData.label;
+
+      /*
+       * 対応環境ではoption自体も
+       * そのフォントで表示する。
+       */
+      option.style.fontFamily =
+        `"${fontData.value}", sans-serif`;
+
+      fontInput.appendChild(
+        option
+      );
+    }
+  );
+
+
+  const previousValueExists =
+    fontOptions.some(
+      fontData =>
+        fontData.value ===
+        previousValue
+    );
+
+
+  fontInput.value =
+    previousValueExists
+      ? previousValue
+      : 'Noto Sans JP';
 }
 
 
@@ -3480,7 +3549,9 @@ function createLyricsBlockData(text = '新しい歌詞') {
 },
 
     style: {
-      font: fontInput.value || 'Arial',
+      font:
+  fontInput.value ||
+  'Noto Sans JP',
       size: Number(sizeInput.value) || 72,
       color: colorInput.value || '#ffffff',
       align: alignInput.value || 'center',
@@ -7687,6 +7758,42 @@ function updateOutDescription() {
         outPresetInput?.value
       );
 }
+
+
+
+
+
+
+/*
+ * Webフォントの読込完了後に
+ * 選択中歌詞を再描画する。
+ */
+document.fonts?.ready
+  .then(() => {
+    const selectedData =
+      getSelectedLyricsBlockData();
+
+    if (!selectedData) {
+      return;
+    }
+
+    updateEditorPreview(
+      selectedData,
+      {
+        animate: false
+      }
+    );
+
+    sendLyricsBlockToVisualizer(
+      selectedData
+    );
+  })
+  .catch(error => {
+    console.warn(
+      'Font loading failed:',
+      error
+    );
+  });
 
 
 ensurePreviewCenterGuides();

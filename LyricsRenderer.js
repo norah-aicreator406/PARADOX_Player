@@ -30,7 +30,8 @@ window.LyricsRenderer = {
     targetElement.style.transform =
       `translate(-50%, -50%) translate(${Number(position.x) || 0}px, ${Number(position.y) || 0}px) rotate(${rotation}deg)`;
 
-    targetElement.style.fontFamily = `"${style.font || 'Arial'}", sans-serif`;
+    targetElement.style.fontFamily =
+  `"${style.font || 'Noto Sans JP'}", sans-serif`;
     targetElement.style.fontSize = `${Number(style.size) || 72}px`;
     targetElement.style.color = style.color || '#ffffff';
     targetElement.style.textAlign = style.align || 'center';
