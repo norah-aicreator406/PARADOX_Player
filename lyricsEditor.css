@@ -4816,6 +4816,156 @@ input[type="range"] {
 
 
 /* ==================================================
+   Preview Snap Guides
+================================================== */
+
+.previewSnapGuideLayer {
+  position: absolute;
+  inset: 0;
+
+  z-index: 900;
+
+  pointer-events: none;
+
+  opacity: 0;
+
+  transition:
+    opacity 80ms ease;
+}
+
+
+.previewSnapGuideLayer.is-active {
+  opacity: 1;
+}
+
+
+.previewSnapGuide {
+  position: absolute;
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  background:
+    rgba(
+      92,
+      210,
+      255,
+      0.72
+    );
+
+  box-shadow:
+    0 0 8px
+      rgba(
+        92,
+        210,
+        255,
+        0.35
+      );
+
+  transition:
+    opacity 60ms ease;
+}
+
+
+.previewSnapGuide.is-visible {
+  opacity: 1;
+}
+
+
+/*
+ * X軸中央への吸着を示す縦線。
+ */
+.previewSnapGuideVertical {
+  top: 0;
+  bottom: 0;
+
+  left: 50%;
+
+  width: 1px;
+
+  transform:
+    translateX(-0.5px);
+}
+
+
+/*
+ * Y軸中央への吸着を示す横線。
+ */
+.previewSnapGuideHorizontal {
+  left: 0;
+  right: 0;
+
+  top: 50%;
+
+  height: 1px;
+
+  transform:
+    translateY(-0.5px);
+}
+
+
+/*
+ * 完全中央へ吸着したときの
+ * 小さな中心マーカー。
+ */
+.previewSnapCenterPoint {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width: 7px;
+  height: 7px;
+
+  border:
+    1px solid
+    rgba(
+      120,
+      225,
+      255,
+      0.9
+    );
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      12,
+      23,
+      34,
+      0.88
+    );
+
+  box-shadow:
+    0 0 10px
+      rgba(
+        92,
+        210,
+        255,
+        0.65
+      );
+
+  opacity: 0;
+
+  transform:
+    translate(
+      -50%,
+      -50%
+    );
+
+  transition:
+    opacity 60ms ease;
+}
+
+
+.previewSnapCenterPoint.is-visible {
+  opacity: 1;
+}
+
+
+
+/* ==================================================
    TODO:
    UI v2完成後に以下を整理する
 

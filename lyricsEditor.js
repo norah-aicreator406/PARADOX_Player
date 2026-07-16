@@ -865,77 +865,494 @@ function pasteLyricsAppearanceToSelection() {
 }
 
 
+/* ==================================================
+   Preview Center Guides
+================================================== */
+
+function ensurePreviewCenterGuides() {
+  const canvas =
+    document.getElementById(
+      'editorPreviewCanvas'
+    );
+
+  if (!canvas) {
+    return null;
+  }
+
+
+  let guideLayer =
+    canvas.querySelector(
+      '.previewSnapGuideLayer'
+    );
+
+
+  if (!guideLayer) {
+    guideLayer =
+      document.createElement(
+        'div'
+      );
+
+    guideLayer.className =
+      'previewSnapGuideLayer';
+
+
+    const verticalGuide =
+      document.createElement(
+        'div'
+      );
+
+    verticalGuide.className =
+      'previewSnapGuide previewSnapGuideVertical';
+
+
+    const horizontalGuide =
+      document.createElement(
+        'div'
+      );
+
+    horizontalGuide.className =
+      'previewSnapGuide previewSnapGuideHorizontal';
+
+
+    const centerPoint =
+      document.createElement(
+        'div'
+      );
+
+    centerPoint.className =
+      'previewSnapCenterPoint';
+
+
+    guideLayer.append(
+      verticalGuide,
+      horizontalGuide,
+      centerPoint
+    );
+
+
+    canvas.appendChild(
+      guideLayer
+    );
+  }
+
+
+  return {
+    layer:
+      guideLayer,
+
+    vertical:
+      guideLayer.querySelector(
+        '.previewSnapGuideVertical'
+      ),
+
+    horizontal:
+      guideLayer.querySelector(
+        '.previewSnapGuideHorizontal'
+      ),
+
+    centerPoint:
+      guideLayer.querySelector(
+        '.previewSnapCenterPoint'
+      )
+  };
+}
+
+
+function updatePreviewCenterGuides({
+  showX = false,
+  showY = false
+} = {}) {
+  const guides =
+    ensurePreviewCenterGuides();
+
+  if (!guides) return;
+
+
+  /*
+   * X座標が中央に吸着
+   * → 縦線を表示。
+   */
+  guides.vertical
+    ?.classList.toggle(
+      'is-visible',
+      showX
+    );
+
+
+  /*
+   * Y座標が中央に吸着
+   * → 横線を表示。
+   */
+  guides.horizontal
+    ?.classList.toggle(
+      'is-visible',
+      showY
+    );
+
+
+  /*
+   * X・Y両方が中央なら
+   * 中央ポイントも表示。
+   */
+  guides.centerPoint
+    ?.classList.toggle(
+      'is-visible',
+      showX && showY
+    );
+
+
+  guides.layer
+    ?.classList.toggle(
+      'is-active',
+      showX || showY
+    );
+}
+
+
+function hidePreviewCenterGuides() {
+  updatePreviewCenterGuides({
+    showX: false,
+    showY: false
+  });
+}
+
+
 
 function setupPreviewLyricsDrag() {
-  const previewLyrics = document.getElementById('editorPreviewLyrics');
-  
-  if (!previewLyrics) return;
+  const previewLyrics =
+    document.getElementById(
+      'editorPreviewLyrics'
+    );
+
+  if (!previewLyrics) {
+    return;
+  }
+
 
   let isDragging = false;
+  let hasMoved = false;
+
   let startMouseX = 0;
   let startMouseY = 0;
+
   let startX = 0;
   let startY = 0;
+
   let targetBlock = null;
+  let beforeDragState = null;
 
-  previewLyrics.addEventListener('mousedown', (event) => {
-  if (event.detail >= 2) return;
-  if (event.target.closest('.selectionHandle')) return;
-  if (event.target.closest('.selectionSideHandle')) return;
 
-  targetBlock = getSelectedLyricsBlockData();
-    if (!targetBlock) return;
-    if (event.button !== 0) return;
+  previewLyrics.addEventListener(
+    'mousedown',
+    event => {
+      if (event.detail >= 2) {
+        return;
+      }
 
-    if (!targetBlock.position) {
-      targetBlock.position = { x: 0, y: 0, z: 0 };
+      if (
+        event.target.closest(
+          '.selectionHandle'
+        )
+      ) {
+        return;
+      }
+
+      if (
+        event.target.closest(
+          '.selectionSideHandle'
+        )
+      ) {
+        return;
+      }
+
+      if (event.button !== 0) {
+        return;
+      }
+
+
+      targetBlock =
+        getSelectedLyricsBlockData();
+
+      if (!targetBlock) {
+        return;
+      }
+
+
+      if (!targetBlock.position) {
+        targetBlock.position = {
+          x: 0,
+          y: 0,
+          z: 0
+        };
+      }
+
+
+      /*
+       * ドラッグ開始前の状態を保存。
+       * 1回の移動をUndo 1回にする。
+       */
+      beforeDragState =
+        captureEditorState();
+
+
+      isDragging = true;
+      hasMoved = false;
+
+
+      startMouseX =
+        event.clientX;
+
+      startMouseY =
+        event.clientY;
+
+
+      startX =
+        Number(
+          targetBlock.position.x
+        ) || 0;
+
+      startY =
+        Number(
+          targetBlock.position.y
+        ) || 0;
+
+
+      previewLyrics.classList.add(
+        'is-dragging'
+      );
+
+
+      hidePreviewCenterGuides();
+
+
+      event.preventDefault();
+      event.stopPropagation();
     }
+  );
 
-    isDragging = true;
 
-    startMouseX = event.clientX;
-    startMouseY = event.clientY;
-    startX = Number(targetBlock.position.x) || 0;
-    startY = Number(targetBlock.position.y) || 0;
+  document.addEventListener(
+    'mousemove',
+    event => {
+      if (
+        !isDragging ||
+        !targetBlock
+      ) {
+        return;
+      }
 
-    previewLyrics.classList.add('is-dragging');
 
-    event.preventDefault();
-    event.stopPropagation();
-  });
+      const canvas =
+        document.getElementById(
+          'editorPreviewCanvas'
+        );
 
-  document.addEventListener('mousemove', (event) => {
-  if (!isDragging || !targetBlock) return;
+      if (!canvas) {
+        return;
+      }
 
-  const canvas = document.getElementById('editorPreviewCanvas');
-  if (!canvas) return;
 
-  const rect = canvas.getBoundingClientRect();
+      const rect =
+        canvas.getBoundingClientRect();
 
-  const scaleX = rect.width / canvas.offsetWidth;
-  const scaleY = rect.height / canvas.offsetHeight;
 
-  const dx = (event.clientX - startMouseX) / scaleX;
-  const dy = (event.clientY - startMouseY) / scaleY;
+      /*
+       * Canvasの論理サイズに対する
+       * 現在の画面表示倍率。
+       */
+      const scaleX =
+        rect.width /
+        canvas.offsetWidth;
 
-  targetBlock.position.x = startX + dx;
-  targetBlock.position.y = startY + dy;
+      const scaleY =
+        rect.height /
+        canvas.offsetHeight;
 
-  previewLyrics.style.transform =
-    `translate(-50%, -50%) translate(${targetBlock.position.x}px, ${targetBlock.position.y}px)`;
-});
 
-  document.addEventListener('mouseup', () => {
-  if (!isDragging) return;
+      if (
+        !Number.isFinite(scaleX) ||
+        !Number.isFinite(scaleY) ||
+        scaleX <= 0 ||
+        scaleY <= 0
+      ) {
+        return;
+      }
 
-  isDragging = false;
-  previewLyrics.classList.remove('is-dragging');
 
-  updateEditorPreview(targetBlock);
-  sendLyricsBlockToVisualizer(targetBlock);
+      const mouseDeltaX =
+        event.clientX -
+        startMouseX;
 
-  targetBlock = null;
-});
+      const mouseDeltaY =
+        event.clientY -
+        startMouseY;
+
+
+      if (
+        Math.abs(mouseDeltaX) > 2 ||
+        Math.abs(mouseDeltaY) > 2
+      ) {
+        hasMoved = true;
+      }
+
+
+      /*
+       * 画面上の移動量を、
+       * Canvas内部座標へ変換。
+       */
+      const deltaX =
+        mouseDeltaX /
+        scaleX;
+
+      const deltaY =
+        mouseDeltaY /
+        scaleY;
+
+
+      const rawX =
+        startX +
+        deltaX;
+
+      const rawY =
+        startY +
+        deltaY;
+
+
+      /*
+       * 画面上で約12px以内に入ると
+       * 中央へ吸着する。
+       *
+       * 表示倍率に左右されないように、
+       * Canvas内部座標へ換算する。
+       */
+      const screenThreshold =
+        12;
+
+      const thresholdX =
+        screenThreshold /
+        scaleX;
+
+      const thresholdY =
+        screenThreshold /
+        scaleY;
+
+
+      /*
+       * Shiftを押している間は
+       * 中央スナップを一時解除。
+       */
+      const snapDisabled =
+        event.shiftKey;
+
+
+      const snapped =
+        window.NorahSnapManager
+          .snapPosition({
+            x: rawX,
+            y: rawY,
+
+            targetX: 0,
+            targetY: 0,
+
+            thresholdX,
+            thresholdY,
+
+            disabled:
+              snapDisabled
+          });
+
+
+      targetBlock.position.x =
+        snapped.x;
+
+      targetBlock.position.y =
+        snapped.y;
+
+
+      previewLyrics.style.transform =
+        `translate(-50%, -50%) ` +
+        `translate(${snapped.x}px, ${snapped.y}px)`;
+
+
+      updatePreviewCenterGuides({
+        showX:
+          snapped.snappedX,
+
+        showY:
+          snapped.snappedY
+      });
+    }
+  );
+
+
+  document.addEventListener(
+    'mouseup',
+    () => {
+      if (!isDragging) {
+        return;
+      }
+
+
+      isDragging = false;
+
+
+      previewLyrics.classList.remove(
+        'is-dragging'
+      );
+
+
+      hidePreviewCenterGuides();
+
+
+      if (
+        !targetBlock ||
+        !hasMoved
+      ) {
+        beforeDragState = null;
+        targetBlock = null;
+        hasMoved = false;
+
+        return;
+      }
+
+
+      updateEditorPreview(
+        targetBlock,
+        {
+          animate: false
+        }
+      );
+
+
+      sendLyricsBlockToVisualizer(
+        targetBlock
+      );
+
+
+      /*
+       * ドラッグ全体を
+       * Undo履歴へ1回だけ登録。
+       */
+      commitEditorHistory(
+        beforeDragState
+      );
+
+
+      beforeDragState = null;
+      targetBlock = null;
+      hasMoved = false;
+    }
+  );
+
+
+  /*
+   * ウィンドウ外へマウスが出た場合も
+   * ガイドだけは残さない。
+   */
+  window.addEventListener(
+    'blur',
+    hidePreviewCenterGuides
+  );
 }
 
 
@@ -3708,63 +4125,115 @@ function getSelectedLyricsBlock() {
   return document.querySelector('.lyricsBlock.selected');
 }
 
-if (duplicateLyricsBlockButton && lyricsBlockList) {
-  duplicateLyricsBlockButton.addEventListener('click', () => {
-    const selectedBlock = getSelectedLyricsBlock();
-    if (!selectedBlock) return;
+function duplicateSelectedLyricsBlock() {
+  const selectedBlock =
+    getSelectedLyricsBlock();
 
-    const blockId = selectedBlock.dataset.blockId;
-    const blocks = sectionData[currentSectionName] || [];
-    const index = blocks.findIndex(block => block.id === blockId);
+  if (!selectedBlock) {
+    return false;
+  }
 
-    if (index === -1) return;
+  const blockId =
+    selectedBlock.dataset.blockId;
 
-const beforeState =
-  captureEditorState();
+  const blocks =
+    sectionData[
+      currentSectionName
+    ] || [];
 
-const original =
-  blocks[index];
+  const index =
+    blocks.findIndex(
+      block =>
+        block.id === blockId
+    );
 
-/*
- * ネストしたstyleやanimationも
- * 独立させるため、ディープコピーする。
- */
-const copy = {
-  ...JSON.parse(
-    JSON.stringify(
-      original
-    )
-  ),
+  if (index === -1) {
+    return false;
+  }
 
-  id:
+  const beforeState =
+    captureEditorState();
+
+  const original =
+    blocks[index];
+
+  /*
+   * ネストされたstyle・animation・
+   * position・layoutも独立させる。
+   */
+  const copy =
+    JSON.parse(
+      JSON.stringify(
+        original
+      )
+    );
+
+  copy.id =
     `block_${Date.now()}_${Math.random()
       .toString(16)
-      .slice(2)}`
-};
+      .slice(2)}`;
 
-blocks.splice(
-  index + 1,
-  0,
-  copy
-);
+  /*
+   * 元ブロックと完全に重なると
+   * 複製されたことが分かりにくいため、
+   * タイムライン上で少し後ろへずらす。
+   */
+  
 
-renderSectionBlocks();
-
-const newBlock =
-  document.querySelector(
-    `.lyricsBlock[data-block-id="${copy.id}"]`
+  blocks.splice(
+    index + 1,
+    0,
+    copy
   );
 
-if (newBlock) {
-  selectLyricsBlock(
-    newBlock
+  /*
+   * 複製したブロックだけを
+   * 編集対象にする。
+   */
+  selectedLyricsBlockIds.clear();
+
+  selectedLyricsBlockIds.add(
+    copy.id
   );
+
+  lastSelectedLyricsBlockId =
+    copy.id;
+
+  lastSelectedBlockIdBySection.set(
+    currentSectionName,
+    copy.id
+  );
+
+  renderSectionBlocks();
+  applyLyricsBlockSelectionClasses();
+
+  const newBlockElement =
+    document.querySelector(
+      `.lyricsBlock[data-block-id="${copy.id}"]`
+    );
+
+  if (newBlockElement) {
+    loadLyricsBlockToInspector(
+      newBlockElement
+    );
+  }
+
+  commitEditorHistory(
+    beforeState
+  );
+
+  return true;
 }
 
-commitEditorHistory(
-  beforeState
-);
-  });
+
+if (
+  duplicateLyricsBlockButton &&
+  lyricsBlockList
+) {
+  duplicateLyricsBlockButton.addEventListener(
+    'click',
+    duplicateSelectedLyricsBlock
+  );
 }
 
 
@@ -5145,60 +5614,227 @@ document.addEventListener('keydown', (event) => {
 
 function setupLyricsRotationHandle() {
   let rotating = false;
+  let hasRotated = false;
+
   let targetBlock = null;
+  let beforeRotateState = null;
+
   let startAngle = 0;
   let startRotation = 0;
 
-  document.addEventListener('mousedown', (event) => {
-    const handle = event.target.closest('.selectionHandle.topRight');
-    if (!handle) return;
 
-    const previewLyrics = document.getElementById('editorPreviewLyrics');
-    if (!previewLyrics) return;
+  document.addEventListener(
+    'mousedown',
+    event => {
+      const handle =
+        event.target.closest(
+          '.selectionHandle.topRight'
+        );
 
-    targetBlock = getSelectedLyricsBlockData();
-    if (!targetBlock) return;
+      if (!handle) return;
+      if (event.button !== 0) return;
 
-    if (!targetBlock.layout) {
-      targetBlock.layout = { width: 900, rotation: 0 };
+
+      const previewLyrics =
+        document.getElementById(
+          'editorPreviewLyrics'
+        );
+
+      if (!previewLyrics) return;
+
+
+      targetBlock =
+        getSelectedLyricsBlockData();
+
+      if (!targetBlock) return;
+
+
+      if (!targetBlock.layout) {
+        targetBlock.layout = {
+          width: 900,
+          rotation: 0
+        };
+      }
+
+
+      /*
+       * 回転開始前の状態を保存。
+       * 1回の回転ドラッグを
+       * Undo 1回として扱う。
+       */
+      beforeRotateState =
+        captureEditorState();
+
+
+      const rect =
+        previewLyrics
+          .getBoundingClientRect();
+
+      const centerX =
+        rect.left +
+        rect.width / 2;
+
+      const centerY =
+        rect.top +
+        rect.height / 2;
+
+
+      startAngle =
+        Math.atan2(
+          event.clientY - centerY,
+          event.clientX - centerX
+        );
+
+
+      startRotation =
+        Number(
+          targetBlock.layout.rotation
+        ) || 0;
+
+
+      rotating = true;
+      hasRotated = false;
+
+
+      event.preventDefault();
+      event.stopPropagation();
     }
+  );
 
-    const rect = previewLyrics.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
 
-    startAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX);
-    startRotation = Number(targetBlock.layout.rotation) || 0;
+  document.addEventListener(
+    'mousemove',
+    event => {
+      if (
+        !rotating ||
+        !targetBlock
+      ) {
+        return;
+      }
 
-    rotating = true;
 
-    event.preventDefault();
-    event.stopPropagation();
-  });
+      const previewLyrics =
+        document.getElementById(
+          'editorPreviewLyrics'
+        );
 
-  document.addEventListener('mousemove', (event) => {
-    if (!rotating || !targetBlock) return;
+      if (!previewLyrics) return;
 
-    const previewLyrics = document.getElementById('editorPreviewLyrics');
-    if (!previewLyrics) return;
 
-    const rect = previewLyrics.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
+      const rect =
+        previewLyrics
+          .getBoundingClientRect();
 
-    const currentAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX);
-    const deltaDeg = (currentAngle - startAngle) * 180 / Math.PI;
+      const centerX =
+        rect.left +
+        rect.width / 2;
 
-    targetBlock.layout.rotation = Math.round(startRotation + deltaDeg);
+      const centerY =
+        rect.top +
+        rect.height / 2;
 
-    updateEditorPreview(targetBlock);
-    sendLyricsBlockToVisualizer(targetBlock);
-  });
 
-  document.addEventListener('mouseup', () => {
-    rotating = false;
-    targetBlock = null;
-  });
+      const currentAngle =
+        Math.atan2(
+          event.clientY - centerY,
+          event.clientX - centerX
+        );
+
+
+      const deltaDeg =
+        (
+          currentAngle -
+          startAngle
+        ) *
+        180 /
+        Math.PI;
+
+
+      const rawRotation =
+        startRotation +
+        deltaDeg;
+
+
+      /*
+       * Shiftを押している間だけ
+       * 45度刻みへスナップ。
+       */
+      const nextRotation =
+        event.shiftKey
+          ? Math.round(
+              rawRotation / 45
+            ) * 45
+          : Math.round(
+              rawRotation
+            );
+
+
+      if (
+        nextRotation !==
+        targetBlock.layout.rotation
+      ) {
+        hasRotated = true;
+      }
+
+
+      targetBlock.layout.rotation =
+        nextRotation;
+
+
+      updateEditorPreview(
+        targetBlock,
+        {
+          animate: false
+        }
+      );
+
+
+      sendLyricsBlockToVisualizer(
+        targetBlock
+      );
+    }
+  );
+
+
+  document.addEventListener(
+    'mouseup',
+    () => {
+      if (!rotating) return;
+
+
+      rotating = false;
+
+
+      if (
+        targetBlock &&
+        hasRotated
+      ) {
+        commitEditorHistory(
+          beforeRotateState
+        );
+      }
+
+
+      beforeRotateState = null;
+      targetBlock = null;
+      hasRotated = false;
+    }
+  );
+
+
+  /*
+   * ウィンドウ外でマウスを離した場合も
+   * 回転状態を解除する。
+   */
+  window.addEventListener(
+    'blur',
+    () => {
+      rotating = false;
+      beforeRotateState = null;
+      targetBlock = null;
+      hasRotated = false;
+    }
+  );
 }
 
 let latestParsedLyrics = null;
@@ -6584,6 +7220,132 @@ document.addEventListener(
   }
 );
 
+
+document.addEventListener(
+  'keydown',
+  event => {
+    const modifierPressed =
+      event.metaKey ||
+      event.ctrlKey;
+
+    if (!modifierPressed) {
+      return;
+    }
+
+    if (
+      event.key.toLowerCase() !==
+      'd'
+    ) {
+      return;
+    }
+
+    /*
+     * 文字入力中は、
+     * OSやブラウザの操作を妨げない。
+     */
+    const target =
+      event.target;
+
+    const isTextEditing =
+      target instanceof
+        HTMLTextAreaElement ||
+      (
+        target instanceof
+          HTMLInputElement &&
+        ![
+          'range',
+          'color',
+          'checkbox',
+          'radio',
+          'button'
+        ].includes(
+          target.type
+        )
+      ) ||
+      target?.isContentEditable;
+
+    if (isTextEditing) {
+      return;
+    }
+
+    const duplicated =
+      duplicateSelectedLyricsBlock();
+
+    if (duplicated) {
+      event.preventDefault();
+    }
+  }
+);
+
+document.addEventListener(
+  'keydown',
+  event => {
+    /*
+     * Delete または Backspace 以外は無視。
+     */
+    if (
+      event.key !== 'Delete' &&
+      event.key !== 'Backspace'
+    ) {
+      return;
+    }
+
+
+    /*
+     * 文字入力中は、
+     * 通常の文字削除を優先する。
+     */
+    const target =
+      event.target;
+
+    const isTextEditing =
+      target instanceof
+        HTMLTextAreaElement ||
+      (
+        target instanceof
+          HTMLInputElement &&
+        ![
+          'range',
+          'color',
+          'checkbox',
+          'radio',
+          'button'
+        ].includes(
+          target.type
+        )
+      ) ||
+      target?.isContentEditable;
+
+
+    if (isTextEditing) {
+      return;
+    }
+
+
+    /*
+     * 選択中ブロックがなければ何もしない。
+     */
+    if (
+      selectedLyricsBlockIds.size === 0
+    ) {
+      return;
+    }
+
+
+    /*
+     * ブラウザの戻る操作などを防ぐ。
+     */
+    event.preventDefault();
+
+
+    /*
+     * 既存の削除ボタン処理を再利用。
+     */
+    deleteLyricsBlockButton?.click();
+  }
+);
+
+
 document.addEventListener(
   'keydown',
   event => {
@@ -7377,7 +8139,7 @@ function updateOutDescription() {
 }
 
 
-
+ensurePreviewCenterGuides();
 setupPreviewLyricsDrag();
 resizeEditorPreviewCanvas();
 setupLyricsSelectionResize();
