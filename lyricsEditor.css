@@ -1063,13 +1063,16 @@ input[type="range"] {
 
 #timelineContent {
   position: relative;
-  width: 1600px;
-  min-height: 388px;
+
+  min-width: 100%;
+  min-height: 100%;
+
+  overflow: visible;
 }
 
 .timelineTrackArea {
   position: relative;
-  height: 360px;
+  min-height: 360px;
   overflow: visible;
 }
 
@@ -2859,9 +2862,13 @@ input[type="range"] {
 .timelineTrackArea {
   position: relative;
 
+  width: 100%;
+  height: auto;
+  min-height: 84px;
+
   overflow: visible;
 
-  min-height: 84px;
+  flex: none;
 
   background:
     linear-gradient(
@@ -4964,6 +4971,25 @@ input[type="range"] {
 }
 
 
+.timelineScrollArea {
+  position: relative;
+
+  min-width: 0;
+  min-height: 0;
+
+  overflow-x: auto;
+  overflow-y: auto;
+
+  overscroll-behavior: contain;
+}
+
+#timelineContent,
+.timelineTrackArea,
+#lyricsBlockList {
+  box-sizing: border-box;
+}
+
+
 
 /* ==================================================
    TODO:
@@ -4977,3 +5003,202 @@ input[type="range"] {
    - 旧Timeline Rebuild v1
    - UI v2上書き部分の統合
 ================================================== */
+
+
+
+/* ==================================================
+   Timeline Scroll Viewport Fix
+   必ずCSSの一番最後
+================================================== */
+
+.timelineGrid {
+  position: relative !important;
+
+  flex: 1 1 auto !important;
+
+  min-width: 0 !important;
+  min-height: 0 !important;
+
+  overflow: hidden !important;
+}
+
+
+
+/*
+ * これらの高さはJSが設定する。
+ */
+#timelineContent,
+.timelineTrackArea,
+#lyricsBlockList {
+  position: relative;
+
+  min-height: 0;
+
+  overflow: visible;
+}
+
+
+
+
+/*
+ * 中身はブロック数に応じて
+ * JavaScriptが高さを設定する。
+ */
+#timelineContent,
+.timelineTrackArea,
+#lyricsBlockList {
+  position: relative;
+
+  overflow: visible;
+}
+
+/* ==================================================
+   Timeline Height Final Fix
+================================================== */
+
+#timelinePanel {
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+#timelineEditor {
+  height: 100% !important;
+  min-height: 0 !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  overflow: hidden !important;
+}
+
+
+/*
+ * 操作部分を除いた残りの高さを
+ * タイムライン本体がすべて使用する。
+ */
+.timelineGrid {
+  flex: 1 1 auto !important;
+
+  width: 100% !important;
+  height: auto !important;
+
+  min-width: 0 !important;
+  min-height: 0 !important;
+
+  display: grid !important;
+
+  grid-template-columns:
+    70px
+    minmax(0, 1fr) !important;
+
+  grid-template-rows:
+    30px
+    minmax(0, 1fr) !important;
+
+  overflow: hidden !important;
+}
+
+
+/*
+ * Grid内の表示領域いっぱいまで広げる。
+ */
+.timelineScrollArea {
+  grid-column: 2 !important;
+  grid-row: 1 / 3 !important;
+
+  position: relative !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  min-width: 0 !important;
+  min-height: 0 !important;
+
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+}
+
+/* ==================================================
+   Timeline Vertical Layout Final Fix
+================================================== */
+
+/*
+ * 実在するtimelinePanel自身を
+ * 縦方向のFlexコンテナにする。
+ */
+#timelinePanel {
+  display: flex !important;
+  flex-direction: column !important;
+
+  min-height: 0 !important;
+
+  overflow: hidden !important;
+}
+
+
+/*
+ * セクションタブと操作バーは
+ * 必要な高さだけ使用する。
+ */
+#timelinePanel .sectionTabs,
+#timelinePanel .timelineControlBar {
+  flex: 0 0 auto !important;
+}
+
+
+/*
+ * 残った高さをタイムライン本体へ渡す。
+ */
+#timelinePanel .timelineGrid {
+  flex: 1 1 0 !important;
+
+  width: 100% !important;
+  height: 0 !important;
+
+  min-width: 0 !important;
+  min-height: 0 !important;
+
+  overflow: hidden !important;
+
+  display: grid !important;
+
+  grid-template-columns:
+    70px
+    minmax(0, 1fr) !important;
+
+  grid-template-rows:
+    30px
+    minmax(0, 1fr) !important;
+}
+
+
+/*
+ * タイムラインの表示窓を、
+ * timelineGrid内の高さへ固定する。
+ */
+#timelinePanel .timelineScrollArea {
+  position: relative !important;
+
+  grid-column: 2 !important;
+  grid-row: 1 / 3 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  min-width: 0 !important;
+  min-height: 0 !important;
+
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+}
+
+
+/*
+ * 中身の高さはJavaScriptが
+ * ブロック数に応じて設定する。
+ */
+#timelineContent,
+.timelineTrackArea,
+#lyricsBlockList {
+  overflow: visible !important;
+}

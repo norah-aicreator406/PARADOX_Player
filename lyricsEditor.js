@@ -6,6 +6,52 @@ const TIMELINE_SCALE_MAX = 260;
 const TIMELINE_ROW_HEIGHT = 56;
 const TIMELINE_MIN_BLOCK_WIDTH = 24;
 
+
+/* ==================================================
+   Timeline Module Connection
+================================================== */
+
+const lyricsEditorTimeline =
+  window.LyricsEditorTimeline.create({
+    getAudio() {
+      return editorAudio;
+    },
+
+    getTimelineScale() {
+      return timelineScale;
+    },
+
+    getRowHeight() {
+      return TIMELINE_ROW_HEIGHT;
+    },
+
+    getCurrentBlocks() {
+      return (
+        sectionData[
+          currentSectionName
+        ] || []
+      );
+    },
+
+    formatTime(
+      seconds
+    ) {
+      return formatEditorTime(
+        seconds
+      );
+    },
+
+    getRulerStep() {
+      return getTimelineRulerStep();
+    },
+
+    getScrollArea() {
+      return getTimelineScrollArea();
+    }
+  });
+
+
+
 const lyricsImportDialog = document.getElementById('lyricsImportDialog');
 const openLyricsImportButton = document.getElementById('openLyricsImportButton');
 const cancelLyricsImportButton = document.getElementById('cancelLyricsImportButton');
@@ -3464,7 +3510,9 @@ function renderSectionBlocks() {
 
   applyLyricsBlockSelectionClasses();
 
+requestAnimationFrame(() => {
   updateTimelineContentHeight();
+});
 }
 
 function syncCurrentSectionOrderFromDOM() {
@@ -5372,202 +5420,33 @@ function getTimelineRulerStep() {
 }
 
 
+/* ==================================================
+   Timeline Compatibility Wrappers
+================================================== */
 
 function renderTimelineRuler() {
-  const ruler =
-    document.querySelector('.timelineRuler');
-
-  const gridLines =
-    document.getElementById('timelineGridLines');
-
-  if (
-    !ruler ||
-    !gridLines ||
-    !editorAudio ||
-    !Number.isFinite(editorAudio.duration)
-  ) {
-    return;
-  }
-
-  ruler.innerHTML = '';
-  gridLines.innerHTML = '';
-
-  const duration = editorAudio.duration;
-  const step = getTimelineRulerStep();
-
-  const totalWidth = getTimelineTotalWidth();
-
-  ruler.style.position = 'relative';
-  ruler.style.width = `${totalWidth}px`;
-
-  for (let time = 0; time <= duration; time += step) {
-    const mark = document.createElement('div');
-    const line=document.createElement("div");
-
-line.className = 'timelineGridLine';
-
-line.style.left =
-  `${time * timelineScale}px`;
-
-line.style.top = '0';
-
-gridLines.appendChild(line);
-
-    mark.className = 'timelineRulerMark';
-
-    mark.style.position = 'absolute';
-    mark.style.left = `${time * timelineScale}px`;
-
-    mark.textContent = formatEditorTime(time).replace('.00', '');
-
-    ruler.appendChild(mark);
-  }
-
-  updateTimelineContentWidth();
-  updateTimelineContentHeight();
+  return lyricsEditorTimeline
+    .renderRuler();
 }
+
 
 function getTimelineTotalWidth() {
-  if (!editorAudio || !Number.isFinite(editorAudio.duration)) return 1600;
-
-  return Math.max(
-    1600,
-    editorAudio.duration * timelineScale + 800
-  );
-}
-
-
-function updateTimelineContentHeight() {
-  const timelineContent =
-    document.getElementById('timelineContent');
-
-  const lyricsBlockList =
-    document.getElementById('lyricsBlockList');
-
-  const gridLines =
-    document.getElementById('timelineGridLines');
-
-  const playhead =
-    document.getElementById('timelinePlayhead');
-
-  const scrollArea =
-    getTimelineScrollArea
-      ? getTimelineScrollArea()
-      : document.querySelector('.timelineScrollArea');
-
-  const blocks =
-    sectionData[currentSectionName] || [];
-
-  /*
-   * 最後の歌詞ブロックの下端まで含める。
-   */
-  const blocksHeight =
-    Math.max(
-      blocks.length * TIMELINE_ROW_HEIGHT,
-      TIMELINE_ROW_HEIGHT
-    );
-
-  const visibleHeight =
-    scrollArea
-      ? scrollArea.clientHeight
-      : 0;
-
-  /*
-   * 最後のブロック下に余白を追加。
-   */
-  const bottomPadding = 40;
-
-  const contentHeight =
-    Math.max(
-      blocksHeight + bottomPadding,
-      visibleHeight
-    );
-
-  const heightText =
-    `${contentHeight}px`;
-
-    if (scrollArea) {
-   scrollArea.style.overflow = 'auto';
-   scrollArea.style.minHeight = '0';
-}
-
-  /*
-   * タイムライン全体
-   */
-  if (timelineContent) {
-  timelineContent.style.position = 'relative';
-  timelineContent.style.height = heightText;
-  timelineContent.style.minHeight = heightText;
-
-  /*
-   * スクロール領域の内側要素なので、
-   * overflowは指定しない。
-   */
-  timelineContent.style.removeProperty('overflow');
-}
-
-  /*
-   * 歌詞ブロック配置領域
-   */
-  if (lyricsBlockList) {
-  lyricsBlockList.style.position = 'relative';
-  lyricsBlockList.style.height = heightText;
-  lyricsBlockList.style.minHeight = heightText;
-
-  lyricsBlockList.style.removeProperty('overflow');
-}
-
-  /*
-   * 秒数縦ラインのレイヤー
-   */
-  if (gridLines) {
-    gridLines.style.position = 'absolute';
-    gridLines.style.left = '0';
-    gridLines.style.top = '0';
-    gridLines.style.width = '100%';
-    gridLines.style.height = heightText;
-    gridLines.style.minHeight = heightText;
-    gridLines.style.overflow = 'visible';
-    gridLines.style.pointerEvents = 'none';
-
-    /*
-     * 各縦ライン自身にも高さを直接指定する。
-     */
-    gridLines
-      .querySelectorAll('.timelineGridLine')
-      .forEach(line => {
-        line.style.top = '0';
-        line.style.height = heightText;
-      });
-  }
-
-  /*
-   * 赤い再生ヘッド自身にも直接高さを指定。
-   */
-  if (playhead) {
-    playhead.style.top = '0';
-    playhead.style.bottom = 'auto';
-    playhead.style.height = heightText;
-    playhead.style.minHeight = heightText;
-  }
+  return lyricsEditorTimeline
+    .getTotalWidth();
 }
 
 
 function updateTimelineContentWidth() {
-  const timelineContent = document.getElementById('timelineContent');
-  const lyricsBlockList = document.getElementById('lyricsBlockList');
-  const width = getTimelineTotalWidth();
-
-  if (timelineContent) {
-    timelineContent.style.width = `${width}px`;
-    timelineContent.style.minWidth = `${width}px`;
-  }
-
-  if (lyricsBlockList) {
-    lyricsBlockList.style.width = `${width}px`;
-    lyricsBlockList.style.minWidth = `${width}px`;
-  }
+  return lyricsEditorTimeline
+    .updateContentWidth();
 }
+
+
+function updateTimelineContentHeight() {
+  return lyricsEditorTimeline
+    .updateContentHeight();
+}
+
 
 
 /*
