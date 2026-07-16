@@ -664,13 +664,707 @@ if (trackArea) {
 }
 
 
-      return {
+function setupBlockResize({
+  block,
+  blockData,
+
+  minBlockWidth,
+
+  getScale,
+
+  parseTime,
+  formatTime,
+
+  captureHistory,
+  commitHistory,
+
+  getSelectedIds,
+  getLastSelectedId,
+  setSelection,
+
+  applySelectionClasses,
+  loadInspector,
+
+  renderBlocks,
+  updatePreview,
+  sendToVisualizer
+}) {
+  if (
+    !block ||
+    !blockData
+  ) {
+    return;
+  }
+
+
+  const leftHandle =
+    block.querySelector(
+      '.lyricsResizeHandleLeft'
+    );
+
+  const rightHandle =
+    block.querySelector(
+      '.lyricsResizeHandleRight'
+    );
+
+
+  if (
+    !leftHandle ||
+    !rightHandle
+  ) {
+    return;
+  }
+
+
+  let resizing = false;
+  let resizeSide = null;
+  let hasResized = false;
+
+  let startMouseX = 0;
+  let startLeft = 0;
+  let startWidth = 0;
+
+  let originalStartSeconds = 0;
+  let originalEndSeconds = 0;
+
+  let beforeResizeState = null;
+
+
+  function beginResize(
+    event,
+    side
+  ) {
+    if (event.button !== 0) {
+      return;
+    }
+
+
+    const selectedIds =
+      getSelectedIds?.() ||
+      new Set();
+
+
+    const isOnlyThisBlockSelected =
+      selectedIds.size === 1 &&
+      selectedIds.has(
+        blockData.id
+      );
+
+
+    /*
+     * 操作対象を先に選択する。
+     */
+    if (!isOnlyThisBlockSelected) {
+      setSelection?.(
+        blockData.id
+      );
+
+      applySelectionClasses?.();
+
+      loadInspector?.(
+        block
+      );
+    }
+
+
+    /*
+     * 選択確定後に履歴を取得する。
+     */
+    beforeResizeState =
+      captureHistory?.();
+
+
+    resizing = true;
+    resizeSide = side;
+    hasResized = false;
+
+
+    startMouseX =
+      event.clientX;
+
+
+    startLeft =
+      parseFloat(
+        block.style.left
+      ) || 0;
+
+
+    startWidth =
+      parseFloat(
+        block.style.width
+      ) ||
+      block.offsetWidth;
+
+
+    originalStartSeconds =
+      parseTime(
+        blockData.start
+      );
+
+
+    originalEndSeconds =
+      parseTime(
+        blockData.end
+      );
+
+
+    block.classList.add(
+      'resizing'
+    );
+
+
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+
+  leftHandle.addEventListener(
+    'mousedown',
+    event => {
+      beginResize(
+        event,
+        'left'
+      );
+    }
+  );
+
+
+  rightHandle.addEventListener(
+    'mousedown',
+    event => {
+      beginResize(
+        event,
+        'right'
+      );
+    }
+  );
+
+
+  document.addEventListener(
+    'mousemove',
+    event => {
+      if (!resizing) {
+        return;
+      }
+
+
+      const deltaX =
+        event.clientX -
+        startMouseX;
+
+
+      if (
+        Math.abs(deltaX) > 2
+      ) {
+        hasResized = true;
+      }
+
+
+      if (
+        resizeSide === 'right'
+      ) {
+        const nextWidth =
+          Math.max(
+            minBlockWidth,
+            startWidth + deltaX
+          );
+
+
+        block.style.width =
+          `${nextWidth}px`;
+
+        return;
+      }
+
+
+      if (
+        resizeSide === 'left'
+      ) {
+        const fixedRight =
+          startLeft +
+          startWidth;
+
+
+        const maximumLeft =
+          fixedRight -
+          minBlockWidth;
+
+
+        const nextLeft =
+          Math.max(
+            0,
+            Math.min(
+              startLeft + deltaX,
+              maximumLeft
+            )
+          );
+
+
+        const nextWidth =
+          fixedRight -
+          nextLeft;
+
+
+        block.style.left =
+          `${nextLeft}px`;
+
+        block.style.width =
+          `${nextWidth}px`;
+      }
+    }
+  );
+
+
+  document.addEventListener(
+    'mouseup',
+    () => {
+      if (!resizing) {
+        return;
+      }
+
+
+      resizing = false;
+
+      block.classList.remove(
+        'resizing'
+      );
+
+
+      /*
+       * 実際に変更していない場合。
+       */
+      if (!hasResized) {
+        resizeSide = null;
+        beforeResizeState = null;
+
+        renderBlocks?.();
+        applySelectionClasses?.();
+
+        return;
+      }
+
+
+      const finalLeft =
+        parseFloat(
+          block.style.left
+        ) || 0;
+
+
+      const finalWidth =
+        parseFloat(
+          block.style.width
+        ) ||
+        minBlockWidth;
+
+
+      const timelineScale =
+        Number(
+          getScale?.()
+        ) || 90;
+
+
+      if (
+        resizeSide === 'right'
+      ) {
+        const nextEndSeconds =
+          originalStartSeconds +
+          finalWidth /
+            timelineScale;
+
+
+        blockData.end =
+          formatTime(
+            nextEndSeconds
+          );
+      }
+
+
+      if (
+        resizeSide === 'left'
+      ) {
+        const nextStartSeconds =
+          finalLeft /
+          timelineScale;
+
+
+        blockData.start =
+          formatTime(
+            Math.min(
+              nextStartSeconds,
+              originalEndSeconds -
+                0.01
+            )
+          );
+
+
+        /*
+         * 左側変更時は終了時間を固定。
+         */
+        blockData.end =
+          formatTime(
+            originalEndSeconds
+          );
+      }
+
+
+      renderBlocks?.();
+      applySelectionClasses?.();
+
+
+      const restoredElement =
+        document.querySelector(
+          `.lyricsBlock[data-block-id="${blockData.id}"]`
+        );
+
+
+      if (restoredElement) {
+        loadInspector?.(
+          restoredElement
+        );
+      }
+
+
+      updatePreview?.(
+        blockData,
+        {
+          animate: false
+        }
+      );
+
+
+      sendToVisualizer?.(
+        blockData
+      );
+
+
+      commitHistory?.(
+        beforeResizeState
+      );
+
+
+      resizeSide = null;
+      beforeResizeState = null;
+      hasResized = false;
+    }
+  );
+}
+
+
+/*
+ * タイムライン用の
+ * 歌詞ブロックDOMを作成する。
+ */
+function createBlockElement({
+  blockData,
+  blocks = [],
+  sectionName = '',
+
+  timelineScale = 90,
+  rowHeight = 56,
+  minBlockWidth = 40,
+
+  parseTime,
+  getAnimationLabel,
+
+  onSelect,
+  onTimingRestart,
+
+  isTimingInputMode = false,
+
+  setupDrag,
+  setupResize
+}) {
+  if (!blockData) {
+    return null;
+  }
+
+
+  const block =
+    document.createElement(
+      'div'
+    );
+
+
+  block.className =
+    'lyricsBlock';
+
+  block.draggable =
+    false;
+
+  block.dataset.blockId =
+    blockData.id;
+
+  block.dataset.animationPreset =
+    blockData.animationPreset ||
+    'fade';
+
+
+  const startSeconds =
+    parseTime(
+      blockData.start
+    );
+
+  const endSeconds =
+    parseTime(
+      blockData.end
+    );
+
+
+  const durationSeconds =
+    Math.max(
+      endSeconds -
+        startSeconds,
+      0.5
+    );
+
+
+  const index =
+    blocks.findIndex(
+      item =>
+        item.id ===
+        blockData.id
+    );
+
+
+  block.style.position =
+    'absolute';
+
+  block.style.left =
+    `${startSeconds *
+      timelineScale}px`;
+
+  block.style.top =
+    `${Math.max(0, index) *
+      rowHeight}px`;
+
+  block.style.width =
+    `${Math.max(
+      durationSeconds *
+        timelineScale,
+
+      minBlockWidth
+    )}px`;
+
+
+  const animationLabel =
+    typeof getAnimationLabel ===
+      'function'
+      ? getAnimationLabel(
+          blockData.animationPreset
+        )
+      : (
+          blockData.animationPreset ||
+          'fade'
+        );
+
+
+  const position =
+    blockData.position || {
+      x: 0,
+      y: 0,
+      z: 0
+    };
+
+
+  block.innerHTML = `
+    <div class="lyricsBlockTop">
+      <div class="lyricsBlockMotion"></div>
+      <div class="lyricsBlockSection"></div>
+    </div>
+
+    <div class="lyricsTime"></div>
+
+    <div class="lyricsSentence"></div>
+
+    <div class="lyricsBlockMeta">
+      <span></span>
+    </div>
+
+    <div
+      class="lyricsResizeHandle
+             lyricsResizeHandleLeft"
+    ></div>
+
+    <div
+      class="lyricsResizeHandle
+             lyricsResizeHandleRight"
+    ></div>
+  `;
+
+
+  /*
+   * textContentで設定し、
+   * 歌詞内のHTML文字列を
+   * DOMとして解釈させない。
+   */
+  const motionElement =
+    block.querySelector(
+      '.lyricsBlockMotion'
+    );
+
+  const sectionElement =
+    block.querySelector(
+      '.lyricsBlockSection'
+    );
+
+  const timeElement =
+    block.querySelector(
+      '.lyricsTime'
+    );
+
+  const sentenceElement =
+    block.querySelector(
+      '.lyricsSentence'
+    );
+
+  const metaElement =
+    block.querySelector(
+      '.lyricsBlockMeta span'
+    );
+
+
+  if (motionElement) {
+    motionElement.textContent =
+      animationLabel;
+  }
+
+  if (sectionElement) {
+    sectionElement.textContent =
+      sectionName;
+  }
+
+  if (timeElement) {
+    timeElement.textContent =
+      `${blockData.start} → ${blockData.end}`;
+  }
+
+  if (sentenceElement) {
+    sentenceElement.textContent =
+      blockData.text || '';
+  }
+
+  if (metaElement) {
+    metaElement.textContent =
+      `Position X:${Number(position.x) || 0} ` +
+      `Y:${Number(position.y) || 0} ` +
+      `Z:${Number(position.z) || 0}`;
+  }
+
+
+  block.addEventListener(
+    'click',
+    event => {
+      const additive =
+        event.ctrlKey ||
+        event.metaKey;
+
+      const range =
+        event.shiftKey;
+
+
+      onSelect?.(
+        block,
+        {
+          additive,
+          range
+        }
+      );
+
+
+      if (
+        isTimingInputMode &&
+        !additive &&
+        !range
+      ) {
+        onTimingRestart?.(
+          block
+        );
+      }
+
+
+      event.stopPropagation();
+    }
+  );
+
+
+  setupDrag?.(
+    block,
+    blockData
+  );
+
+  setupResize?.(
+    block,
+    blockData
+  );
+
+
+  return block;
+}
+
+
+/*
+ * タイムラインの全ブロックを描画する。
+ */
+function renderBlocks({
+  container,
+  blocks = [],
+  sectionName = '',
+
+  createElement,
+
+  applySelection,
+  updateHeight
+}) {
+  if (!container) {
+    return;
+  }
+
+
+  container.innerHTML =
+    '';
+
+
+  blocks.forEach(blockData => {
+    const block =
+      createElement?.({
+        blockData,
+        blocks,
+        sectionName
+      });
+
+
+    if (block) {
+      container.appendChild(
+        block
+      );
+    }
+  });
+
+
+  applySelection?.();
+
+
+  /*
+   * DOM配置後に高さを再計算する。
+   */
+  requestAnimationFrame(
+    () => {
+      updateHeight?.();
+    }
+  );
+}
+
+
+   return {
   getTotalWidth,
   updateContentWidth,
   updateContentHeight,
   renderRuler,
-  setupBlockDrag
-  }; 
+  setupBlockDrag,
+  setupBlockResize,
+  createBlockElement,
+  renderBlocks
+};
     }
 
 

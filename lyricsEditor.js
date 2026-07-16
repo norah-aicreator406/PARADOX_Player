@@ -3494,25 +3494,39 @@ layout: {
 }
 
 function renderSectionBlocks() {
-  if (!lyricsBlockList) return;
-
-  lyricsBlockList.innerHTML = '';
-
   const blocks =
-    sectionData[currentSectionName] || [];
+    sectionData[
+      currentSectionName
+    ] || [];
 
-  blocks.forEach(blockData => {
-    const block =
-      createLyricsBlockFromData(blockData);
 
-    lyricsBlockList.appendChild(block);
-  });
+  lyricsEditorTimeline
+    .renderBlocks({
+      container:
+        lyricsBlockList,
 
-  applyLyricsBlockSelectionClasses();
+      blocks,
 
-requestAnimationFrame(() => {
-  updateTimelineContentHeight();
-});
+      sectionName:
+        currentSectionName,
+
+      createElement({
+        blockData,
+        blocks:
+          currentBlocks
+      }) {
+        return createLyricsBlockFromData(
+          blockData,
+          currentBlocks
+        );
+      },
+
+      applySelection:
+        applyLyricsBlockSelectionClasses,
+
+      updateHeight:
+        updateTimelineContentHeight
+    });
 }
 
 function syncCurrentSectionOrderFromDOM() {
@@ -3526,105 +3540,48 @@ function syncCurrentSectionOrderFromDOM() {
   });
 }
 
-function createLyricsBlockFromData(blockData) {
+function createLyricsBlockFromData(
+  blockData,
+  blocks =
+    sectionData[
+      currentSectionName
+    ] || []
+) {
+  return lyricsEditorTimeline
+    .createBlockElement({
+      blockData,
+      blocks,
 
-  console.log('createLyricsBlockFromData called:', blockData);
+      sectionName:
+        currentSectionName,
 
+      timelineScale,
 
-  const block = document.createElement('div');
-  block.className = 'lyricsBlock';
-  block.draggable = false;
-  block.dataset.blockId = blockData.id;
-  block.dataset.animationPreset = blockData.animationPreset || 'fade';
+      rowHeight:
+        TIMELINE_ROW_HEIGHT,
 
-  const startSeconds = parseTimeToSeconds(blockData.start);
-  const endSeconds = parseTimeToSeconds(blockData.end);
-  const durationSeconds = Math.max(endSeconds - startSeconds, 0.5);
+      minBlockWidth:
+        TIMELINE_MIN_BLOCK_WIDTH,
 
-  const index =
-    (sectionData[currentSectionName] || []).findIndex(
-      item => item.id === blockData.id
-    );
+      parseTime:
+        parseTimeToSeconds,
 
-  block.style.position = 'absolute';
-  block.style.left = `${startSeconds * timelineScale}px`;
-block.style.top = `${index * TIMELINE_ROW_HEIGHT}px`;
-block.style.width = `${Math.max(
-  durationSeconds * timelineScale,
-  TIMELINE_MIN_BLOCK_WIDTH
-)}px`;
+      getAnimationLabel,
 
-console.log('timeline block style:', {
-  left: block.style.left,
-  top: block.style.top,
-  width: block.style.width
-});
+      onSelect:
+        selectLyricsBlock,
 
-  block.innerHTML = `
-    <div class="lyricsBlockTop">
-      <div class="lyricsBlockMotion">
-        ${getAnimationLabel(blockData.animationPreset)}
-      </div>
+      onTimingRestart:
+        prepareTimingRestartFromBlock,
 
-      <div class="lyricsBlockSection">
-        ${currentSectionName}
-      </div>
-    </div>
+      isTimingInputMode,
 
-    <div class="lyricsTime">
-      ${blockData.start} → ${blockData.end}
-    </div>
+      setupDrag:
+        setupTimelineBlockDrag,
 
-    <div class="lyricsSentence">
-      ${blockData.text}
-    </div>
-
-    <div class="lyricsBlockMeta">
-      <span>Position X:${blockData.position.x} Y:${blockData.position.y} Z:${blockData.position.z}</span>
-    </div>
-    <div class="lyricsResizeHandle lyricsResizeHandleLeft"></div>
-    <div class="lyricsResizeHandle lyricsResizeHandleRight"></div>
-  `;
-
-  block.addEventListener('click', event => {
-  const additive =
-    event.ctrlKey ||
-    event.metaKey;
-
-  const range =
-    event.shiftKey;
-
-  selectLyricsBlock(block, {
-    additive,
-    range
-  });
-
-  /*
-   * タイミング入力ON中に
-   * 通常クリックした場合だけ、
-   * その歌詞から再開準備する。
-   *
-   * Command / Ctrl / Shiftによる
-   * 複数選択時は再開させない。
-   */
-  if (
-    isTimingInputMode &&
-    !additive &&
-    !range
-  ) {
-    prepareTimingRestartFromBlock(
-      block
-    );
-  }
-
-  event.stopPropagation();
-});
-
-  // setupLyricsBlockDrag(block);
-  setupTimelineBlockDrag(block, blockData);
-  setupTimelineResize(block, blockData);
-
-  return block;
+      setupResize:
+        setupTimelineResize
+    });
 }
 
 
@@ -3670,339 +3627,71 @@ function setupTimelineResize(
   block,
   blockData
 ) {
-  const leftHandle =
-    block.querySelector(
-      '.lyricsResizeHandleLeft'
-    );
+  lyricsEditorTimeline
+    .setupBlockResize({
+      block,
+      blockData,
 
-  const rightHandle =
-    block.querySelector(
-      '.lyricsResizeHandleRight'
-    );
+      minBlockWidth:
+        TIMELINE_MIN_BLOCK_WIDTH,
 
-  if (
-    !leftHandle ||
-    !rightHandle
-  ) {
-    return;
-  }
+      getScale() {
+        return timelineScale;
+      },
 
+      parseTime:
+        parseTimeToSeconds,
 
-  let resizing = false;
-  let resizeSide = null;
-  let hasResized = false;
+      formatTime:
+        formatSecondsToTime,
 
-  let startMouseX = 0;
-  let startLeft = 0;
-  let startWidth = 0;
+      captureHistory:
+        captureEditorState,
 
-  let originalStartSeconds = 0;
-  let originalEndSeconds = 0;
+      commitHistory:
+        commitEditorHistory,
 
-  let beforeResizeState = null;
+      getSelectedIds() {
+        return selectedLyricsBlockIds;
+      },
 
+      getLastSelectedId() {
+        return lastSelectedLyricsBlockId;
+      },
 
-  function beginResize(
-  event,
-  side
-) {
-  if (event.button !== 0) {
-    return;
-  }
-
-  /*
-   * 操作対象を先に選択する。
-   */
-  const isOnlyThisBlockSelected =
-    selectedLyricsBlockIds.size === 1 &&
-    selectedLyricsBlockIds.has(
-      blockData.id
-    );
-
-  if (!isOnlyThisBlockSelected) {
-    selectedLyricsBlockIds.clear();
-
-    selectedLyricsBlockIds.add(
-      blockData.id
-    );
-
-    lastSelectedLyricsBlockId =
-      blockData.id;
-
-    lastSelectedBlockIdBySection.set(
-      currentSectionName,
-      blockData.id
-    );
-
-    applyLyricsBlockSelectionClasses();
-
-    loadLyricsBlockToInspector(
-      block
-    );
-  }
-
-  /*
-   * 選択を確定したあと、
-   * 変更前の時間を履歴へ保存する。
-   */
-  beforeResizeState =
-    captureEditorState();
-
-  resizing = true;
-  resizeSide = side;
-  hasResized = false;
-
-  startMouseX =
-    event.clientX;
-
-  startLeft =
-    parseFloat(
-      block.style.left
-    ) || 0;
-
-  startWidth =
-    parseFloat(
-      block.style.width
-    ) ||
-    block.offsetWidth;
-
-  originalStartSeconds =
-    parseTimeToSeconds(
-      blockData.start
-    );
-
-  originalEndSeconds =
-    parseTimeToSeconds(
-      blockData.end
-    );
-
-  block.classList.add(
-    'resizing'
-  );
-
-  event.preventDefault();
-  event.stopPropagation();
-}
-
-
-  leftHandle.addEventListener(
-    'mousedown',
-    event => {
-      beginResize(
-        event,
-        'left'
-      );
-    }
-  );
-
-
-  rightHandle.addEventListener(
-    'mousedown',
-    event => {
-      beginResize(
-        event,
-        'right'
-      );
-    }
-  );
-
-
-  document.addEventListener(
-    'mousemove',
-    event => {
-      if (!resizing) return;
-
-      const deltaX =
-        event.clientX -
-        startMouseX;
-
-      /*
-       * 数ピクセルの揺れを
-       * 編集操作として扱わない。
-       */
-      if (
-        Math.abs(deltaX) > 2
+      setSelection(
+        blockId
       ) {
-        hasResized = true;
-      }
+        selectedLyricsBlockIds.clear();
 
+        selectedLyricsBlockIds.add(
+          blockId
+        );
 
-      if (
-        resizeSide === 'right'
-      ) {
-        const nextWidth =
-          Math.max(
-            TIMELINE_MIN_BLOCK_WIDTH,
-            startWidth + deltaX
-          );
+        lastSelectedLyricsBlockId =
+          blockId;
 
-        block.style.width =
-          `${nextWidth}px`;
+        lastSelectedBlockIdBySection.set(
+          currentSectionName,
+          blockId
+        );
+      },
 
-        return;
-      }
+      applySelectionClasses:
+        applyLyricsBlockSelectionClasses,
 
+      loadInspector:
+        loadLyricsBlockToInspector,
 
-      if (
-        resizeSide === 'left'
-      ) {
-        const fixedRight =
-          startLeft +
-          startWidth;
+      renderBlocks:
+        renderSectionBlocks,
 
-        const maximumLeft =
-          fixedRight -
-          TIMELINE_MIN_BLOCK_WIDTH;
+      updatePreview:
+        updateEditorPreview,
 
-        const nextLeft =
-          Math.max(
-            0,
-            Math.min(
-              startLeft + deltaX,
-              maximumLeft
-            )
-          );
-
-        const nextWidth =
-          fixedRight -
-          nextLeft;
-
-        block.style.left =
-          `${nextLeft}px`;
-
-        block.style.width =
-          `${nextWidth}px`;
-      }
-    }
-  );
-
-
-  document.addEventListener(
-    'mouseup',
-    () => {
-      if (!resizing) return;
-
-      resizing = false;
-
-      block.classList.remove(
-        'resizing'
-      );
-
-
-      /*
-       * 実際に動かしていなければ、
-       * 履歴を追加しない。
-       */
-      if (!hasResized) {
-        resizeSide = null;
-        beforeResizeState = null;
-
-        /*
-         * 見た目だけ動いた可能性を消す。
-         */
-        renderSectionBlocks();
-        applyLyricsBlockSelectionClasses();
-
-        return;
-      }
-
-
-      const finalLeft =
-        parseFloat(
-          block.style.left
-        ) || 0;
-
-      const finalWidth =
-        parseFloat(
-          block.style.width
-        ) ||
-        TIMELINE_MIN_BLOCK_WIDTH;
-
-
-      if (
-        resizeSide === 'right'
-      ) {
-        const nextEndSeconds =
-          originalStartSeconds +
-          finalWidth /
-            timelineScale;
-
-        blockData.end =
-          formatSecondsToTime(
-            nextEndSeconds
-          );
-      }
-
-
-      if (
-        resizeSide === 'left'
-      ) {
-        const nextStartSeconds =
-          finalLeft /
-          timelineScale;
-
-        blockData.start =
-          formatSecondsToTime(
-            Math.min(
-              nextStartSeconds,
-              originalEndSeconds -
-                0.01
-            )
-          );
-
-        /*
-         * 左ハンドルでは
-         * 終了時間を固定する。
-         */
-        blockData.end =
-          formatSecondsToTime(
-            originalEndSeconds
-          );
-      }
-
-
-/*
- * 選択IDを変更する処理は置かない。
- */
-
-renderSectionBlocks();
-applyLyricsBlockSelectionClasses();
-
-
-      const restoredElement =
-  document.querySelector(
-    `.lyricsBlock[data-block-id="${blockData.id}"]`
-  );
-
-if (restoredElement) {
-  loadLyricsBlockToInspector(
-    restoredElement
-  );
-}
-
-updateEditorPreview(
-  blockData,
-  {
-    animate: false
-  }
-);
-
-sendLyricsBlockToVisualizer(
-  blockData
-);
-
-/*
- * 時間変更全体を1回の履歴として登録。
- */
-commitEditorHistory(
-  beforeResizeState
-);
-
-resizeSide = null;
-beforeResizeState = null;
-hasResized = false;
-    }
-  );
+      sendToVisualizer:
+        sendLyricsBlockToVisualizer
+    });
 }
 
 
