@@ -656,6 +656,216 @@ function getSelectedLyricsBlockData() {
   return null;
 }
 
+/*
+ * 現在選択中の全ブロックデータを取得する。
+ */
+function getSelectedLyricsBlocksData() {
+  const selectedIds =
+    selectedLyricsBlockIds;
+
+  if (!selectedIds.size) {
+    return [];
+  }
+
+  return Object.values(
+    sectionData
+  )
+    .flat()
+    .filter(block =>
+      selectedIds.has(
+        block.id
+      )
+    );
+}
+
+
+function copySelectedLyricsAppearance() {
+  /*
+   * 複数選択中でも、
+   * 最後に操作した代表ブロックをコピーする。
+   */
+  const sourceBlock =
+    (
+      lastSelectedLyricsBlockId
+        ? Object.values(
+            sectionData
+          )
+            .flat()
+            .find(
+              block =>
+                block.id ===
+                lastSelectedLyricsBlockId
+            )
+        : null
+    ) ||
+    getSelectedLyricsBlockData();
+
+
+  if (!sourceBlock) {
+    return false;
+  }
+
+
+  const copied =
+    window
+      .LyricsEditorClipboard
+      .copyAppearance(
+        sourceBlock
+      );
+
+
+  if (copied) {
+    console.log(
+      '歌詞の見た目をコピーしました:',
+      sourceBlock.text
+    );
+  }
+
+
+  return copied;
+}
+
+
+
+function pasteLyricsAppearanceToSelection() {
+  const targetBlocks =
+    getSelectedLyricsBlocksData();
+
+
+  if (!targetBlocks.length) {
+    return false;
+  }
+
+
+  if (
+    !window
+      .LyricsEditorClipboard
+      .hasAppearance()
+  ) {
+    return false;
+  }
+
+
+  /*
+   * 貼り付け前の状態を保存。
+   *
+   * 複数ブロックへの貼り付けも
+   * Undo 1回で戻せる。
+   */
+  const beforeState =
+    captureEditorState();
+
+
+  let pastedCount = 0;
+
+
+  targetBlocks.forEach(block => {
+    const pasted =
+      window
+        .LyricsEditorClipboard
+        .pasteAppearance(
+          block
+        );
+
+    if (pasted) {
+      pastedCount += 1;
+    }
+  });
+
+
+  if (!pastedCount) {
+    return false;
+  }
+
+
+  renderSectionBlocks();
+  applyLyricsBlockSelectionClasses();
+
+
+  /*
+   * 代表ブロックを
+   * インスペクタへ再読込。
+   */
+  const representativeId =
+    (
+      lastSelectedLyricsBlockId &&
+      selectedLyricsBlockIds.has(
+        lastSelectedLyricsBlockId
+      )
+    )
+      ? lastSelectedLyricsBlockId
+      : (
+          [
+            ...selectedLyricsBlockIds
+          ][0] ||
+          null
+        );
+
+
+  const representativeElement =
+    representativeId
+      ? document.querySelector(
+          `.lyricsBlock[data-block-id="${representativeId}"]`
+        )
+      : null;
+
+
+  if (representativeElement) {
+    loadLyricsBlockToInspector(
+      representativeElement
+    );
+  }
+
+
+  /*
+   * Visualizer送信キャッシュを解除。
+   */
+  lastEditorActiveLyricsSignature =
+    '';
+
+  lastSentPreviewLyricsSignature =
+    '';
+
+
+  const representativeBlock =
+    representativeId
+      ? targetBlocks.find(
+          block =>
+            block.id ===
+            representativeId
+        )
+      : targetBlocks[0];
+
+
+  if (representativeBlock) {
+    updateEditorPreview(
+      representativeBlock,
+      {
+        animate: false
+      }
+    );
+
+    sendLyricsBlockToVisualizer(
+      representativeBlock
+    );
+  }
+
+
+  commitEditorHistory(
+    beforeState
+  );
+
+
+  console.log(
+    `${pastedCount}件へ見た目を貼り付けました`
+  );
+
+
+  return true;
+}
+
+
+
 function setupPreviewLyricsDrag() {
   const previewLyrics = document.getElementById('editorPreviewLyrics');
   
@@ -2475,114 +2685,105 @@ function selectLyricsBlock(
 ) {
   if (!block) return;
 
-  const blockId = block.dataset.blockId;
+  const blockId =
+    block.dataset.blockId;
+
   if (!blockId) return;
 
-  const blocks = sectionData[currentSectionName] || [];
 
-  // Shift＋クリック：直前選択から範囲選択
-  if (
-    range &&
-    lastSelectedLyricsBlockId
-  ) {
-    const startIndex = blocks.findIndex(
-      item => item.id === lastSelectedLyricsBlockId
-    );
+  const blocks =
+    sectionData[
+      currentSectionName
+    ] || [];
 
-    const endIndex = blocks.findIndex(
-      item => item.id === blockId
-    );
 
-    if (startIndex !== -1 && endIndex !== -1) {
-      const from = Math.min(startIndex, endIndex);
-      const to = Math.max(startIndex, endIndex);
+  /*
+   * 選択計算は外部モジュールへ委譲。
+   */
+  const result =
+    window.LyricsEditorSelection
+      .calculateSelection({
+        blockId,
 
-      // Shift単独なら既存選択を解除して範囲だけ選択
-      if (!additive) {
-        selectedLyricsBlockIds.clear();
-      }
+        blocks,
 
-      for (let index = from; index <= to; index += 1) {
-        selectedLyricsBlockIds.add(blocks[index].id);
-      }
+        selectedIds:
+          selectedLyricsBlockIds,
+
+        lastSelectedId:
+          lastSelectedLyricsBlockId,
+
+        additive,
+
+        range
+      });
+
+
+  /*
+   * Setオブジェクト自体は維持し、
+   * 中身だけ更新する。
+   *
+   * Undoなどが同じSetを参照しているため。
+   */
+  selectedLyricsBlockIds.clear();
+
+  result.selectedIds.forEach(
+    selectedId => {
+      selectedLyricsBlockIds.add(
+        selectedId
+      );
     }
-  }
+  );
 
-  // Command / Ctrl＋クリック：個別追加・解除
-  else if (additive) {
-    if (selectedLyricsBlockIds.has(blockId)) {
-      selectedLyricsBlockIds.delete(blockId);
-    } else {
-      selectedLyricsBlockIds.add(blockId);
-    }
 
-    lastSelectedLyricsBlockId = blockId;
-  }
+  lastSelectedLyricsBlockId =
+    result.lastSelectedId;
 
-  // 通常クリック：1件だけ選択
-  else {
-    selectedLyricsBlockIds.clear();
-    selectedLyricsBlockIds.add(blockId);
-    lastSelectedLyricsBlockId = blockId;
-  }
 
   applyLyricsBlockSelectionClasses();
 
-/*
- * 現在のセクションで最後に選んだ
- * 編集対象を記憶する。
- */
-if (
-  selectedLyricsBlockIds.has(
-    blockId
-  )
-) {
-  lastSelectedBlockIdBySection.set(
-    currentSectionName,
-    blockId
-  );
 
-  loadLyricsBlockToInspector(
-    block
-  );
-}
+  /*
+   * 最後に操作したブロックが
+   * 選択状態なら編集対象として記憶。
+   */
+  if (
+    selectedLyricsBlockIds.has(
+      blockId
+    )
+  ) {
+    lastSelectedBlockIdBySection.set(
+      currentSectionName,
+      blockId
+    );
+
+    loadLyricsBlockToInspector(
+      block
+    );
+  }
 }
 
 
 function applyLyricsBlockSelectionClasses() {
-  document
-    .querySelectorAll('.lyricsBlock')
-    .forEach(block => {
-      const blockId = block.dataset.blockId;
+  window.LyricsEditorSelection
+    .applySelectionClasses({
+      selector:
+        '.lyricsBlock',
 
-      block.classList.toggle(
-        'selected',
-        selectedLyricsBlockIds.has(blockId)
-      );
+      selectedIds:
+        selectedLyricsBlockIds
     });
 }
 
 function applyLyricsPlaybackClasses(
   activeBlocks = []
 ) {
-  const activeIds =
-    new Set(
-      activeBlocks.map(
-        block => block.id
-      )
-    );
+  window.LyricsEditorSelection
+    .applyPlaybackClasses({
+      selector:
+        '.lyricsBlock',
 
-  document
-    .querySelectorAll(
-      '.lyricsBlock'
-    )
-    .forEach(block => {
-      block.classList.toggle(
-        'is-playing',
-        activeIds.has(
-          block.dataset.blockId
-        )
-      );
+      activeBlocks
     });
 }
 
@@ -2596,64 +2797,64 @@ function restoreLyricsSelectionForSection(
   } = {}
 ) {
   const blocks =
-    sectionData[sectionName] || [];
+    sectionData[
+      sectionName
+    ] || [];
 
-  if (!blocks.length) {
-    selectedLyricsBlockIds.clear();
-    lastSelectedLyricsBlockId = null;
-
-    applyLyricsBlockSelectionClasses();
-
-    return;
-  }
 
   const savedBlockId =
     lastSelectedBlockIdBySection.get(
       sectionName
     );
 
-  const validSavedBlock =
-    savedBlockId &&
-    blocks.some(
-      block =>
-        block.id === savedBlockId
-    );
 
   const targetBlockId =
-    validSavedBlock
-      ? savedBlockId
-      : (
-          selectFirstWhenEmpty
-            ? blocks[0].id
-            : null
-        );
+    window.LyricsEditorSelection
+      .resolveSectionSelection({
+        blocks,
+
+        savedBlockId,
+
+        selectFirstWhenEmpty
+      });
+
 
   selectedLyricsBlockIds.clear();
 
+
   if (!targetBlockId) {
-    lastSelectedLyricsBlockId = null;
+    lastSelectedLyricsBlockId =
+      null;
+
     applyLyricsBlockSelectionClasses();
+
     return;
   }
+
 
   selectedLyricsBlockIds.add(
     targetBlockId
   );
 
+
   lastSelectedLyricsBlockId =
     targetBlockId;
+
 
   lastSelectedBlockIdBySection.set(
     sectionName,
     targetBlockId
   );
 
+
   applyLyricsBlockSelectionClasses();
+
 
   const targetElement =
     document.querySelector(
       `.lyricsBlock[data-block-id="${targetBlockId}"]`
     );
+
 
   if (targetElement) {
     loadLyricsBlockToInspector(
@@ -6379,6 +6580,90 @@ document.addEventListener(
       event.preventDefault();
 
       undoEditorAction();
+    }
+  }
+);
+
+document.addEventListener(
+  'keydown',
+  event => {
+    const modifierPressed =
+      event.metaKey ||
+      event.ctrlKey;
+
+    if (!modifierPressed) {
+      return;
+    }
+
+
+    /*
+     * テキスト編集中は、
+     * 通常の文字コピー／貼り付けを優先。
+     */
+    const target =
+      event.target;
+
+    const isTextEditing =
+      target instanceof
+        HTMLTextAreaElement ||
+      (
+        target instanceof
+          HTMLInputElement &&
+        ![
+          'range',
+          'color',
+          'checkbox',
+          'radio',
+          'button'
+        ].includes(
+          target.type
+        )
+      ) ||
+      target?.isContentEditable;
+
+
+    if (isTextEditing) {
+      return;
+    }
+
+
+    const key =
+      event.key.toLowerCase();
+
+
+    /*
+     * Command / Ctrl + C
+     * 選択ブロックの見た目をコピー。
+     */
+    if (
+      key === 'c' &&
+      !event.shiftKey
+    ) {
+      const copied =
+        copySelectedLyricsAppearance();
+
+      if (copied) {
+        event.preventDefault();
+      }
+
+      return;
+    }
+
+
+    /*
+     * Command / Ctrl + V
+     * 選択ブロックへ見た目を貼り付け。
+     */
+    if (
+      key === 'v' &&
+      !event.shiftKey
+    ) {
+      const pasted =
+        pasteLyricsAppearanceToSelection();
+
+      if (pasted) {
+        event.preventDefault();
+      }
     }
   }
 );
