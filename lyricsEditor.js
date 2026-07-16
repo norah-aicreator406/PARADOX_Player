@@ -322,36 +322,86 @@ function setupFontOptions() {
   }
 
   const fontOptions = [
-    {
-      value: 'Arial',
-      label: 'Arial'
-    },
+  {
+    value: 'Arial',
+    label: 'Arial'
+  },
 
-    {
-      value: 'Noto Sans JP',
-      label: 'Noto Sans JP'
-    },
+  {
+    value: 'Noto Sans JP',
+    label: 'Noto Sans JP'
+  },
 
-    {
-      value: 'Zen Kaku Gothic New',
-      label: 'Zen Kaku Gothic New'
-    },
+  {
+    value: 'Noto Serif JP',
+    label: 'Noto Serif JP'
+  },
 
-    {
-      value: 'Dela Gothic One',
-      label: 'Dela Gothic One'
-    },
+  {
+    value: 'Zen Kaku Gothic New',
+    label: 'Zen Kaku Gothic New'
+  },
 
-    {
-      value: 'DotGothic16',
-      label: 'DotGothic16'
-    },
+  {
+    value: 'Zen Maru Gothic',
+    label: 'Zen Maru Gothic'
+  },
 
-    {
-      value: 'Orbitron',
-      label: 'Orbitron'
-    }
-  ];
+  {
+    value: 'Zen Old Mincho',
+    label: 'Zen Old Mincho'
+  },
+
+  {
+    value: 'M PLUS Rounded 1c',
+    label: 'M PLUS Rounded 1c'
+  },
+
+  {
+    value: 'Kaisei Decol',
+    label: 'Kaisei Decol'
+  },
+
+  {
+    value: 'Shippori Mincho',
+    label: 'Shippori Mincho'
+  },
+
+  {
+    value: 'Dela Gothic One',
+    label: 'Dela Gothic One'
+  },
+
+  {
+    value: 'DotGothic16',
+    label: 'DotGothic16'
+  },
+
+  {
+    value: 'Reggae One',
+    label: 'Reggae One'
+  },
+
+  {
+    value: 'RocknRoll One',
+    label: 'RocknRoll One'
+  },
+
+  {
+    value: 'Orbitron',
+    label: 'Orbitron'
+  },
+
+  {
+    value: 'Bebas Neue',
+    label: 'Bebas Neue'
+  },
+
+  {
+    value: 'Playfair Display',
+    label: 'Playfair Display'
+  }
+];
 
 
   /*
@@ -7796,6 +7846,80 @@ document.fonts?.ready
   });
 
 
+
+  /* ==================================================
+   Font Library Connection
+================================================== */
+
+const fontLibrary =
+  window
+    .LyricsEditorFontLibrary
+    ?.create({
+      getPreviewText() {
+        const selectedBlock =
+          getSelectedLyricsBlockData();
+
+        return (
+          selectedBlock?.text ||
+          textInput?.value ||
+          '観覧車が止まる前に'
+        );
+      },
+
+      getCurrentFont() {
+        return (
+          fontInput?.value ||
+          'Noto Sans JP'
+        );
+      },
+
+      applyFont(fontValue) {
+        if (!fontInput) return;
+
+        fontInput.value =
+          fontValue;
+
+        sendLyricsUpdate();
+
+        document.fonts?.ready
+          .then(() => {
+            const selectedBlock =
+              getSelectedLyricsBlockData();
+
+            if (!selectedBlock) return;
+
+            updateEditorPreview(
+              selectedBlock,
+              {
+                animate: false
+              }
+            );
+
+            sendLyricsBlockToVisualizer(
+              selectedBlock
+            );
+          });
+      }
+    });
+
+
+document
+  .getElementById(
+    openFontLibraryButton
+  ?.addEventListener(
+    'click',
+    () => {
+      fontLibrary?.open();
+
+      document.body.classList.add(
+        'font-library-open'
+      );
+    }
+  )
+  );
+
+
+
 ensurePreviewCenterGuides();
 setupPreviewLyricsDrag();
 resizeEditorPreviewCanvas();
@@ -7810,3 +7934,5 @@ setupLyricsRotationHandle(); // 右上回転ハンドル
 setupTimelineZoomControls();
 setupTimelineZoomByWheel();
 updateAnimationDescription();
+
+
