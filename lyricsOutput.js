@@ -2,8 +2,7 @@ const {
   ipcRenderer
 } = require('electron');
 
-const BASE_WIDTH = 1080;
-const BASE_HEIGHT = 1920;
+
 
 const blocksLayer =
   document.getElementById(
@@ -27,17 +26,49 @@ function resizeLyricsOutputCanvas() {
       'lyricsOutputCanvas'
     );
 
-  if (!canvas) {
+  const stage =
+    document.getElementById(
+      'lyricsOutputStage'
+    );
+
+  if (!canvas || !stage) {
     return;
   }
 
-  const scale = Math.min(
-    window.innerWidth /
-      BASE_WIDTH,
+  const availableWidth =
+    stage.clientWidth;
 
-    window.innerHeight /
-      BASE_HEIGHT
-  );
+  const availableHeight =
+    stage.clientHeight;
+
+  const isWide =
+    currentAspectRatio ===
+    '16:9';
+
+  const baseWidth =
+    isWide
+      ? 1920
+      : 1080;
+
+  const baseHeight =
+    isWide
+      ? 1080
+      : 1920;
+
+  canvas.style.width =
+    `${baseWidth}px`;
+
+  canvas.style.height =
+    `${baseHeight}px`;
+
+  const scale =
+    Math.min(
+      availableWidth /
+        baseWidth,
+
+      availableHeight /
+        baseHeight
+    );
 
   canvas.style.setProperty(
     '--lyrics-output-scale',
@@ -346,13 +377,25 @@ function setLyricsBlocks(blocks) {
  * Lyrics Outputを途中で開いた場合でも、
  * 現在の位相から正しく開始できる。
  */
-applyLyricsHoldAnimation(
-  lyricsBlock,
-  block.animation || {},
-  Number(
-    block.elapsedSeconds
-  ) || 0
-);
+/*
+ * HOLDは新規表示または内容変更時だけ適用する。
+ *
+ * elapsedSecondsを渡すため、
+ * Lyrics Outputを途中で開いても
+ * 現在の位相から開始できる。
+ */
+if (
+  isNewBlock ||
+  needsRender
+) {
+  applyLyricsHoldAnimation(
+    lyricsBlock,
+    block.animation || {},
+    Number(
+      block.elapsedSeconds
+    ) || 0
+  );
+}
 
       /*
        * OUTは残り時間が継続的に変わるため、
@@ -545,18 +588,163 @@ ipcRenderer.on(
 );
 
 
-/*
- * Phase 2用。
- * 現時点では受信だけして表示しない。
- */
+/* ========================================
+   Song Info
+======================================== */
+
+const songInfoElement =
+  document.getElementById(
+    'lyricsOutputSongInfo'
+  );
+
+const titleElement =
+  document.getElementById(
+    'lyricsOutputTitle'
+  );
+
+const artistElement =
+  document.getElementById(
+    'lyricsOutputArtist'
+  );
+
+const currentTimeElement =
+  document.getElementById(
+    'lyricsOutputCurrentTime'
+  );
+
+const durationElement =
+  document.getElementById(
+    'lyricsOutputDuration'
+  );
+
+
+function updateSongInfo(
+  song
+) {
+  if (titleElement) {
+    titleElement.textContent =
+      song?.title || '';
+  }
+
+  if (artistElement) {
+    /*
+     * 大文字・小文字を変換せず、
+     * 登録された表記をそのまま使用する。
+     */
+    artistElement.textContent =
+      song?.artist || '';
+  }
+}
+
+
+function formatOutputTime(
+  value
+) {
+  if (
+    typeof value ===
+    'string'
+  ) {
+    return value;
+  }
+
+  const totalSeconds =
+    Math.max(
+      0,
+      Number(value) || 0
+    );
+
+  const minutes =
+    Math.floor(
+      totalSeconds / 60
+    );
+
+  const seconds =
+    Math.floor(
+      totalSeconds % 60
+    );
+
+  return (
+    String(minutes)
+      .padStart(2, '0') +
+    ':' +
+    String(seconds)
+      .padStart(2, '0')
+  );
+}
+
+
+function updateTimeInfo(
+  timeData
+) {
+  if (currentTimeElement) {
+    currentTimeElement.textContent =
+      formatOutputTime(
+        timeData?.currentText ??
+        timeData?.currentTime ??
+        timeData?.current ??
+        0
+      );
+  }
+
+  if (durationElement) {
+    durationElement.textContent =
+      formatOutputTime(
+        timeData?.durationText ??
+        timeData?.durationTime ??
+        timeData?.duration ??
+        0
+      );
+  }
+}
+
+
+function setSongInfoVisible(
+  visible
+) {
+  if (!songInfoElement) {
+    return;
+  }
+
+  const shouldShow =
+    Boolean(visible);
+
+  songInfoElement
+    .classList
+    .toggle(
+      'is-visible',
+      shouldShow
+    );
+
+  songInfoElement.setAttribute(
+    'aria-hidden',
+    shouldShow
+      ? 'false'
+      : 'true'
+  );
+}
+
+
+function setLyricsVisible(
+  visible
+) {
+  if (!blocksLayer) {
+    return;
+  }
+
+  blocksLayer.style.display =
+    visible
+      ? 'block'
+      : 'none';
+}
+
+
 ipcRenderer.on(
   'lyrics-output-song',
   (
     event,
     song
   ) => {
-    console.log(
-      '[Lyrics Output] song:',
+    updateSongInfo(
       song
     );
   }
@@ -569,9 +757,34 @@ ipcRenderer.on(
     event,
     timeData
   ) => {
-    console.log(
-      '[Lyrics Output] time:',
+    updateTimeInfo(
       timeData
+    );
+  }
+);
+
+
+ipcRenderer.on(
+  'lyrics-output-song-info-visible',
+  (
+    event,
+    visible
+  ) => {
+    setSongInfoVisible(
+      visible
+    );
+  }
+);
+
+
+ipcRenderer.on(
+  'lyrics-output-lyrics-visible',
+  (
+    event,
+    visible
+  ) => {
+    setLyricsVisible(
+      visible
     );
   }
 );
@@ -606,4 +819,18 @@ closeButton?.addEventListener(
       'close-lyrics-output-window'
     );
   }
+);
+
+/*
+ * 初期状態
+ *
+ * 表示先切替をまだ受信していない間は、
+ * 歌詞を表示し、Song Infoは非表示にする。
+ */
+setLyricsVisible(
+  true
+);
+
+setSongInfoVisible(
+  false
 );

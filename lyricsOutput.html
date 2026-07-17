@@ -28,25 +28,19 @@
   >
 
   <!--
-  歌詞のIN・HOLD・OUTアニメーション定義を共有
--->
-<link
-  rel="stylesheet"
-  href="./visualizer.css"
->
+    歌詞のIN・HOLD・OUTアニメーション定義を共有
+  -->
+  <link
+    rel="stylesheet"
+    href="./visualizer.css"
+  >
 
-<!--
-  Lyrics Output専用の上書き
--->
-<link
-  rel="stylesheet"
-  href="./lyricsOutput.css"
->
-
-
+  <!-- Lyrics Output専用CSS -->
+  <link
+    rel="stylesheet"
+    href="./lyricsOutput.css"
+  >
 </head>
-
-<body>
 
 <body>
   <header id="lyricsOutputToolbar">
@@ -88,11 +82,35 @@
   <main id="lyricsOutputStage">
     <div id="lyricsOutputCanvas">
       <div id="lyricsOutputBlocks"></div>
-    </div>
-  </main>
-  <main id="lyricsOutputStage">
-    <div id="lyricsOutputCanvas">
-      <div id="lyricsOutputBlocks"></div>
+
+      <section
+        id="lyricsOutputSongInfo"
+        aria-hidden="true"
+      >
+        <div class="lyricsOutputSongLine"></div>
+
+        <div id="lyricsOutputTitle"></div>
+
+        <div id="lyricsOutputArtist"></div>
+
+        <div id="lyricsOutputTime">
+          <span id="lyricsOutputCurrentTime">
+            00:00
+          </span>
+
+          <span class="lyricsOutputTimeDivider">
+            /
+          </span>
+
+          <span id="lyricsOutputDuration">
+            00:00
+          </span>
+        </div>
+
+        <div
+          class="lyricsOutputSongLine lyricsOutputBottomLine"
+        ></div>
+      </section>
     </div>
   </main>
 
