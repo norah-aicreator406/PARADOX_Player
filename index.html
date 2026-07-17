@@ -2176,12 +2176,18 @@ body {
   </div>
 
   <div class="buttonGroup">
-    <div class="buttonGroupTitle">出力</div>
+  <div class="buttonGroupTitle">出力</div>
 
-    <div class="buttonRow">
-      <button class="nav" onclick="openVisualizer()">🖥 外出し</button>
-    </div>
+  <div class="buttonRow">
+    <button class="nav" onclick="openVisualizer()">
+      🖥 Visualizer
+    </button>
+
+    <button class="nav" onclick="openLyricsOutput()">
+      📝 Lyrics
+    </button>
   </div>
+</div>
 
   <div class="buttonGroup">
     <div class="buttonGroupTitle">管理</div>
@@ -2627,8 +2633,10 @@ body {
   <div class="bottomRightTools">
   <button onclick="copyCurrent()" title="コピー">コピー</button>
   <button onclick="openQueueModal()" title="予約">予約</button>
-  <button onclick="openVisualizer()" title="外出し">外出し</button>
+  <button onclick="openVisualizer()" title="Visualiser">Visualiser</button>
+  <button onclick="openLyricsOutput()" title="Lyrics">Lyrics</button>
   <button id="openBottomEditorButton" title="Editor">Editor</button>
+  
 </div>
 
 </div>

@@ -164,34 +164,7 @@ document.addEventListener('keydown', (event) => {
 
 
 const { ipcRenderer } = require('electron');
-const fontGroups = [
-  {
-    label: 'Japanese',
-    fonts: [
-      'Yu Gothic UI',
-      'Yu Gothic',
-      'Meiryo',
-      'MS Gothic',
-      'MS PGothic',
-      'MS UI Gothic',
-      'Yu Mincho',
-      'MS Mincho'
-    ]
-  },
-  {
-    label: 'English',
-    fonts: [
-      'Arial',
-      'Verdana',
-      'Tahoma',
-      'Trebuchet MS',
-      'Georgia',
-      'Times New Roman',
-      'Impact',
-      'Comic Sans MS'
-    ]
-  }
-];
+
 
 const stylePresets = {
 
@@ -318,141 +291,194 @@ function formatSecondsToTime(seconds) {
 
 function setupFontOptions() {
   if (!fontInput) {
+    console.warn(
+      '[Font] lyricsFontが見つかりません。'
+    );
+
     return;
   }
 
-  const fontOptions = [
-  {
-    value: 'Arial',
-    label: 'Arial'
-  },
+  const fontLibraryFonts =
+    window
+      .LyricsEditorFontLibrary
+      ?.fonts;
 
-  {
-    value: 'Noto Sans JP',
-    label: 'Noto Sans JP'
-  },
+  if (
+    !Array.isArray(
+      fontLibraryFonts
+    )
+  ) {
+    console.warn(
+      '[Font] Font Libraryの一覧を取得できません。'
+    );
 
-  {
-    value: 'Noto Serif JP',
-    label: 'Noto Serif JP'
-  },
-
-  {
-    value: 'Zen Kaku Gothic New',
-    label: 'Zen Kaku Gothic New'
-  },
-
-  {
-    value: 'Zen Maru Gothic',
-    label: 'Zen Maru Gothic'
-  },
-
-  {
-    value: 'Zen Old Mincho',
-    label: 'Zen Old Mincho'
-  },
-
-  {
-    value: 'M PLUS Rounded 1c',
-    label: 'M PLUS Rounded 1c'
-  },
-
-  {
-    value: 'Kaisei Decol',
-    label: 'Kaisei Decol'
-  },
-
-  {
-    value: 'Shippori Mincho',
-    label: 'Shippori Mincho'
-  },
-
-  {
-    value: 'Dela Gothic One',
-    label: 'Dela Gothic One'
-  },
-
-  {
-    value: 'DotGothic16',
-    label: 'DotGothic16'
-  },
-
-  {
-    value: 'Reggae One',
-    label: 'Reggae One'
-  },
-
-  {
-    value: 'RocknRoll One',
-    label: 'RocknRoll One'
-  },
-
-  {
-    value: 'Orbitron',
-    label: 'Orbitron'
-  },
-
-  {
-    value: 'Bebas Neue',
-    label: 'Bebas Neue'
-  },
-
-  {
-    value: 'Playfair Display',
-    label: 'Playfair Display'
+    return;
   }
-];
 
-
-  /*
-   * 現在選択中の値を維持する。
-   */
-  const previousValue =
-    fontInput.value;
-
+  const previousFont =
+    fontInput.value ||
+    'Noto Sans JP';
 
   fontInput.innerHTML = '';
 
+  const categoryGroups = [
+    {
+      label: '日本語',
+      category: 'japanese'
+    },
+    {
+      label: '英語',
+      category: 'english'
+    }
+  ];
 
-  fontOptions.forEach(
-    fontData => {
-      const option =
-        document.createElement(
-          'option'
+  const addedFonts =
+    new Set();
+
+  categoryGroups.forEach(
+    groupData => {
+      const matchingFonts =
+        fontLibraryFonts.filter(
+          fontData =>
+            Array.isArray(
+              fontData.categories
+            ) &&
+            fontData.categories.includes(
+              groupData.category
+            )
         );
 
-      option.value =
-        fontData.value;
+      if (!matchingFonts.length) {
+        return;
+      }
 
-      option.textContent =
-        fontData.label;
+      const optgroup =
+        document.createElement(
+          'optgroup'
+        );
 
-      /*
-       * 対応環境ではoption自体も
-       * そのフォントで表示する。
-       */
-      option.style.fontFamily =
-        `"${fontData.value}", sans-serif`;
+      optgroup.label =
+        groupData.label;
+
+      matchingFonts.forEach(
+        fontData => {
+          if (
+            !fontData?.value ||
+            addedFonts.has(
+              fontData.value
+            )
+          ) {
+            return;
+          }
+
+          const option =
+            document.createElement(
+              'option'
+            );
+
+          option.value =
+            fontData.value;
+
+          option.textContent =
+            fontData.label ||
+            fontData.value;
+
+          option.style.fontFamily =
+            `"${fontData.value}", sans-serif`;
+
+          optgroup.appendChild(
+            option
+          );
+
+          addedFonts.add(
+            fontData.value
+          );
+        }
+      );
 
       fontInput.appendChild(
-        option
+        optgroup
       );
     }
   );
 
-
-  const previousValueExists =
-    fontOptions.some(
+  const otherFonts =
+    fontLibraryFonts.filter(
       fontData =>
-        fontData.value ===
-        previousValue
+        fontData?.value &&
+        !addedFonts.has(
+          fontData.value
+        )
     );
 
+  if (otherFonts.length) {
+    const otherGroup =
+      document.createElement(
+        'optgroup'
+      );
 
-  fontInput.value =
-    previousValueExists
-      ? previousValue
-      : 'Noto Sans JP';
+    otherGroup.label =
+      'その他';
+
+    otherFonts.forEach(
+      fontData => {
+        const option =
+          document.createElement(
+            'option'
+          );
+
+        option.value =
+          fontData.value;
+
+        option.textContent =
+          fontData.label ||
+          fontData.value;
+
+        option.style.fontFamily =
+          `"${fontData.value}", sans-serif`;
+
+        otherGroup.appendChild(
+          option
+        );
+
+        addedFonts.add(
+          fontData.value
+        );
+      }
+    );
+
+    fontInput.appendChild(
+      otherGroup
+    );
+  }
+
+  const previousFontExists =
+    Array.from(
+      fontInput.options
+    ).some(
+      option =>
+        option.value ===
+        previousFont
+    );
+
+  if (previousFontExists) {
+    fontInput.value =
+      previousFont;
+  } else if (
+    Array.from(
+      fontInput.options
+    ).some(
+      option =>
+        option.value ===
+        'Noto Sans JP'
+    )
+  ) {
+    fontInput.value =
+      'Noto Sans JP';
+  } else {
+    fontInput.selectedIndex =
+      0;
+  }
 }
 
 

@@ -225,6 +225,393 @@ window.LyricsEditorFontLibrary =
     'セリフ',
     '上品'
   ]
+},
+
+/* ================================
+   Japanese Gothic
+================================ */
+
+{
+  value:
+    'Noto Sans JP',
+
+  label:
+    'Noto Sans JP',
+
+  categories: [
+    'all',
+    'japanese',
+    'gothic',
+    'modern'
+  ],
+
+  tags: [
+    '日本語',
+    'ゴシック',
+    '標準'
+  ]
+},
+
+{
+  value:
+    'Zen Kaku Gothic New',
+
+  label:
+    'Zen Kaku Gothic New',
+
+  categories: [
+    'all',
+    'japanese',
+    'gothic',
+    'modern'
+  ],
+
+  tags: [
+    '日本語',
+    'ゴシック',
+    'すっきり'
+  ]
+},
+
+{
+  value:
+    'Dela Gothic One',
+
+  label:
+    'Dela Gothic One',
+
+  categories: [
+    'all',
+    'japanese',
+    'gothic',
+    'bold',
+    'design'
+  ],
+
+  tags: [
+    '日本語',
+    '極太',
+    'インパクト'
+  ]
+},
+
+/* ================================
+   Dot / Pixel
+================================ */
+
+{
+  value:
+    'DotGothic16',
+
+  label:
+    'DotGothic16',
+
+  categories: [
+    'all',
+    'japanese',
+    'dot',
+    'design'
+  ],
+
+  tags: [
+    '日本語',
+    'ドット',
+    'レトロ'
+  ]
+},
+
+{
+  value:
+    'Pixelify Sans',
+
+  label:
+    'Pixelify Sans',
+
+  categories: [
+    'all',
+    'english',
+    'dot',
+    'design'
+  ],
+
+  tags: [
+    '英語',
+    'ピクセル',
+    'ゲーム'
+  ]
+},
+
+/* ================================
+   Handwriting
+================================ */
+
+{
+  value:
+    'Yomogi',
+
+  label:
+    'Yomogi',
+
+  categories: [
+    'all',
+    'japanese',
+    'handwriting',
+    'cute'
+  ],
+
+  tags: [
+    '日本語',
+    '手書き',
+    'やさしい'
+  ]
+},
+
+{
+  value:
+    'Klee One',
+
+  label:
+    'Klee One',
+
+  categories: [
+    'all',
+    'japanese',
+    'handwriting',
+    'classic'
+  ],
+
+  tags: [
+    '日本語',
+    '手書き',
+    '繊細'
+  ]
+},
+
+{
+  value:
+    'Hachi Maru Pop',
+
+  label:
+    'Hachi Maru Pop',
+
+  categories: [
+    'all',
+    'japanese',
+    'handwriting',
+    'cute',
+    'rounded'
+  ],
+
+  tags: [
+    '日本語',
+    '手書き',
+    'かわいい'
+  ]
+},
+
+{
+  value:
+    'Mochiy Pop One',
+
+  label:
+    'Mochiy Pop One',
+
+  categories: [
+    'all',
+    'japanese',
+    'cute',
+    'rounded',
+    'bold'
+  ],
+
+  tags: [
+    '日本語',
+    'ポップ',
+    'かわいい'
+  ]
+},
+
+{
+  value:
+    'Zen Maru Gothic',
+
+  label:
+    'Zen Maru Gothic',
+
+  categories: [
+    'all',
+    'japanese',
+    'rounded',
+    'cute'
+  ],
+
+  tags: [
+    '日本語',
+    '丸文字',
+    'やわらかい'
+  ]
+},
+
+/* ================================
+   Cute / Pop
+================================ */
+
+{
+  value:
+    'Mochiy Pop One',
+
+  label:
+    'Mochiy Pop One',
+
+  categories: [
+    'all',
+    'japanese',
+    'cute',
+    'rounded',
+    'bold'
+  ],
+
+  tags: [
+    '日本語',
+    'ポップ',
+    'かわいい'
+  ]
+},
+
+/* ================================
+   Horror
+================================ */
+
+{
+  value:
+    'Yuji Boku',
+
+  label:
+    'Yuji Boku',
+
+  categories: [
+    'all',
+    'japanese',
+    'handwriting',
+    'horror'
+  ],
+
+  tags: [
+    '日本語',
+    '筆文字',
+    '怪談'
+  ]
+},
+
+{
+  value:
+    'Yuji Mai',
+
+  label:
+    'Yuji Mai',
+
+  categories: [
+    'all',
+    'japanese',
+    'handwriting',
+    'horror'
+  ],
+
+  tags: [
+    '日本語',
+    '崩し字',
+    '不穏'
+  ]
+},
+
+{
+  value:
+    'Zen Old Mincho',
+
+  label:
+    'Zen Old Mincho',
+
+  categories: [
+    'all',
+    'japanese',
+    'mincho',
+    'horror',
+    'classic'
+  ],
+
+  tags: [
+    '日本語',
+    '古風',
+    '怪談'
+  ]
+},
+
+{
+  value:
+    'Shippori Mincho',
+
+  label:
+    'Shippori Mincho',
+
+  categories: [
+    'all',
+    'japanese',
+    'mincho',
+    'horror',
+    'classic'
+  ],
+
+  tags: [
+    '日本語',
+    '映画的',
+    '静かな恐怖'
+  ]
+},
+
+/* ================================
+   Techno
+================================ */
+
+{
+  value:
+    'Orbitron',
+
+  label:
+    'Orbitron',
+
+  categories: [
+    'all',
+    'english',
+    'techno',
+    'modern'
+  ],
+
+  tags: [
+    '英語',
+    'テクノ',
+    '未来'
+  ]
+},
+
+{
+  value:
+    'Audiowide',
+
+  label:
+    'Audiowide',
+
+  categories: [
+    'all',
+    'english',
+    'techno',
+    'design'
+  ],
+
+  tags: [
+    '英語',
+    '近未来',
+    'タイトル'
+  ]
 }
     ];
 
@@ -354,6 +741,17 @@ window.LyricsEditorFontLibrary =
         readStorageArray(
           RECENT_KEY
         );
+        /*
+ * Font Library内で現在選択しているフォント。
+ *
+ * getCurrentFont()だけに依存すると、
+ * Inspectorや選択ブロックの更新タイミングによって
+ * カード選択表示が一瞬遅れる場合があるため、
+ * ライブラリ側でも保持する。
+ */
+let selectedFontValue =
+  getCurrentFont?.() ||
+  'Noto Sans JP';
 
 
       function getSafePreviewText() {
@@ -424,25 +822,44 @@ window.LyricsEditorFontLibrary =
 
 
       function applySelectedFont(
-        fontValue,
-        {
-          closeAfter = false
-        } = {}
-      ) {
-        applyFont?.(
-          fontValue
-        );
+  fontValue,
+  {
+    closeAfter = false
+  } = {}
+) {
+  if (!fontValue) {
+    return;
+  }
 
-        addRecentFont(
-          fontValue
-        );
+  /*
+   * 先に選択状態を更新する。
+   * これによりカードの枠が即座に切り替わる。
+   */
+  selectedFontValue =
+    fontValue;
 
-        render();
+  /*
+   * lyricsEditor.js側へ反映。
+   *
+   * ここでInspectorのfontInput、
+   * 選択中ブロック、
+   * Editor Preview、
+   * Visualizerが更新される想定。
+   */
+  applyFont?.(
+    fontValue
+  );
 
-        if (closeAfter) {
-          close();
-        }
-      }
+  addRecentFont(
+    fontValue
+  );
+
+  render();
+
+  if (closeAfter) {
+    close();
+  }
+}
 
 
       function createSideListItem(
@@ -470,6 +887,12 @@ window.LyricsEditorFontLibrary =
 
         button.className =
           'fontLibrarySideItem';
+
+          button.classList.toggle(
+  'is-selected',
+  selectedFontValue ===
+    fontData.value
+);
 
         button.textContent =
           fontData.label;
@@ -616,18 +1039,24 @@ window.LyricsEditorFontLibrary =
           fontData.value;
 
 
-        const currentFont =
-          getCurrentFont?.();
-
-
         if (
-          currentFont ===
-          fontData.value
-        ) {
-          card.classList.add(
-            'is-selected'
-          );
-        }
+  selectedFontValue ===
+  fontData.value
+) {
+  card.classList.add(
+    'is-selected'
+  );
+
+  card.setAttribute(
+    'aria-selected',
+    'true'
+  );
+} else {
+  card.setAttribute(
+    'aria-selected',
+    'false'
+  );
+}
 
 
         const header =
@@ -694,10 +1123,29 @@ window.LyricsEditorFontLibrary =
         );
 
 
-        header.append(
-          name,
-          favoriteButton
-        );
+      const selectedMark =
+  document.createElement(
+    'span'
+  );
+
+selectedMark.className =
+  'fontLibrarySelectedMark';
+
+selectedMark.textContent =
+  '✓';
+
+selectedMark.setAttribute(
+  'aria-hidden',
+  'true'
+);
+
+
+
+       header.append(
+  name,
+  selectedMark,
+  favoriteButton
+);
 
 
         const preview =
@@ -776,34 +1224,86 @@ window.LyricsEditorFontLibrary =
 
 
         /*
-         * 1クリックで即時反映。
-         * ライブラリは閉じない。
-         */
-        card.addEventListener(
-          'click',
-          () => {
-            applySelectedFont(
-              fontData.value
-            );
-          }
-        );
+ * シングルクリックとダブルクリックを区別する。
+ *
+ * 通常のdblclickイベントでは、
+ * clickが先に2回発生してしまうため、
+ * 少しだけ待って判定する。
+ */
+let clickTimer =
+  null;
 
 
-        /*
-         * ダブルクリックなら
-         * 即時反映して閉じる。
-         */
-        card.addEventListener(
-          'dblclick',
-          () => {
-            applySelectedFont(
-              fontData.value,
-              {
-                closeAfter: true
-              }
-            );
-          }
-        );
+card.addEventListener(
+  'click',
+  event => {
+    /*
+     * お気に入りボタンからの操作は
+     * カード選択として扱わない。
+     */
+    if (
+      event.target.closest(
+        '.fontLibraryFavoriteButton'
+      )
+    ) {
+      return;
+    }
+
+    if (clickTimer) {
+      clearTimeout(
+        clickTimer
+      );
+
+      clickTimer =
+        null;
+
+      return;
+    }
+
+    clickTimer =
+      setTimeout(
+        () => {
+          applySelectedFont(
+            fontData.value
+          );
+
+          clickTimer =
+            null;
+        },
+        220
+      );
+  }
+);
+
+
+card.addEventListener(
+  'dblclick',
+  event => {
+    if (
+      event.target.closest(
+        '.fontLibraryFavoriteButton'
+      )
+    ) {
+      return;
+    }
+
+    if (clickTimer) {
+      clearTimeout(
+        clickTimer
+      );
+
+      clickTimer =
+        null;
+    }
+
+    applySelectedFont(
+      fontData.value,
+      {
+        closeAfter: true
+      }
+    );
+  }
+);
 
 
         return card;
@@ -878,27 +1378,40 @@ window.LyricsEditorFontLibrary =
   renderCards();
 
   if (currentFontLabel) {
-    currentFontLabel.textContent =
-      getCurrentFont?.() ||
-      'Noto Sans JP';
-  }
+  currentFontLabel.textContent =
+    selectedFontValue ||
+    getCurrentFont?.() ||
+    'Noto Sans JP';
+
+  currentFontLabel.style.fontFamily =
+    `"${selectedFontValue}", sans-serif`;
+}
 }
 
 
       function open() {
-        overlay.classList.remove(
-          'is-hidden'
-        );
+  /*
+   * Drawerを開くたびに、
+   * 現在選択中ブロックのフォントを再取得する。
+   */
+  selectedFontValue =
+    getCurrentFont?.() ||
+    selectedFontValue ||
+    'Noto Sans JP';
 
-        overlay.setAttribute(
-          'aria-hidden',
-          'false'
-        );
+  overlay.classList.remove(
+    'is-hidden'
+  );
 
-        searchInput?.focus();
+  overlay.setAttribute(
+    'aria-hidden',
+    'false'
+  );
 
-        render();
-      }
+  searchInput?.focus();
+
+  render();
+}
 
 
       function close() {

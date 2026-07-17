@@ -6151,3 +6151,168 @@ body.font-library-open
   font-size: 11px;
   font-weight: 750;
 }
+
+
+/* ==================================================
+   Font Library Selection State
+================================================== */
+
+.fontLibraryCard {
+  position: relative;
+
+  cursor: pointer;
+
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+
+.fontLibraryCard:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(
+      108,
+      178,
+      255,
+      0.56
+    );
+
+  box-shadow:
+    0 10px 28px
+      rgba(
+        0,
+        0,
+        0,
+        0.26
+      );
+}
+
+
+.fontLibraryCard.is-selected {
+  border-color:
+    rgba(
+      103,
+      191,
+      255,
+      0.96
+    );
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        54,
+        132,
+        255,
+        0.18
+      ),
+      rgba(
+        120,
+        73,
+        255,
+        0.1
+      )
+    );
+
+  box-shadow:
+    0 0 0 1px
+      rgba(
+        103,
+        191,
+        255,
+        0.26
+      ),
+    0 0 22px
+      rgba(
+        54,
+        132,
+        255,
+        0.24
+      );
+}
+
+
+.fontLibrarySelectedMark {
+  display: grid;
+
+  place-items: center;
+
+  width: 20px;
+  height: 20px;
+
+  margin-left: auto;
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      80,
+      170,
+      255,
+      0.95
+    );
+
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 900;
+
+  opacity: 0;
+
+  transform:
+    scale(0.72);
+
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+
+.fontLibraryCard.is-selected
+.fontLibrarySelectedMark {
+  opacity: 1;
+
+  transform:
+    scale(1);
+}
+
+
+.fontLibraryFavoriteButton {
+  margin-left: 4px;
+}
+
+
+.fontLibrarySideItem.is-selected {
+  border-color:
+    rgba(
+      103,
+      191,
+      255,
+      0.72
+    );
+
+  background:
+    rgba(
+      56,
+      135,
+      255,
+      0.14
+    );
+
+  color:
+    #aedaff;
+
+  box-shadow:
+    inset 3px 0 0
+      rgba(
+        103,
+        191,
+        255,
+        0.9
+      );
+}

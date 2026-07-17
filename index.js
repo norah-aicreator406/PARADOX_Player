@@ -1598,22 +1598,21 @@ async function copyCurrent() {
   await ipcRenderer.invoke('copy-text', text);
 }
 
+
 async function openVisualizer() {
-  await ipcRenderer.invoke('open-visualizer-window');
-
-  await ipcRenderer.invoke('send-visualizer-enabled', visualizerEnabled);
-  await ipcRenderer.invoke('send-visualizer-brand-name', visualizerBrandName);
-  await ipcRenderer.invoke('send-visualizer-template', visualizerTemplate);
-
-  if (currentSong) {
-    await ipcRenderer.invoke('send-song-to-visualizer', currentSong);
+  try {
+    await ipcRenderer.invoke('open-visualizer-window');
+  } catch (error) {
+    console.error('Visualizerを開けませんでした:', error);
   }
+}
 
-  if (currentBackground) {
-    await ipcRenderer.invoke('send-background-to-visualizer', currentBackground);
+async function openLyricsOutput() {
+  try {
+    await ipcRenderer.invoke('open-lyrics-output-window');
+  } catch (error) {
+    console.error('Lyrics Outputを開けませんでした:', error);
   }
-
-  await sendOverlayLayersToVisualizer();
 }
 
 function toggleSettingsPanel() {

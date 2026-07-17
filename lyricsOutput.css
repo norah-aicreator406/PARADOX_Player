@@ -1,0 +1,802 @@
+:root {
+  --lyrics-output-scale: 0.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+
+  /*
+   * Electronの透明ウィンドウとOBSの
+   * 背景透過を維持する。
+   */
+  background: transparent !important;
+}
+
+body {
+  position: relative;
+  user-select: none;
+}
+
+#lyricsOutputStage {
+  position: fixed;
+  top: 46px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  overflow: hidden;
+  background: transparent;
+  pointer-events: none;
+
+  border:
+    1px solid
+    rgba(90, 255, 225, 0.28);
+
+  box-shadow:
+    inset 0 0 0 1px
+    rgba(255, 255, 255, 0.04);
+}
+
+/*
+ * Lyrics EditorとVisualizerが基準としている
+ * 1080 × 1920の仮想キャンバス。
+ */
+#lyricsOutputCanvas {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width: 1080px;
+  height: 1920px;
+
+  transform:
+    translate(-50%, -50%)
+    scale(var(--lyrics-output-scale));
+
+  transform-origin: center center;
+
+  overflow: visible;
+  background: transparent;
+}
+
+/*
+ * LyricsRendererが生成した各歌詞ブロックを置くレイヤー。
+ */
+#lyricsOutputBlocks {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: visible;
+  pointer-events: none;
+}
+
+.lyricsOutputBlock {
+  position: absolute;
+
+  /*
+   * LyricsRendererはキャンバス中央を基準に
+   * x・y位置を計算しているため、
+   * Visualizerと同じ中央基準にする。
+   */
+  left: 50%;
+  top: 50%;
+
+  width: auto;
+  height: auto;
+
+  overflow: visible;
+  pointer-events: none;
+
+  isolation: isolate;
+  transform-style: preserve-3d;
+}
+
+/*
+ * OBSで文字の縁が粗くなりにくいようにする。
+ */
+.lyricsOutputBlock,
+.lyricsOutputBlock * {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+  backface-visibility: hidden;
+}
+
+/* ========================================
+   Lyrics Output window toolbar
+======================================== */
+
+#lyricsOutputToolbar {
+  position: fixed;
+  z-index: 10000;
+
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 46px;
+
+  display: flex;
+  align-items: stretch;
+
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(16, 18, 31, 0.96),
+      rgba(12, 24, 27, 0.96)
+    );
+
+  border-bottom:
+    1px solid
+    rgba(92, 255, 226, 0.35);
+
+  box-shadow:
+    0 8px 24px
+    rgba(0, 0, 0, 0.3);
+
+  pointer-events: auto;
+}
+
+.lyricsOutputDragArea {
+  flex: 1;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 0 14px;
+
+  /*
+   * Electronウィンドウの移動領域
+   */
+  -webkit-app-region: drag;
+
+  cursor: grab;
+}
+
+.lyricsOutputDragArea:active {
+  cursor: grabbing;
+}
+
+.lyricsOutputToolbarIcon {
+  display: grid;
+  place-items: center;
+
+  width: 26px;
+  height: 26px;
+
+  border-radius: 7px;
+
+  color: #7fffea;
+  background:
+    rgba(71, 238, 211, 0.13);
+
+  border:
+    1px solid
+    rgba(71, 238, 211, 0.45);
+
+  font-weight: 800;
+}
+
+.lyricsOutputToolbarTitle {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.lyricsOutputToolbarHint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.46);
+}
+
+.lyricsOutputWindowActions {
+  display: flex;
+  align-items: stretch;
+
+  /*
+   * ドラッグ領域からボタンを除外する
+   */
+  -webkit-app-region: no-drag;
+}
+
+.lyricsOutputWindowActions button {
+  width: 46px;
+
+  border: 0;
+  border-left:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+
+  color: rgba(255, 255, 255, 0.84);
+  background: transparent;
+
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.lyricsOutputWindowActions button:hover {
+  background:
+    rgba(255, 255, 255, 0.09);
+}
+
+#lyricsOutputCloseButton:hover {
+  background:
+    rgba(230, 62, 83, 0.88);
+  color: #ffffff;
+}
+
+/* ========================================
+   Lyrics Renderer compatibility
+======================================== */
+
+.lyricsMotionWrapper {
+  width: 100%;
+
+  --lyrics-motion-duration: 0.5s;
+
+  will-change:
+    transform,
+    opacity,
+    filter;
+}
+
+.lyricsHoldWrapper {
+  width: 100%;
+
+  transform-origin: center center;
+
+  --lyrics-hold-duration: 2s;
+  --lyrics-hold-strength: 12;
+
+  will-change:
+    transform,
+    opacity,
+    filter;
+}
+
+
+/* ========================================
+   IN animations
+======================================== */
+
+@keyframes lyricsFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-fade {
+  animation:
+    lyricsFadeIn
+    var(--lyrics-motion-duration)
+    ease-out
+    both;
+}
+
+
+@keyframes lyricsSlideUpIn {
+  from {
+    opacity: 0;
+    transform: translateY(36px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-slide-up {
+  animation:
+    lyricsSlideUpIn
+    var(--lyrics-motion-duration)
+    cubic-bezier(.22, .8, .32, 1)
+    both;
+}
+
+
+@keyframes lyricsSlideDownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-36px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-slide-down {
+  animation:
+    lyricsSlideDownIn
+    var(--lyrics-motion-duration)
+    cubic-bezier(.22, .8, .32, 1)
+    both;
+}
+
+
+@keyframes lyricsSlideLeftIn {
+  from {
+    opacity: 0;
+    transform: translateX(48px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-slide-left {
+  animation:
+    lyricsSlideLeftIn
+    var(--lyrics-motion-duration)
+    cubic-bezier(.22, .8, .32, 1)
+    both;
+}
+
+
+@keyframes lyricsSlideRightIn {
+  from {
+    opacity: 0;
+    transform: translateX(-48px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-slide-right {
+  animation:
+    lyricsSlideRightIn
+    var(--lyrics-motion-duration)
+    cubic-bezier(.22, .8, .32, 1)
+    both;
+}
+
+
+@keyframes lyricsZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(.82);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-zoom {
+  animation:
+    lyricsZoomIn
+    var(--lyrics-motion-duration)
+    cubic-bezier(.22, .8, .32, 1)
+    both;
+}
+
+
+@keyframes lyricsBlurIn {
+  from {
+    opacity: 0;
+    filter: blur(18px);
+    transform: scale(1.06);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-blur-in {
+  animation:
+    lyricsBlurIn
+    var(--lyrics-motion-duration)
+    ease-out
+    both;
+}
+
+
+@keyframes lyricsRotateIn {
+  from {
+    opacity: 0;
+    transform:
+      rotate(-8deg)
+      scale(.88);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      rotate(0deg)
+      scale(1);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-rotate-in {
+  transform-origin: center;
+
+  animation:
+    lyricsRotateIn
+    var(--lyrics-motion-duration)
+    cubic-bezier(.22, .8, .32, 1)
+    both;
+}
+
+
+@keyframes lyricsBounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(.55);
+  }
+
+  55% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+
+  75% {
+    transform: scale(.94);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-bounce-in {
+  animation:
+    lyricsBounceIn
+    var(--lyrics-motion-duration)
+    cubic-bezier(.22, .9, .28, 1.2)
+    both;
+}
+
+
+@keyframes lyricsGlitchIn {
+  0% {
+    opacity: 0;
+
+    transform:
+      translateX(-18px)
+      skewX(-8deg);
+
+    filter: hue-rotate(90deg);
+
+    text-shadow:
+      6px 0 #00ffff,
+      -6px 0 #ff00aa;
+  }
+
+  25% {
+    opacity: 1;
+
+    transform:
+      translateX(12px)
+      skewX(5deg);
+  }
+
+  45% {
+    transform: translateX(-8px);
+
+    text-shadow:
+      -4px 0 #00ffff,
+      4px 0 #ff00aa;
+  }
+
+  70% {
+    transform: translateX(4px);
+  }
+
+  100% {
+    opacity: 1;
+
+    transform:
+      translateX(0)
+      skewX(0);
+
+    filter: none;
+    text-shadow: inherit;
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-glitch {
+  animation:
+    lyricsGlitchIn
+    var(--lyrics-motion-duration)
+    steps(2, end)
+    both;
+}
+
+
+@keyframes lyricsNeonFlickerIn {
+  0%,
+  12%,
+  22% {
+    opacity: 0;
+    filter: brightness(.35);
+  }
+
+  6%,
+  18%,
+  28% {
+    opacity: 1;
+    filter: brightness(2.2);
+  }
+
+  42% {
+    opacity: .4;
+    filter: brightness(.8);
+  }
+
+  58% {
+    opacity: 1;
+    filter: brightness(2.6);
+  }
+
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+.lyricsMotionWrapper.lyrics-motion-neon-flicker {
+  animation:
+    lyricsNeonFlickerIn
+    var(--lyrics-motion-duration)
+    linear
+    both;
+}
+
+
+/* ========================================
+   HOLD animations
+======================================== */
+
+@keyframes lyricsHoldHover {
+  0%,
+  100% {
+    transform:
+      translateY(
+        calc(
+          var(--lyrics-hold-strength, 12)
+          * -1px
+        )
+      );
+  }
+
+  50% {
+    transform:
+      translateY(
+        calc(
+          var(--lyrics-hold-strength, 12)
+          * 1px
+        )
+      );
+  }
+}
+
+.lyricsHoldWrapper.lyrics-hold-hover {
+  animation:
+    lyricsHoldHover
+    var(--lyrics-hold-duration)
+    ease-in-out
+    infinite;
+}
+
+
+@keyframes lyricsHoldPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform:
+      scale(
+        calc(
+          1 +
+          var(--lyrics-hold-strength, 12)
+          * .002
+        )
+      );
+  }
+}
+
+.lyricsHoldWrapper.lyrics-hold-pulse {
+  animation:
+    lyricsHoldPulse
+    var(--lyrics-hold-duration)
+    ease-in-out
+    infinite;
+}
+
+
+@keyframes lyricsHoldBreathing {
+  0%,
+  100% {
+    transform: scale(.985);
+    opacity: .92;
+  }
+
+  50% {
+    transform:
+      scale(
+        calc(
+          1 +
+          var(--lyrics-hold-strength, 12)
+          * .0015
+        )
+      );
+
+    opacity: 1;
+  }
+}
+
+.lyricsHoldWrapper.lyrics-hold-breathing {
+  animation:
+    lyricsHoldBreathing
+    var(--lyrics-hold-duration)
+    ease-in-out
+    infinite;
+}
+
+
+@keyframes lyricsHoldShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform:
+      translateX(
+        calc(
+          var(--lyrics-hold-strength, 12)
+          * -.18px
+        )
+      );
+  }
+
+  75% {
+    transform:
+      translateX(
+        calc(
+          var(--lyrics-hold-strength, 12)
+          * .18px
+        )
+      );
+  }
+}
+
+.lyricsHoldWrapper.lyrics-hold-shake {
+  animation:
+    lyricsHoldShake
+    var(--lyrics-hold-duration)
+    linear
+    infinite;
+}
+
+
+/* ========================================
+   Song Info
+======================================== */
+
+#lyricsOutputSongInfo {
+  display: none;
+
+  position: absolute;
+  left: 50%;
+  bottom: 105px;
+
+  width: 86%;
+
+  transform: translateX(-50%);
+
+  text-align: center;
+  color: #ffffff;
+
+  pointer-events: none;
+}
+
+#lyricsOutputSongInfo.is-visible {
+  display: block;
+}
+
+#lyricsOutputTitle {
+  font-size: 56px;
+  line-height: 1.08;
+  font-weight: 800;
+
+  color: #ffffff;
+
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, .28),
+    0 0 18px rgba(124, 251, 255, .22);
+}
+
+#lyricsOutputArtist {
+  margin-top: 20px;
+
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: .22em;
+
+  color: #9f8cff;
+
+  /*
+   * 登録された表記を維持する。
+   */
+  text-transform: none;
+
+  text-shadow:
+    0 0 10px rgba(159, 140, 255, .62),
+    0 0 20px rgba(255, 79, 216, .22);
+}
+
+#lyricsOutputTime {
+  margin-top: 20px;
+
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: .08em;
+
+  color:
+    rgba(255, 255, 255, .86);
+}
+
+.lyricsOutputTimeDivider {
+  opacity: .45;
+}
+
+.lyricsOutputSongLine {
+  width: 720px;
+  max-width: 70%;
+  height: 1px;
+
+  margin:
+    0 auto 34px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(124, 251, 255, .9),
+      rgba(255, 79, 216, .65),
+      transparent
+    );
+
+  box-shadow:
+    0 0 14px
+    rgba(124, 251, 255, .45);
+}
+
+.lyricsOutputBottomLine {
+  margin:
+    34px auto 0;
+
+  opacity: .75;
+}
