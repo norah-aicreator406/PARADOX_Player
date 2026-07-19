@@ -30,8 +30,17 @@ window.LyricsRenderer = {
     targetElement.style.transform =
       `translate(-50%, -50%) translate(${Number(position.x) || 0}px, ${Number(position.y) || 0}px) rotate(${rotation}deg)`;
 
-    targetElement.style.fontFamily =
-  `"${style.font || 'Noto Sans JP'}", sans-serif`;
+    const selectedFont =
+  String(
+    style.font ||
+    'Noto Sans JP'
+  ).trim();
+
+targetElement.style.setProperty(
+  'font-family',
+  `"${selectedFont}", sans-serif`,
+  'important'
+);
     targetElement.style.fontSize = `${Number(style.size) || 72}px`;
     targetElement.style.color = style.color || '#ffffff';
     targetElement.style.textAlign = style.align || 'center';
@@ -67,12 +76,24 @@ const holdWrapper =
 holdWrapper.className =
   'lyricsHoldWrapper';
 
+holdWrapper.style.setProperty(
+  'font-family',
+  'inherit',
+  'important'
+);
+
 lines.forEach(line => {
   const div =
     document.createElement('div');
 
   div.className =
     'lyricsLine';
+
+  div.style.setProperty(
+    'font-family',
+    'inherit',
+    'important'
+  );
 
   div.textContent =
     line;
