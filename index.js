@@ -724,37 +724,33 @@ migrateLibraryButton
 
 
 const librarySearchInput =
-  document.getElementById(
-    'searchInput'
-  );
+  document.getElementById('searchInput');
 
 const clearLibrarySearchButton =
   document.getElementById(
     'clearLibrarySearchButton'
   );
 
-librarySearchInput
-  ?.addEventListener(
-    'input',
-    () => {
-      renderLibrarySongs();
-      updateLibrarySearchClearButton();
-    }
-  );
+librarySearchInput?.addEventListener(
+  'input',
+  () => {
+    renderLibrarySongs();
+    updateLibrarySearchClearButton();
+  }
+);
 
-clearLibrarySearchButton
-  ?.addEventListener(
-    'click',
-    () => {
-      if (!librarySearchInput) return;
+clearLibrarySearchButton?.addEventListener(
+  'click',
+  () => {
+    if (!librarySearchInput) return;
 
-      librarySearchInput.value = '';
-      librarySearchInput.focus();
+    librarySearchInput.value = '';
+    librarySearchInput.focus();
 
-      renderLibrarySongs();
-      updateLibrarySearchClearButton();
-    }
-  );
+    renderLibrarySongs();
+    updateLibrarySearchClearButton();
+  }
+);
 
 updateLibrarySearchClearButton();
 
@@ -3840,4 +3836,22 @@ async function refreshLibrarySettingsDisplay() {
       );
     }
   }
+}
+
+
+function updateLibrarySearchClearButton() {
+  const input =
+    document.getElementById('searchInput');
+
+  const clearButton =
+    document.getElementById(
+      'clearLibrarySearchButton'
+    );
+
+  if (!input || !clearButton) return;
+
+  clearButton.classList.toggle(
+    'show',
+    input.value.trim().length > 0
+  );
 }

@@ -3126,6 +3126,54 @@ body {
 }
 
 
+.librarySearchBox {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+#searchInput {
+  width: 100%;
+  padding-right: 46px;
+}
+
+.clearLibrarySearchButton {
+  display: none;
+
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 30px;
+  height: 30px;
+  min-height: 0;
+  padding: 0;
+
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+
+  font-size: 18px;
+  line-height: 1;
+}
+
+.clearLibrarySearchButton.show {
+  display: flex;
+}
+
+.clearLibrarySearchButton:hover {
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  box-shadow: none;
+}
+
 </style>
 </head>
 
