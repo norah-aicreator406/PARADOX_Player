@@ -67,6 +67,17 @@ const bottomSeekBar = document.getElementById('bottomSeekBar');
 const bottomCurrentTime = document.getElementById('bottomCurrentTime');
 const bottomDuration = document.getElementById('bottomDuration');
 const bottomPlayPauseButton = document.getElementById('bottomPlayPauseButton');
+const bottomFavoriteButton = document.getElementById('bottomFavoriteButton');
+
+
+
+if (bottomFavoriteButton) {
+  bottomFavoriteButton.addEventListener('click', () => {
+    if (!currentSong?.id) return;
+
+    toggleSongFavorite(currentSong.id);
+  });
+}
 
 audio.addEventListener('loadedmetadata', () => {
   if (bottomDuration) {
@@ -684,25 +695,6 @@ initializeOutputRouting();
 });
 
 
-function updateStudioHeaderStats() {
-  const artistCountLabel = document.getElementById('artistCountLabel');
-  const songCountLabel = document.getElementById('songCountLabel');
-  const queueCountLabel = document.getElementById('queueCountLabel');
-
-  if (artistCountLabel) {
-    artistCountLabel.textContent = data.length;
-  }
-
-  if (songCountLabel) {
-    songCountLabel.textContent =
-      data.reduce((total, artist) => total + artist.songs.length, 0);
-  }
-
-  if (queueCountLabel) {
-    queueCountLabel.textContent = `${queue.length} / ${MAX_QUEUE}`;
-  }
-}
-
 
 async function loadSongs() {
   try {
@@ -710,10 +702,6 @@ async function loadSongs() {
 
    data = await ipcRenderer.invoke('get-songs');
 
-document.getElementById("songCountLabel").textContent =
-  data.reduce((total, artist) => total + artist.songs.length, 0);
-
-  updateStudioHeaderStats();
 
 applySavedArtistOrder();
 
@@ -855,6 +843,46 @@ function renderLibraryTabs() {
 }
 
 
+
+function toggleSongFavorite(songId) {
+  if (!songId) return null;
+
+  const library = loadLibrary();
+  const targetSong = library.find(song => song.id === songId);
+
+  if (!targetSong) {
+    console.warn('お気に入り対象の曲が見つかりません:', songId);
+    return null;
+  }
+
+  const updatedSong = updateSong(songId, {
+    favorite: !Boolean(targetSong.favorite)
+  });
+
+  if (!updatedSong) {
+    console.warn('お気に入り状態を保存できませんでした:', songId);
+    return null;
+  }
+
+  // インスペクタで選択している曲も最新状態へ更新
+  if (selectedLibrarySong?.id === updatedSong.id) {
+    selectedLibrarySong = updatedSong;
+    updateSongInspector(updatedSong);
+  }
+
+  // 再生中の曲も最新状態へ更新
+  if (currentSong?.id === updatedSong.id) {
+    currentSong = createPlayableLibrarySong(updatedSong);
+    updateBottomPlayer(currentSong);
+  }
+
+  renderLibrarySongs();
+
+  return updatedSong;
+}
+
+
+
 function renderLibrarySongs() {
   const library = loadLibrary();
   const songsContainer = document.getElementById('songs');
@@ -947,14 +975,32 @@ currentPlaybackList = filteredLibrary.map(song =>
     予約
   </button>
 
-  <button class="libraryFavoriteButton">
-    ${song.favorite ? '♥' : '♡'}
-  </button>
+  <button
+  class="libraryFavoriteButton ${song.favorite ? 'isFavorite' : ''}"
+  title="${song.favorite ? 'お気に入りから解除' : 'お気に入りに追加'}"
+  aria-pressed="${song.favorite ? 'true' : 'false'}"
+  type="button"
+>
+  ${song.favorite ? '♥' : '♡'}
+</button>
 
   <button class="libraryDeleteButton" title="削除">
     ×
   </button>
 `;
+
+
+const favoriteButton =
+  songElement.querySelector('.libraryFavoriteButton');
+
+if (favoriteButton) {
+  favoriteButton.addEventListener('click', event => {
+    event.stopPropagation();
+
+    toggleSongFavorite(song.id);
+  });
+}
+
 
 const reserveButton = songElement.querySelector('.libraryReserveButton');
 
@@ -1388,6 +1434,31 @@ function updateBottomPlayer(song) {
       ? `url("${pathToFileURL(song.artworkPath).href}")`
       : '';
   }
+
+const bottomFavoriteButton =
+  document.getElementById('bottomFavoriteButton');
+
+if (bottomFavoriteButton) {
+  const isFavorite = Boolean(song.favorite);
+
+  bottomFavoriteButton.textContent =
+    isFavorite ? '♥' : '♡';
+
+  bottomFavoriteButton.classList.toggle(
+    'isFavorite',
+    isFavorite
+  );
+
+  bottomFavoriteButton.setAttribute(
+    'aria-pressed',
+    String(isFavorite)
+  );
+
+  bottomFavoriteButton.title =
+    isFavorite
+      ? 'お気に入りから解除'
+      : 'お気に入りに追加';
+}
 }
 
 function updateSongInspector(song) {
@@ -2378,7 +2449,6 @@ function renderQueue() {
 
     queueList.appendChild(row);
   }
-updateStudioHeaderStats();
 
 }
 

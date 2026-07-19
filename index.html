@@ -112,14 +112,31 @@ color:#fff;
 
 body {
   margin: 0;
-  min-height: 100vh;
+  width: 100%;
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+
   background:
-    radial-gradient(circle at 20% 0%, rgba(80, 60, 160, 0.18), transparent 32%),
-    radial-gradient(circle at 85% 15%, rgba(0, 255, 204, 0.08), transparent 28%),
+    radial-gradient(
+      circle at 20% 0%,
+      rgba(80, 60, 160, 0.18),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 85% 15%,
+      rgba(0, 255, 204, 0.08),
+      transparent 28%
+    ),
     #08090d;
+
   color: #fff;
   font-family: system-ui, sans-serif;
-  padding: 24px 24px 118px;
+
+  padding: 24px 24px 148px;
   box-sizing: border-box;
 }
 
@@ -136,6 +153,8 @@ h1 {
   backdrop-filter: none;
   padding: 0;
   border-bottom: none;
+  flex: 0 0 auto;
+  min-height: 0;
 }
 
 #playerPanel {
@@ -1101,11 +1120,16 @@ flex-wrap:wrap;
 }
 
 #studioWorkspace {
+  flex: 1 1 auto;
+  min-height: 0;
+
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr) 360px;
   gap: 24px;
+
   margin-top: 24px;
-  align-items: start;
+  align-items: stretch;
+  overflow: hidden;
 }
 
 #studioInspector{
@@ -1490,10 +1514,21 @@ line-height:1.8;
 }
 
 #libraryArea {
-  min-height: 560px;
+  min-height: 0;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
   padding: 18px;
   border-radius: 24px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.045),
+      rgba(255,255,255,0.02)
+    );
   border: 1px solid rgba(255,255,255,0.10);
   box-shadow: 0 24px 70px rgba(0,0,0,0.28);
 }
@@ -2112,6 +2147,371 @@ body {
     rgba(19, 241, 211, 0.12);
 }
 
+html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+#librarySidebar {
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+
+
+#songs {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  padding-right: 4px;
+}
+
+
+
+/* =========================================================
+   PLAYER LAYOUT FIX
+   ========================================================= */
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  box-sizing: border-box;
+  padding: 0 16px;
+}
+
+/* ---------------------------------------------------------
+   NORAH Studio ヘッダーをコンパクト化
+   --------------------------------------------------------- */
+
+#fixedHeader {
+  flex: none;
+  height: 108px;
+  min-height: 108px;
+  padding: 0;
+  overflow: hidden;
+}
+
+#studioHeader {
+  height: 100%;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 18px 0 10px;
+}
+
+.studioTitle {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.studioSubtitle {
+  margin-top: 7px;
+  font-size: 11px;
+}
+
+/* 右側の集計を削除済みなので余分な領域を持たせない */
+.studioProjectInfo {
+  display: none;
+}
+
+/* ---------------------------------------------------------
+   3ペインのワークスペース
+   上124px、下Player約126pxを差し引く
+   --------------------------------------------------------- */
+
+#studioWorkspace {
+  position: fixed;
+
+  top: 104px;
+  left: 16px;
+  right: 16px;
+  bottom: 132px;
+
+  min-height: 0;
+  margin: 0;
+
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr) 380px;
+  gap: 26px;
+  align-items: stretch;
+
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------
+   左ペイン
+   --------------------------------------------------------- */
+
+#librarySidebar {
+  height: 100%;
+  min-height: 0;
+
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  padding: 18px;
+}
+
+/* 古い560px指定を無効化 */
+#librarySidebar {
+  min-height: 0 !important;
+}
+
+/* ---------------------------------------------------------
+   中央ライブラリ
+   --------------------------------------------------------- */
+
+#libraryArea {
+  height: 100%;
+  min-height: 0 !important;
+
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 18px;
+  overflow: hidden;
+}
+
+#searchInput {
+  height: 42px;
+  box-sizing: border-box;
+}
+
+/* タブを必ず表示領域に固定 */
+#libraryFilterTabs {
+  flex: 0 0 auto;
+
+  min-height: 38px;
+  margin: 14px 0 14px;
+  padding: 0 0 2px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  position: relative;
+  z-index: 2;
+}
+
+/* 曲一覧だけをスクロール */
+#songs {
+  flex: 1 1 auto;
+  min-height: 0;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  padding-right: 6px;
+}
+
+/* ---------------------------------------------------------
+   右インスペクタ
+   --------------------------------------------------------- */
+
+#studioInspector {
+  height: 100%;
+  min-height: 0 !important;
+
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 20px;
+
+  overflow: hidden;
+}
+
+/* インスペクター見出しとタブは固定 */
+.inspectorHeader,
+.inspectorTabs {
+  flex: 0 0 auto;
+}
+
+/* 表示中ページだけスクロール */
+.inspectorPage.active {
+  display: block;
+
+  flex: 1 1 auto;
+  min-height: 0;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  padding-right: 6px;
+}
+
+/* 非表示ページは完全に消す */
+.inspectorPage:not(.active) {
+  display: none;
+}
+
+/* ---------------------------------------------------------
+   下部Player
+   --------------------------------------------------------- */
+
+#bottomPlayerBar {
+  position: fixed;
+
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+
+  height: 104px;
+
+  box-sizing: border-box;
+  z-index: 1000;
+}
+
+
+
+/* =========================================================
+   PLAYER UI 微調整
+   ========================================================= */
+
+/* 検索欄を少し上へ */
+#searchInput {
+  transform: translateY(-8px);
+  margin-bottom: -4px;
+}
+
+/* ---------------------------------------------------------
+   スクロールバーを細く整える
+   --------------------------------------------------------- */
+
+#songs,
+.inspectorPage.active,
+#librarySidebar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(19, 241, 211, 0.45) transparent;
+}
+
+#songs::-webkit-scrollbar,
+.inspectorPage.active::-webkit-scrollbar,
+#librarySidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+#songs::-webkit-scrollbar-track,
+.inspectorPage.active::-webkit-scrollbar-track,
+#librarySidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#songs::-webkit-scrollbar-thumb,
+.inspectorPage.active::-webkit-scrollbar-thumb,
+#librarySidebar::-webkit-scrollbar-thumb {
+  background: rgba(19, 241, 211, 0.30);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+#songs::-webkit-scrollbar-thumb:hover,
+.inspectorPage.active::-webkit-scrollbar-thumb:hover,
+#librarySidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(19, 241, 211, 0.55);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* ---------------------------------------------------------
+   インスペクタのジャケットを小さく
+   --------------------------------------------------------- */
+
+.songInfoArtwork {
+  width: min(260px, 100%);
+  aspect-ratio: 1 / 1;
+  align-self: center;
+  flex: 0 0 auto;
+}
+
+
+
+/* =========================================================
+   ライブラリ上部の位置・タブ欠け修正
+   ========================================================= */
+
+/* 検索欄・タブ周辺を全体的に上へ */
+#libraryArea {
+  padding-top: 12px;
+}
+
+/* 検索欄をさらに少し上へ */
+#searchInput {
+  transform: translateY(-6px);
+  margin-bottom: -6px;
+}
+
+/* タブがホバー時に欠けない余白を確保 */
+#libraryFilterTabs {
+  padding-top: 8px;
+  margin-top: -2px;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+/* ホバーで上がりすぎないようにする */
+.libraryFilterTab:hover {
+  transform: translateY(-2px);
+}
+
+/* 選択中タブも上端で欠けないようにする */
+.libraryFilterTab.active {
+  transform: none;
+}
+
+
+
+/* =========================================================
+   FAVORITE
+   ========================================================= */
+
+.libraryFavoriteButton,
+#bottomFavoriteButton {
+  transition:
+    color 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease,
+    transform 0.16s ease;
+}
+
+.libraryFavoriteButton.isFavorite,
+#bottomFavoriteButton.isFavorite {
+  color: #ff6f91;
+  border-color: rgba(255, 111, 145, 0.46);
+  background: rgba(255, 111, 145, 0.12);
+}
+
+.libraryFavoriteButton:hover,
+#bottomFavoriteButton:hover {
+  transform: none;
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.libraryFavoriteButton.isFavorite:hover,
+#bottomFavoriteButton.isFavorite:hover {
+  border-color: rgba(255, 111, 145, 0.72);
+  background: rgba(255, 111, 145, 0.18);
+}
+
+
 </style>
 </head>
 
@@ -2326,24 +2726,6 @@ body {
 
   </div>
 
-  <div class="studioProjectInfo">
-
-    <div class="projectInfoItem">
-  <span>アーティスト</span>
-  <strong id="artistCountLabel">0</strong>
-</div>
-
-<div class="projectInfoItem">
-  <span>曲</span>
-  <strong id="songCountLabel">0</strong>
-</div>
-
-<div class="projectInfoItem">
-  <span>予約</span>
-  <strong id="queueCountLabel">0 / 5</strong>
-</div>
-
-  </div>
 
 </div>
 
@@ -2677,7 +3059,10 @@ body {
 </div>
 
 
-<section class="inspectorSection inspectorPage" data-inspector-page="songInfo">
+<section
+  class="inspectorSection inspectorPage active"
+  data-inspector-page="songInfo"
+>
   <div class="inspectorSectionTitle">Song Info</div>
   <div class="inspectorSectionDesc">選択中の曲情報</div>
 
@@ -2767,7 +3152,7 @@ body {
 
 
 
-  <section class="inspectorSection inspectorPage active" data-inspector-page="theme">
+  <section class="inspectorSection inspectorPage" data-inspector-page="theme">
     <div class="inspectorSectionTitle">Visual Theme</div>
     <div class="inspectorSectionDesc">配信画面の世界観を選択</div>
 
@@ -2810,7 +3195,14 @@ body {
       <div id="bottomArtist">-</div>
     </div>
 
-    <button class="bottomIconButton" title="お気に入り">♡</button>
+    <button
+  id="bottomFavoriteButton"
+  class="bottomIconButton"
+  title="お気に入り"
+  type="button"
+>
+  ♡
+</button>
   </div>
 
   <div class="bottomCenter">
