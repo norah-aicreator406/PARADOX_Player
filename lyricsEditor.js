@@ -1571,11 +1571,9 @@ function setupInlineLyricsTextEdit() {
 previewLyrics.classList.add('is-editing');
 previewLyrics.focus();
 
-requestAnimationFrame(() => {
-  const selection = window.getSelection();
+const selection = window.getSelection();
 
-  if (!selection) return;
-
+if (selection) {
   selection.removeAllRanges();
 
   let range = null;
@@ -1593,14 +1591,13 @@ requestAnimationFrame(() => {
   ) {
     range.collapse(true);
     selection.addRange(range);
-    return;
+  } else {
+    range = document.createRange();
+    range.selectNodeContents(previewLyrics);
+    range.collapse(false);
+    selection.addRange(range);
   }
-
-  range = document.createRange();
-  range.selectNodeContents(previewLyrics);
-  range.collapse(false);
-  selection.addRange(range);
-});
+}
 
 event.preventDefault();
 event.stopPropagation();
