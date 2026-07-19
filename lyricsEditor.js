@@ -1568,18 +1568,42 @@ function setupInlineLyricsTextEdit() {
   originalText = editingBlock.text || '';
 
   previewLyrics.contentEditable = 'true';
-  previewLyrics.classList.add('is-editing');
-  previewLyrics.focus();
+previewLyrics.classList.add('is-editing');
+previewLyrics.focus();
 
-  const range = document.createRange();
-  range.selectNodeContents(previewLyrics);
-
+requestAnimationFrame(() => {
   const selection = window.getSelection();
-  selection.removeAllRanges();
-  selection.addRange(range);
 
-  event.preventDefault();
-  event.stopPropagation();
+  if (!selection) return;
+
+  selection.removeAllRanges();
+
+  let range = null;
+
+  if (document.caretRangeFromPoint) {
+    range = document.caretRangeFromPoint(
+      event.clientX,
+      event.clientY
+    );
+  }
+
+  if (
+    range &&
+    previewLyrics.contains(range.startContainer)
+  ) {
+    range.collapse(true);
+    selection.addRange(range);
+    return;
+  }
+
+  range = document.createRange();
+  range.selectNodeContents(previewLyrics);
+  range.collapse(false);
+  selection.addRange(range);
+});
+
+event.preventDefault();
+event.stopPropagation();
 });
 
   previewLyrics.addEventListener('keydown', (event) => {
@@ -1603,6 +1627,18 @@ function setupInlineLyricsTextEdit() {
   });
 
   function finishInlineLyricsEdit() {
+
+   document.addEventListener('pointerdown', (event) => {
+
+    if (!editingBlock) return;
+
+    if (event.target.closest('#editorPreviewLyrics')) {
+        return;
+    }
+
+    finishInlineLyricsEdit();
+
+});
     if (!editingBlock) return;
 
     const nextText = previewLyrics.innerText.trim();
@@ -2948,9 +2984,11 @@ function updateEditorPreviewByTimeline() {
   );
 
   const signature =
-    currentBlocks
-      .map(block => block.id)
-      .join('|');
+  JSON.stringify(
+    currentBlocks.map(
+      block => block.id
+    )
+  );
 
   // 同じ歌詞構成なら再描画しない
   if (signature === lastEditorActiveLyricsSignature) {
