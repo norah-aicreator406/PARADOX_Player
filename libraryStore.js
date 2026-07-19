@@ -461,11 +461,11 @@ function addSongFromFile(filePath, meta = {}) {
     updatedAt: now
   };
 
-  const songs = loadLibrary();
-
-  songs.push(song);
-  saveLibrary(songs);
-
+  try {
+  /*
+    先にproject.jsonを完成させる。
+    これが成功するまではlibrary.jsonへ登録しない。
+  */
   fs.writeFileSync(
     song.projectPath,
     JSON.stringify(
@@ -476,7 +476,34 @@ function addSongFromFile(filePath, meta = {}) {
     'utf-8'
   );
 
+  /*
+    必要ファイルの作成後に、
+    ライブラリ一覧へ正式登録する。
+  */
+  const songs = loadLibrary();
+
+  songs.push(song);
+  saveLibrary(songs);
+
   return song;
+} catch (error) {
+  /*
+    登録途中で失敗した場合は、
+    中途半端に作成された曲フォルダを削除する。
+  */
+  if (fs.existsSync(songDir)) {
+    fs.rmSync(songDir, {
+      recursive: true,
+      force: true
+    });
+  }
+
+  throw new Error(
+    `曲をライブラリへ登録できませんでした: ${
+      error.message || error
+    }`
+  );
+}
 }
 
 function getSongById(songId) {

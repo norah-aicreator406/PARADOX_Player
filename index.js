@@ -11,6 +11,9 @@ const {
 } = require('./libraryStore');
 const { ipcRenderer, webUtils } = require('electron');
 
+const LIBRARY_SIDEBAR_COLLAPSED_KEY =
+  'norahStudioLibrarySidebarCollapsed';
+
 let data = [];
 let currentIndex = 0;
 let currentSong = null;
@@ -469,6 +472,8 @@ let queueOffsetX = 0;
 let queueOffsetY = 0;
 
 window.addEventListener('DOMContentLoaded', () => {
+  initializeLibrarySidebarCollapse();
+
   const queueWindow = document.getElementById('queueFloatingWindow');
   const queueHeader = document.getElementById('queueFloatingHeader');
 
@@ -698,10 +703,6 @@ const openLibraryFolderButton =
     'openLibraryFolderButton'
   );
 
-const selectExistingLibraryButton =
-  document.getElementById(
-    'selectExistingLibraryButton'
-  );
 
 const migrateLibraryButton =
   document.getElementById(
@@ -714,11 +715,6 @@ openLibraryFolderButton
     openCurrentLibraryFolder
   );
 
-selectExistingLibraryButton
-  ?.addEventListener(
-    'click',
-    selectExistingLibraryFolder
-  );
 
 migrateLibraryButton
   ?.addEventListener(
@@ -727,10 +723,184 @@ migrateLibraryButton
   );
 
 
+const librarySearchInput =
+  document.getElementById(
+    'searchInput'
+  );
+
+const clearLibrarySearchButton =
+  document.getElementById(
+    'clearLibrarySearchButton'
+  );
+
+librarySearchInput
+  ?.addEventListener(
+    'input',
+    () => {
+      renderLibrarySongs();
+      updateLibrarySearchClearButton();
+    }
+  );
+
+clearLibrarySearchButton
+  ?.addEventListener(
+    'click',
+    () => {
+      if (!librarySearchInput) return;
+
+      librarySearchInput.value = '';
+      librarySearchInput.focus();
+
+      renderLibrarySongs();
+      updateLibrarySearchClearButton();
+    }
+  );
+
+updateLibrarySearchClearButton();
+
+
+
+const studioWorkspace =
+  document.getElementById(
+    'studioWorkspace'
+  );
+
+const collapseLibrarySidebarButton =
+  document.getElementById(
+    'collapseLibrarySidebarButton'
+  );
+
+const expandLibrarySidebarButton =
+  document.getElementById(
+    'expandLibrarySidebarButton'
+  );
+
+function setLibrarySidebarCollapsed(
+  collapsed
+) {
+  if (!studioWorkspace) return;
+
+  studioWorkspace.classList.toggle(
+    'librarySidebarCollapsed',
+    collapsed
+  );
+
+  localStorage.setItem(
+    LIBRARY_SIDEBAR_COLLAPSED_KEY,
+    String(collapsed)
+  );
+}
+
+collapseLibrarySidebarButton
+  ?.addEventListener(
+    'click',
+    () => {
+      setLibrarySidebarCollapsed(true);
+    }
+  );
+
+expandLibrarySidebarButton
+  ?.addEventListener(
+    'click',
+    () => {
+      setLibrarySidebarCollapsed(false);
+    }
+  );
+
+const savedSidebarCollapsed =
+  localStorage.getItem(
+    LIBRARY_SIDEBAR_COLLAPSED_KEY
+  ) === 'true';
+
+setLibrarySidebarCollapsed(
+  savedSidebarCollapsed
+);
+
+
 initializeOutputRouting();
 
 
 });
+
+
+
+function initializeLibrarySidebarCollapse() {
+  const workspace =
+    document.getElementById(
+      'studioWorkspace'
+    );
+
+  const collapseButton =
+    document.getElementById(
+      'collapseLibrarySidebarButton'
+    );
+
+  const expandButton =
+    document.getElementById(
+      'expandLibrarySidebarButton'
+    );
+
+  if (
+    !workspace ||
+    !collapseButton ||
+    !expandButton
+  ) {
+    console.warn(
+      'Library sidebar collapse elements were not found.',
+      {
+        workspace,
+        collapseButton,
+        expandButton
+      }
+    );
+
+    return;
+  }
+
+  function setCollapsed(collapsed) {
+    workspace.classList.toggle(
+      'librarySidebarCollapsed',
+      collapsed
+    );
+
+    collapseButton.setAttribute(
+      'aria-expanded',
+      String(!collapsed)
+    );
+
+    expandButton.setAttribute(
+      'aria-expanded',
+      String(!collapsed)
+    );
+
+    localStorage.setItem(
+      LIBRARY_SIDEBAR_COLLAPSED_KEY,
+      String(collapsed)
+    );
+  }
+
+  collapseButton.addEventListener(
+    'click',
+    () => {
+      setCollapsed(true);
+    }
+  );
+
+  expandButton.addEventListener(
+    'click',
+    () => {
+      setCollapsed(false);
+    }
+  );
+
+  const savedCollapsed =
+    localStorage.getItem(
+      LIBRARY_SIDEBAR_COLLAPSED_KEY
+    ) === 'true';
+
+  setCollapsed(savedCollapsed);
+}
+
 
 
 
@@ -941,6 +1111,34 @@ function renderLibrarySongs() {
 
 
   let filteredLibrary = [...library];
+  const searchKeyword =
+  document
+    .getElementById('searchInput')
+    ?.value
+    .trim()
+    .toLowerCase() || '';
+
+if (searchKeyword) {
+  filteredLibrary =
+    filteredLibrary.filter(song => {
+      const searchableText = [
+        song.title,
+        song.artist,
+        song.album,
+        song.genre,
+        ...(Array.isArray(song.tags)
+          ? song.tags
+          : String(song.tags || '').split(','))
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return searchableText.includes(
+        searchKeyword
+      );
+    });
+}
 
 if (activeLibraryFilter.type === 'favorite') {
   filteredLibrary = filteredLibrary.filter(song => song.favorite);
@@ -1087,13 +1285,7 @@ if (playlistAddButton) {
     */
     updateSongInspector(song);
 
-    /*
-      下部Playerにも選択曲を読み込む
-    */
-    loadLibrarySongIntoBottomPlayer(
-      song,
-      songIndex
-    );
+    
   }
 );
 
@@ -3534,12 +3726,24 @@ document.addEventListener('click', event => {
 
     panel.classList.toggle('show');
 
-    console.log(
-      'settingsPanel classes:',
-      panel.className
-    );
+const isSettingsOpen =
+  panel.classList.contains('show');
 
-    return;
+panel.setAttribute(
+  'aria-hidden',
+  String(!isSettingsOpen)
+);
+
+if (isSettingsOpen) {
+  refreshLibrarySettingsDisplay();
+}
+
+console.log(
+  'settingsPanel classes:',
+  panel.className
+);
+
+return;
   }
 
   const closeButton =
@@ -3551,12 +3755,13 @@ document.addEventListener('click', event => {
     event.preventDefault();
     event.stopPropagation();
 
-    document
-      .getElementById(
-        'settingsPanel'
-      )
-      ?.classList
-      .remove('show');
+   const panel =
+  document.getElementById(
+    'settingsPanel'
+  );
+
+panel?.classList.remove('show');
+panel?.setAttribute('aria-hidden', 'true');
   }
 });
 

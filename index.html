@@ -2871,6 +2871,260 @@ body {
   line-height: 1.55;
 }
 
+.librarySearchBox {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.librarySearchIcon {
+  position: absolute;
+  left: 14px;
+  z-index: 1;
+
+  color: var(--text-muted);
+  font-size: 17px;
+
+  pointer-events: none;
+}
+
+#searchInput {
+  width: 100%;
+  height: 46px;
+  box-sizing: border-box;
+
+  margin: 0;
+  padding: 0 46px 0 42px;
+
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--text);
+
+  font-size: 14px;
+  outline: none;
+
+  transition: var(--transition);
+}
+
+#searchInput:focus {
+  border-color: rgba(19, 241, 211, 0.55);
+  background: rgba(255, 255, 255, 0.065);
+
+  box-shadow:
+    0 0 0 3px rgba(19, 241, 211, 0.09);
+}
+
+#searchInput::placeholder {
+  color: rgba(166, 173, 187, 0.72);
+}
+
+.clearLibrarySearchButton {
+  display: none;
+
+  position: absolute;
+  right: 8px;
+
+  width: 30px;
+  height: 30px;
+  min-height: 0;
+  padding: 0;
+
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+
+  font-size: 18px;
+  line-height: 1;
+}
+
+.clearLibrarySearchButton.show {
+  display: flex;
+}
+
+.clearLibrarySearchButton:hover {
+  transform: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  box-shadow: none;
+}
+
+
+#studioWorkspace {
+  transition:
+    grid-template-columns 0.22s ease,
+    column-gap 0.22s ease;
+}
+
+.librarySidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 18px;
+}
+
+.librarySidebarTitle {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+}
+
+.collapseLibrarySidebarButton {
+  width: 32px;
+  height: 32px;
+  min-height: 0;
+  padding: 0;
+
+  border-radius: 10px;
+
+  font-size: 24px;
+  line-height: 1;
+}
+
+.expandLibrarySidebarButton {
+  display: none;
+
+  position: absolute;
+  left: 0;
+  top: 18px;
+  z-index: 20;
+
+  width: 34px;
+  height: 46px;
+  min-height: 0;
+  padding: 0;
+
+  border-radius: 0 12px 12px 0;
+
+  background: rgba(20, 22, 28, 0.96);
+  border-left: none;
+
+  font-size: 24px;
+}
+
+#librarySidebar {
+  min-width: 0;
+
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+
+  transition:
+    opacity 0.15s ease,
+    transform 0.22s ease;
+}
+
+
+#studioWorkspace.librarySidebarCollapsed {
+  grid-template-columns:
+    0 minmax(0, 1fr) 380px;
+
+  column-gap: 26px;
+}
+
+#studioWorkspace.librarySidebarCollapsed
+#librarySidebar {
+  width: 0;
+  min-width: 0;
+
+  padding-left: 0;
+  padding-right: 0;
+
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-24px);
+
+  border-width: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.expandLibrarySidebarButton {
+  display: none;
+
+  position: fixed;
+  left: 16px;
+  top: 122px;
+  z-index: 50;
+
+  width: 34px;
+  height: 48px;
+  min-height: 0;
+  padding: 0;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 0 12px 12px 0;
+  border-left: none;
+
+  background: rgba(20, 22, 28, 0.96);
+
+  font-size: 24px;
+  line-height: 1;
+}
+
+#studioWorkspace.librarySidebarCollapsed
+.expandLibrarySidebarButton {
+  display: flex;
+}
+
+.sideNavItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  width: 100%;
+  text-align: left;
+}
+
+.sideNavIcon {
+  flex: 0 0 22px;
+  text-align: center;
+
+  font-size: 17px;
+}
+
+.sideNavLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   WORKSPACE POSITION FIX
+   ========================================================= */
+
+#studioWorkspace {
+  position: fixed;
+
+  top: 104px;
+  left: 16px;
+  right: 16px;
+  bottom: 132px;
+
+  margin: 0;
+  min-height: 0;
+
+  display: grid;
+  grid-template-columns:
+    264px minmax(0, 1fr) 380px;
+
+  column-gap: 26px;
+  overflow: hidden;
+}
+
 
 </style>
 </head>
@@ -3269,20 +3523,6 @@ body {
             </span>
           </button>
 
-          <button
-            id="selectExistingLibraryButton"
-            type="button"
-            class="libraryActionButton"
-          >
-            <span class="libraryActionIcon">🔗</span>
-
-            <span class="libraryActionText">
-              <strong>既存ライブラリを選択</strong>
-              <small>
-                すでに存在するNORAH Studio Libraryへ切り替えます
-              </small>
-            </span>
-          </button>
 
           <button
             id="migrateLibraryButton"
@@ -3372,36 +3612,86 @@ body {
 
   <aside id="librarySidebar">
 
-    <div class="sideNavSection">
-      <button class="sideNavItem active" data-filter="all">ライブラリ</button>
-      <button class="sideNavItem" data-filter="recent">最近追加した曲</button>
-      <button class="sideNavItem" data-filter="favorite">お気に入り</button>
-    </div>
+  <div class="librarySidebarHeader">
+    <span class="librarySidebarTitle">
+      LIBRARY
+    </span>
 
-    <div class="sideNavTitle">自動タグ</div>
+    <button
+      id="collapseLibrarySidebarButton"
+      class="collapseLibrarySidebarButton"
+      type="button"
+      title="左ペインを閉じる"
+      aria-label="左ペインを閉じる"
+    >
+      ‹
+    </button>
+  </div>
 
-    <div class="sideNavSection">
-      <button class="sideNavItem">すべての曲</button>
-      <button class="sideNavItem">アーティスト</button>
-      <button class="sideNavItem">ジャンル</button>
-    </div>
+  <div class="sideNavSection">
+    <button
+      class="sideNavItem active"
+      data-filter="all"
+    >
+      <span class="sideNavIcon">♫</span>
+      <span class="sideNavLabel">ライブラリ</span>
+    </button>
 
-  
+    <button
+      class="sideNavItem"
+      data-filter="recent"
+    >
+      <span class="sideNavIcon">◷</span>
+      <span class="sideNavLabel">最近追加した曲</span>
+    </button>
 
-    <div class="sideDropHint">
-      ファイルをドラッグ＆ドロップして追加
-    </div>
+    <button
+      class="sideNavItem"
+      data-filter="favorite"
+    >
+      <span class="sideNavIcon">♡</span>
+      <span class="sideNavLabel">お気に入り</span>
+    </button>
+  </div>
 
-  </aside>
+  <div class="sideDropHint">
+    ファイルをドラッグ＆ドロップして追加
+  </div>
+
+</aside>
+
+<button
+  id="expandLibrarySidebarButton"
+  class="expandLibrarySidebarButton"
+  type="button"
+  title="左ペインを開く"
+  aria-label="左ペインを開く"
+>
+  ›
+</button>
 
   <div id="libraryArea">
 
+ <div class="librarySearchBox">
+  <span class="librarySearchIcon">⌕</span>
+
   <input
-  id="searchInput"
-  type="text"
-  placeholder="曲名・アーティスト名で検索"
-  oninput="renderSongs(currentIndex)"
->
+    id="searchInput"
+    type="text"
+    placeholder="曲名・アーティスト・タグなどを検索"
+    autocomplete="off"
+  >
+
+  <button
+    id="clearLibrarySearchButton"
+    class="clearLibrarySearchButton"
+    type="button"
+    title="検索をクリア"
+    aria-label="検索をクリア"
+  >
+    ×
+  </button>
+</div>
 
 
 <div id="libraryFilterTabs">
