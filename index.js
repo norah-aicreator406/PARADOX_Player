@@ -73,9 +73,12 @@ const bottomFavoriteButton = document.getElementById('bottomFavoriteButton');
 
 if (bottomFavoriteButton) {
   bottomFavoriteButton.addEventListener('click', () => {
-    if (!currentSong?.id) return;
+    const targetSong =
+      currentSong || selectedLibrarySong;
 
-    toggleSongFavorite(currentSong.id);
+    if (!targetSong?.id) return;
+
+    toggleSongFavorite(targetSong.id);
   });
 }
 
@@ -506,6 +509,7 @@ if (openBottomEditorButton) {
 }
 
 
+
 document.querySelectorAll('input[name="tabCreateType"]').forEach(input => {
   input.addEventListener('change', updateTabCreateFields);
 });
@@ -687,6 +691,40 @@ document.addEventListener(
     }
   }
 );
+
+
+const openLibraryFolderButton =
+  document.getElementById(
+    'openLibraryFolderButton'
+  );
+
+const selectExistingLibraryButton =
+  document.getElementById(
+    'selectExistingLibraryButton'
+  );
+
+const migrateLibraryButton =
+  document.getElementById(
+    'migrateLibraryButton'
+  );
+
+openLibraryFolderButton
+  ?.addEventListener(
+    'click',
+    openCurrentLibraryFolder
+  );
+
+selectExistingLibraryButton
+  ?.addEventListener(
+    'click',
+    selectExistingLibraryFolder
+  );
+
+migrateLibraryButton
+  ?.addEventListener(
+    'click',
+    migrateCurrentLibraryFolder
+  );
 
 
 initializeOutputRouting();
@@ -1025,32 +1063,50 @@ if (playlistAddButton) {
 }
 
 
-   songElement.addEventListener('dblclick', () => {
-  playLibrarySong(song, songIndex);
+  songElement.addEventListener(
+  'click',
+  () => {
+    if (selectedSongElement) {
+      selectedSongElement
+        .classList
+        .remove('selected');
+    }
 
-   songElement.addEventListener('click', () => {
-  updateSongInspector(song);
+    selectedSongElement =
+      songElement;
 
-if (playlistAddButton) {
-  playlistAddButton.addEventListener('click', (event) => {
-    event.stopPropagation();
+    songElement
+      .classList
+      .add('selected');
 
-    alert('プレイリスト追加は次のステップで実装します。');
-  });
-}
+    selectedLibrarySong =
+      song;
 
-songElement.addEventListener('click', () => {
-  console.log('song selected:', song);
-  updateSongInspector(song);
-});
+    /*
+      右側インスペクターを更新
+    */
+    updateSongInspector(song);
 
-songElement.addEventListener('dblclick', () => {
-  playLibrarySong(song, songIndex);
-});
+    /*
+      下部Playerにも選択曲を読み込む
+    */
+    loadLibrarySongIntoBottomPlayer(
+      song,
+      songIndex
+    );
+  }
+);
 
-});
 
-});
+songElement.addEventListener(
+  'dblclick',
+  () => {
+    playLibrarySong(
+      song,
+      songIndex
+    );
+  }
+);
 
 const deleteButton = songElement.querySelector('.libraryDeleteButton');
 
@@ -1066,20 +1122,6 @@ if (deleteButton) {
     renderLibrarySongs();
   });
 }
-songElement.addEventListener('click', () => {
-
-  if (selectedSongElement) {
-    selectedSongElement.classList.remove('selected');
-  }
-
-  selectedSongElement = songElement;
-
-  songElement.classList.add('selected');
-
-  console.log('song selected:', song.title);
-
-  updateSongInspector(song);
-});
 
     songsContainer.appendChild(songElement);
   });
@@ -1556,6 +1598,51 @@ function createPlayableLibrarySong(song) {
     mediaType: 'audio'
   };
 }
+
+function loadLibrarySongIntoBottomPlayer(
+  song,
+  songIndex = -1
+) {
+  if (!song?.id || !song.audioPath) {
+    return;
+  }
+
+  const playableSong =
+    createPlayableLibrarySong(song);
+
+  currentSong = playableSong;
+
+  currentPlaybackIndex =
+    songIndex >= 0
+      ? songIndex
+      : currentPlaybackList.findIndex(
+          item => item.id === song.id
+        );
+
+  /*
+    下部Playerの表示を更新
+    タイトル・アーティスト・ジャケット・お気に入り
+  */
+  updateBottomPlayer(playableSong);
+
+  /*
+    再生ボタンを押したらすぐ再生できるよう、
+    音源だけ読み込んでおく。
+  */
+  if (audio.src !== playableSong.fileUrl) {
+    audio.src = playableSong.fileUrl;
+    audio.load();
+  }
+
+  /*
+    歌詞プロジェクトも先に読み込む。
+  */
+  loadLyricsBlocksFromProject(
+    playableSong
+  );
+}
+
+
 
 function addLibrarySongToQueue(song) {
   if (!song.audioPath) {
@@ -2087,11 +2174,33 @@ async function initializeOutputRouting() {
   updateOutputRoutingUI();
 }
 
-function toggleSettingsPanel() {
-  const panel = document.getElementById('settingsPanel');
-  if (!panel) return;
+async function toggleSettingsPanel() {
+  const panel =
+    document.getElementById(
+      'settingsPanel'
+    );
 
-  panel.classList.toggle('show');
+  if (!panel) {
+    return;
+  }
+
+  const willOpen =
+    !panel.classList.contains(
+      'show'
+    );
+
+  panel.classList.toggle(
+    'show'
+  );
+
+  panel.setAttribute(
+    'aria-hidden',
+    String(!willOpen)
+  );
+
+  if (willOpen) {
+    await refreshLibrarySettingsDisplay();
+  }
 }
 
 document.querySelectorAll('.inspectorTab').forEach(button => {
@@ -2675,9 +2784,23 @@ function collectEffectSettings() {
 
 
 function closeSettingsPanel() {
-  const panel = document.getElementById('settingsPanel');
-  if (!panel) return;
-  panel.classList.remove('show');
+  const panel =
+    document.getElementById(
+      'settingsPanel'
+    );
+
+  if (!panel) {
+    return;
+  }
+
+  panel.classList.remove(
+    'show'
+  );
+
+  panel.setAttribute(
+    'aria-hidden',
+    'true'
+  );
 }
 
 function switchSettingsTab(tabName) {
@@ -3181,5 +3304,335 @@ function loadEffectSettingsFromProject(song) {
   } catch (error) {
     console.warn('Effect settings load failed:', error);
     applyEffectSettingsToInspector();
+  }
+}
+
+
+async function getCurrentLibraryRootPath() {
+  try {
+    const result =
+      await ipcRenderer.invoke(
+        'get-library-root-path'
+      );
+
+    if (!result?.success) {
+      console.warn(
+        'ライブラリ保存先を取得できません:',
+        result?.message
+      );
+
+      return '';
+    }
+
+    return result.path || '';
+  } catch (error) {
+    console.error(
+      'ライブラリ保存先取得IPCに失敗しました:',
+      error
+    );
+
+    return '';
+  }
+}
+
+
+async function openCurrentLibraryFolder() {
+  try {
+    const result =
+      await ipcRenderer.invoke(
+        'open-library-root-folder'
+      );
+
+    if (!result?.success) {
+      alert(
+        result?.message ||
+        'ライブラリフォルダを開けませんでした。'
+      );
+    }
+  } catch (error) {
+    console.error(
+      'ライブラリフォルダを開く処理に失敗しました:',
+      error
+    );
+
+    alert(
+      'ライブラリフォルダを開けませんでした。'
+    );
+  }
+}
+
+
+async function selectExistingLibraryFolder() {
+  try {
+    const result =
+      await ipcRenderer.invoke(
+        'select-existing-library-folder'
+      );
+
+    if (result?.canceled) {
+      return;
+    }
+
+    if (!result?.success) {
+      alert(
+        result?.message ||
+        '選択したフォルダは使用できません。'
+      );
+
+      return;
+    }
+
+    const ok = confirm(
+      [
+        'ライブラリを切り替えました。',
+        '',
+        `変更前：${result.previousPath || '-'}`,
+        `変更後：${result.path || '-'}`,
+        '',
+        '画面を再読み込みします。'
+      ].join('\n')
+    );
+
+    if (!ok) {
+      /*
+        この時点ですでに保存先設定は変更されているため、
+        キャンセルしても次回起動時には新しい保存先になる。
+        ここでは再読み込みだけを保留する。
+      */
+      return;
+    }
+
+    await ipcRenderer.invoke(
+      'reload-main-window'
+    );
+  } catch (error) {
+    console.error(
+      'ライブラリ切り替え処理に失敗しました:',
+      error
+    );
+
+    alert(
+      'ライブラリを切り替えられませんでした。'
+    );
+  }
+}
+
+
+
+async function migrateCurrentLibraryFolder() {
+  const currentPath =
+    await getCurrentLibraryRootPath();
+
+  const confirmed = confirm(
+    [
+      '現在のライブラリを新しい保存先へコピーします。',
+      '',
+      `現在の保存先：`,
+      currentPath || '-',
+      '',
+      '・元のライブラリは削除されません',
+      '・コピー完了後に新しい保存先へ切り替わります',
+      '・曲数が多い場合は時間がかかります',
+      '',
+      '移行を開始しますか？'
+    ].join('\n')
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    const result =
+      await ipcRenderer.invoke(
+        'migrate-library-folder'
+      );
+
+    if (result?.canceled) {
+      return;
+    }
+
+    if (!result?.success) {
+      alert(
+        [
+          'ライブラリを移行できませんでした。',
+          '',
+          result?.message || ''
+        ]
+          .filter(Boolean)
+          .join('\n')
+      );
+
+      return;
+    }
+
+    alert(
+      [
+        'ライブラリの移行が完了しました。',
+        '',
+        `変更前：`,
+        result.previousPath || '-',
+        '',
+        `変更後：`,
+        result.path || '-',
+        '',
+        '元のライブラリは削除されていません。',
+        '画面を再読み込みします。'
+      ].join('\n')
+    );
+
+    await ipcRenderer.invoke(
+      'reload-main-window'
+    );
+  } catch (error) {
+    console.error(
+      'ライブラリ移行IPCに失敗しました:',
+      error
+    );
+
+    alert(
+      'ライブラリを移行できませんでした。'
+    );
+  }
+}
+
+
+document.addEventListener('click', event => {
+  const openButton =
+    event.target.closest(
+      '[data-open-settings]'
+    );
+
+  if (openButton) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const panel =
+      document.getElementById(
+        'settingsPanel'
+      );
+
+    console.log(
+      '設定ボタン押下:',
+      {
+        openButton,
+        panel
+      }
+    );
+
+    if (!panel) {
+      console.error(
+        '#settingsPanel が見つかりません'
+      );
+
+      alert(
+        '設定パネルが見つかりません。'
+      );
+
+      return;
+    }
+
+    panel.classList.toggle('show');
+
+    console.log(
+      'settingsPanel classes:',
+      panel.className
+    );
+
+    return;
+  }
+
+  const closeButton =
+    event.target.closest(
+      '[data-close-settings]'
+    );
+
+  if (closeButton) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    document
+      .getElementById(
+        'settingsPanel'
+      )
+      ?.classList
+      .remove('show');
+  }
+});
+
+
+async function refreshLibrarySettingsDisplay() {
+  const pathDisplay =
+    document.getElementById(
+      'libraryRootPathDisplay'
+    );
+
+  const status =
+    document.getElementById(
+      'librarySettingsStatus'
+    );
+
+  if (pathDisplay) {
+    pathDisplay.textContent =
+      '読み込み中...';
+
+    pathDisplay.title = '';
+  }
+
+  if (status) {
+    status.textContent = '';
+    status.classList.remove(
+      'error'
+    );
+  }
+
+  try {
+    const libraryRoot =
+      await getCurrentLibraryRootPath();
+
+    if (!libraryRoot) {
+      if (pathDisplay) {
+        pathDisplay.textContent =
+          '保存先を取得できませんでした。';
+      }
+
+      if (status) {
+        status.textContent =
+          'ライブラリ保存先の取得に失敗しました。';
+
+        status.classList.add(
+          'error'
+        );
+      }
+
+      return;
+    }
+
+    if (pathDisplay) {
+      pathDisplay.textContent =
+        libraryRoot;
+
+      pathDisplay.title =
+        libraryRoot;
+    }
+  } catch (error) {
+    console.error(
+      'ライブラリ設定表示の更新に失敗しました:',
+      error
+    );
+
+    if (pathDisplay) {
+      pathDisplay.textContent =
+        '保存先を取得できませんでした。';
+    }
+
+    if (status) {
+      status.textContent =
+        'ライブラリ情報を読み込めませんでした。';
+
+      status.classList.add(
+        'error'
+      );
+    }
   }
 }

@@ -791,43 +791,46 @@ margin-bottom:12px;
 
 }
 
-#settingsPanel {
-  display: none;
-  margin-top: 12px;
-  padding: 14px;
-  border-radius: 14px;
-  background: #181818;
-  border: 1px solid #333;
-}
-
-#settingsPanel.show {
-  display: block;
-}
 
 
 
 /* ===== Clean Settings Sidebar ===== */
 #settingsPanel.settingsSidebar {
-  display: block;
+  display: flex;
+  flex-direction: column;
+
   position: fixed;
   top: 0;
   right: 0;
-  width: 360px;
+
+  width: 420px;
   max-width: calc(100vw - 24px);
   height: 100vh;
+
   margin: 0;
   padding: 0;
-  z-index: 5000;
+
   background: #141414;
   border-left: 1px solid #333;
-  box-shadow: -24px 0 60px rgba(0,0,0,0.55);
-  transform: translateX(105%);
-  transition: transform 0.22s ease;
+  box-shadow: -24px 0 60px rgba(0, 0, 0, 0.55);
+
+  z-index: 999999;
+
+  transform: translateX(110%);
+  visibility: hidden;
+  pointer-events: none;
+
+  transition:
+    transform 0.22s ease,
+    visibility 0.22s ease;
+
   overflow: hidden;
 }
 
 #settingsPanel.settingsSidebar.show {
   transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .settingsHeader {
@@ -862,64 +865,14 @@ margin-bottom:12px;
   font-size: 20px;
 }
 
-.settingsTabs {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  padding: 10px;
-  border-bottom: 1px solid #2b2b2b;
-  background: #171717;
-}
-
-.settingsTab {
-  padding: 8px 4px;
-  border-radius: 999px;
-  background: #292929;
-  color: #bbb;
-  font-size: 12px;
-}
-
-.settingsTab.active {
-  background: rgba(0,255,204,0.18);
-  color: #00ffcc;
-  outline: 1px solid rgba(0,255,204,0.6);
-}
 
 .settingsContent {
-  height: calc(100vh - 106px);
+  flex: 1 1 auto;
+  min-height: 0;
+
   overflow-y: auto;
-  padding: 14px;
-}
 
-.settingsPage {
-  display: none;
-}
-
-.settingsPage.active {
-  display: block;
-}
-
-.settingsPage h3 {
-  margin: 0 0 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #2d2d2d;
-  font-size: 14px;
-  color: #fff;
-}
-
-.settingsRow {
-  display: flex !important;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin: 0 0 12px !important;
-  color: #ccc;
-  font-size: 13px;
-}
-
-.settingsRow.vertical {
-  align-items: stretch;
-  flex-direction: column;
+  padding: 20px;
 }
 
 .settingsRow select,
@@ -937,10 +890,6 @@ margin-bottom:12px;
   font-size: 13px;
 }
 
-.settingsButtonGroup {
-  display: flex;
-  gap: 6px;
-}
 
 .layerPanelClean {
   margin: 0 0 12px !important;
@@ -981,11 +930,6 @@ margin-bottom:12px;
   color: #fff;
 }
 
-.effectGrid {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
 
 .effectGrid label {
   display: flex;
@@ -1000,15 +944,6 @@ margin-bottom:12px;
   width: 100%;
 }
 
-.comingSoonBox {
-  margin-top: 12px;
-  padding: 12px;
-  border-radius: 10px;
-  background: #202020;
-  border: 1px dashed #444;
-  color: #888;
-  font-size: 13px;
-}
 
 #deleteLayerButton {
   width: 100%;
@@ -2512,6 +2447,431 @@ body {
 }
 
 
+/* ========================================
+   Library Settings
+======================================== */
+
+.librarySettingsCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  padding: 16px;
+  margin-bottom: 16px;
+
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px;
+}
+
+.librarySettingsLabel {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.libraryPathDisplay {
+  min-height: 44px;
+  box-sizing: border-box;
+
+  padding: 11px 12px;
+
+  background: #0d0f14;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.55;
+
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.librarySettingsActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.librarySettingsActions button {
+  width: 100%;
+  min-height: 42px;
+}
+
+.libraryPrimaryButton {
+  background: rgba(19, 241, 211, 0.15);
+  border-color: rgba(19, 241, 211, 0.35);
+  color: var(--accent);
+}
+
+.libraryMigrationButton {
+  background: linear-gradient(
+    135deg,
+    rgba(19, 241, 211, 0.18),
+    rgba(92, 200, 255, 0.15)
+  );
+
+  border-color: rgba(19, 241, 211, 0.4);
+  color: #ffffff;
+}
+
+.librarySettingsNote {
+  padding: 12px;
+
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.librarySettingsStatus {
+  min-height: 18px;
+  color: var(--accent);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.librarySettingsStatus.error {
+  color: #ff8e8e;
+}
+
+
+.headerSettingsButton {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  background: rgba(255, 255, 255, 0.065);
+  color: #ffffff;
+
+  font-size: 20px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.headerSettingsButton:hover {
+  border-color: rgba(19, 241, 211, 0.5);
+  background: rgba(19, 241, 211, 0.12);
+  color: var(--accent);
+}
+
+/* ========================================
+   Library Settings
+======================================== */
+
+.librarySettingsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.librarySettingsHeading h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #ffffff;
+}
+
+.librarySettingsHeading p {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.librarySettingsCard {
+  padding: 18px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.05),
+      rgba(255, 255, 255, 0.025)
+    );
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.09);
+
+  border-radius: 18px;
+}
+
+.librarySettingsLabel {
+  margin-bottom: 8px;
+
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.libraryPathDisplay {
+  min-height: 46px;
+  box-sizing: border-box;
+
+  padding: 12px 14px;
+
+  background: rgba(0, 0, 0, 0.3);
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.1);
+
+  border-radius: 12px;
+
+  color: #ffffff;
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+
+  font-size: 12px;
+  line-height: 1.6;
+
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.librarySettingsStatus {
+  min-height: 18px;
+  margin-top: 8px;
+
+  color: var(--accent);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.librarySettingsStatus.error {
+  color: #ff9ca3;
+}
+
+.librarySettingsActions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  margin-top: 18px;
+}
+
+.libraryActionButton {
+  width: 100%;
+  min-height: 66px;
+
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+
+  padding: 12px 14px;
+
+  text-align: left;
+
+  background:
+    rgba(255, 255, 255, 0.04);
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.09);
+
+  border-radius: 14px;
+}
+
+.libraryActionButton:hover {
+  transform: none;
+
+  background:
+    rgba(255, 255, 255, 0.075);
+
+  border-color:
+    rgba(19, 241, 211, 0.38);
+}
+
+.libraryPrimaryAction {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(19, 241, 211, 0.14),
+      rgba(92, 200, 255, 0.1)
+    );
+
+  border-color:
+    rgba(19, 241, 211, 0.3);
+}
+
+.libraryActionIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 38px;
+  height: 38px;
+
+  border-radius: 11px;
+
+  background:
+    rgba(255, 255, 255, 0.065);
+
+  font-size: 18px;
+}
+
+.libraryActionText {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.libraryActionText strong {
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.libraryActionText small {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.librarySettingsInfo {
+  padding: 16px;
+
+  background:
+    rgba(255, 255, 255, 0.025);
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.07);
+
+  border-radius: 16px;
+}
+
+.librarySettingsInfoTitle {
+  margin-bottom: 12px;
+
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.libraryStructurePreview {
+  padding: 14px;
+
+  background:
+    rgba(0, 0, 0, 0.24);
+
+  border-radius: 12px;
+
+  color: var(--text-muted);
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+
+  font-size: 11px;
+  line-height: 1.75;
+}
+
+.libraryStructureChild {
+  padding-left: 12px;
+}
+
+.libraryStructureGrandchild {
+  padding-left: 30px;
+}
+
+.librarySettingsNotice {
+  padding: 14px;
+
+  background:
+    rgba(19, 241, 211, 0.055);
+
+  border:
+    1px solid
+    rgba(19, 241, 211, 0.14);
+
+  border-radius: 14px;
+
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.librarySettingsNotice strong {
+  color: var(--accent);
+}
+
+
+.librarySavedItems {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.librarySavedItem {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 12px;
+  align-items: flex-start;
+
+  padding: 12px;
+
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+}
+
+.librarySavedItemIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 38px;
+  height: 38px;
+
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+
+  font-size: 18px;
+}
+
+.librarySavedItem strong {
+  display: block;
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.librarySavedItem p {
+  margin: 4px 0 0;
+
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+
 </style>
 </head>
 
@@ -2723,9 +3083,16 @@ body {
     <div class="studioSubtitle">
       Music Creator Workspace
     </div>
-
   </div>
 
+<button
+  type="button"
+  class="headerSettingsButton"
+  data-open-settings
+  title="設定を開く"
+>
+  ⚙
+</button>
 
 </div>
 
@@ -2776,187 +3143,33 @@ body {
     <div class="buttonGroupTitle">管理</div>
 
     <div class="buttonRow">
-      <button class="nav" onclick="toggleSettingsPanel()">⚙ 設定</button>
-      <button id="openVisualEditorButton">
+     <button
+  id="settingsButton"
+  class="nav"
+  type="button"
+>
+  ⚙ 設定
+</button>
+
+<button
+  id="openVisualEditorButton"
+  type="button"
+>
   🎬 Visual Editor
 </button>
-      <button class="reload" onclick="loadSongs()">🔄 更新</button>
+
+<button
+  class="reload"
+  onclick="loadSongs()"
+>
+  🔄 更新
+</button>
     </div>
   </div>
 
 </div>
 
-<aside id="settingsPanel" class="settingsSidebar">
-  <div class="settingsHeader">
-    <div>
-      <div class="settingsTitle">⚙ SETTINGS</div>
-      <div class="settingsSubTitle">Visualizer Control</div>
-    </div>
-    <button class="settingsClose" onclick="closeSettingsPanel()">×</button>
-  </div>
 
-  <div class="settingsTabs">
-    <button class="settingsTab active" data-tab="basic" onclick="switchSettingsTab('basic')">基本</button>
-    <button class="settingsTab" data-tab="layers" onclick="switchSettingsTab('layers')">レイヤー</button>
-    <button class="settingsTab" data-tab="effects" onclick="switchSettingsTab('effects')">エフェクト</button>
-    <button class="settingsTab" data-tab="template" onclick="switchSettingsTab('template')">テンプレ</button>
-  </div>
-
-  <div class="settingsContent">
-    <section class="settingsPage active" data-page="basic">
-      <h3>基本設定</h3>
-
-      <div class="settingsRow" id="visualizerSwitchControl">
-        <span>ビジュアライザー</span>
-        <label class="switch">
-          <input type="checkbox" id="visualizerToggle" checked onchange="toggleVisualizerEnabled()">
-          <span class="slider"></span>
-        </label>
-        <span id="visualizerToggleLabel">ON</span>
-      </div>
-
-      <div class="settingsRow" id="aspectRatioControl">
-        <span>比率</span>
-        <div class="settingsButtonGroup">
-          <button onclick="changeVisualizerAspectRatio('9:16')">9:16</button>
-          <button onclick="changeVisualizerAspectRatio('16:9')">16:9</button>
-        </div>
-      </div>
-
-      <div class="settingsRow vertical" id="brandNameControl">
-        <span>表示名</span>
-        <input
-          type="text"
-          id="brandNameInput"
-          placeholder="PARADOX VISUALIZER"
-          oninput="changeVisualizerBrandName()"
-        >
-      </div>
-
-      <h3>背景</h3>
-      <div class="settingsRow vertical" id="backgroundControl">
-        <span>背景画像</span>
-        <select id="backgroundSelect" onchange="changeVisualizerBackground()">
-          <option value="">背景なし</option>
-        </select>
-      </div>
-    </section>
-
-    <section class="settingsPage" data-page="layers">
-      <h3>画像レイヤー</h3>
-
-      <div id="layerPanel" class="layerPanelClean">
-        <div id="layerList"></div>
-        <button id="addLayerButton" onclick="addOverlayLayer()">＋ レイヤー追加</button>
-        <button id="addLyricsLayerButton" onclick="addLyricsLayer()">＋ Lyrics Layer</button>
-        <button id="deleteLayerButton" onclick="deleteSelectedOverlayLayer()">選択中レイヤーを削除</button>
-      </div>
-
-      <div class="settingsRow vertical" id="overlayControl">
-        <span>選択中レイヤー画像</span>
-        <select id="overlaySelect" onchange="changeOverlayImage()">
-          <option value="">なし</option>
-        </select>
-      </div>
-
-      <div class="settingsRow vertical" id="overlayLayerControl">
-        <span>不透明度</span>
-        <input
-          type="range"
-          id="overlayOpacity"
-          min="0"
-          max="100"
-          value="100"
-          oninput="changeOverlayLayerSettings()"
-        >
-      </div>
-
-      <div class="settingsRow vertical" id="lyricsTextControl">
-  <span>Lyrics Text</span>
-
-  <textarea
-    id="lyricsTextInput"
-    rows="3"
-    placeholder="歌詞テキスト"
-    oninput="changeLyricsText()"
-  ></textarea>
-</div>
-
-<div class="settingsRow vertical" id="lyricsSizeControl">
-  <span>Lyrics Size</span>
-
-  <input
-    type="range"
-    id="lyricsSizeInput"
-    min="24"
-    max="160"
-    value="72"
-    oninput="changeLyricsSize()"
-  >
-</div>
-
-      <div id="overlayControl2" style="display:none;">
-        <select id="overlaySelect2" onchange="changeOverlayImage2()">
-          <option value="">なし</option>
-        </select>
-      </div>
-    </section>
-
-     <section class="settingsPage" data-page="effects">
-      <h3>エフェクト</h3>
-
-      <div id="effectControl" class="effectGrid">
-  <label>
-    <span>
-      <input id="effectSpectrumEnabled" type="checkbox" checked>
-      スペクトラム
-    </span>
-    <input id="effectSpectrumStrength" type="range" min="0" max="1" step="0.01" value="1">
-  </label>
-
-  <label>
-    <span>
-      <input id="effectParticlesEnabled" type="checkbox" checked>
-      パーティクル
-    </span>
-    <input id="effectParticlesStrength" type="range" min="0" max="1" step="0.01" value="1">
-  </label>
-
-  <label>
-    <span>
-      <input id="effectAuroraEnabled" type="checkbox" checked>
-      オーロラ
-    </span>
-    <input id="effectAuroraStrength" type="range" min="0" max="1" step="0.01" value="1">
-  </label>
-
-  <label>
-    <span>
-      <input id="effectGlowEnabled" type="checkbox" checked>
-      グロー
-    </span>
-    <input id="effectGlowStrength" type="range" min="0" max="1" step="0.01" value="1">
-  </label>
-</div>
-    </section>
-
-
-    <section class="settingsPage" data-page="template">
-      <h3>テンプレート</h3>
-
-      <div class="settingsRow vertical" id="templateControl">
-        <span>テンプレート</span>
-        <select id="templateSelect" onchange="changeVisualizerTemplate()">
-          <option value="standard">Standard</option>
-        </select>
-      </div>
-
-      <div class="comingSoonBox">
-        GLSL / リリック / テンプレート保存はここに追加予定
-      </div>
-    </section>
-  </div>
-</aside>
 
 
 
@@ -2977,6 +3190,183 @@ body {
 
 </div>
 </div>
+
+<aside
+  id="settingsPanel"
+  class="settingsSidebar"
+  aria-hidden="true"
+>
+  <div class="settingsHeader">
+    <div>
+      <div class="settingsTitle">
+        ⚙ SETTINGS
+      </div>
+
+      <div class="settingsSubTitle">
+        Library Management
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="settingsClose"
+      data-close-settings
+      aria-label="設定を閉じる"
+    >
+      ×
+    </button>
+  </div>
+
+  <div class="settingsContent">
+
+    <section class="librarySettingsSection">
+
+      <div class="librarySettingsHeading">
+        <div>
+          <h2>ライブラリ</h2>
+
+          <p>
+            NORAH Studioで使用する曲・ジャケット・
+            プロジェクトの保存先を管理します。
+          </p>
+        </div>
+      </div>
+
+      <div class="librarySettingsCard">
+
+        <div class="librarySettingsLabel">
+          現在の保存先
+        </div>
+
+        <div
+          id="libraryRootPathDisplay"
+          class="libraryPathDisplay"
+          title=""
+        >
+          読み込み中...
+        </div>
+
+        <div
+          id="librarySettingsStatus"
+          class="librarySettingsStatus"
+          aria-live="polite"
+        ></div>
+
+        <div class="librarySettingsActions">
+
+          <button
+            id="openLibraryFolderButton"
+            type="button"
+            class="libraryActionButton"
+          >
+            <span class="libraryActionIcon">📂</span>
+
+            <span class="libraryActionText">
+              <strong>フォルダを開く</strong>
+              <small>
+                現在使用中のライブラリをFinderで開きます
+              </small>
+            </span>
+          </button>
+
+          <button
+            id="selectExistingLibraryButton"
+            type="button"
+            class="libraryActionButton"
+          >
+            <span class="libraryActionIcon">🔗</span>
+
+            <span class="libraryActionText">
+              <strong>既存ライブラリを選択</strong>
+              <small>
+                すでに存在するNORAH Studio Libraryへ切り替えます
+              </small>
+            </span>
+          </button>
+
+          <button
+            id="migrateLibraryButton"
+            type="button"
+            class="libraryActionButton libraryPrimaryAction"
+          >
+            <span class="libraryActionIcon">↗</span>
+
+            <span class="libraryActionText">
+              <strong>保存先を変更・移行</strong>
+              <small>
+                現在のデータを新しい保存先へコピーします
+              </small>
+            </span>
+          </button>
+
+        </div>
+      </div>
+
+      <div class="librarySettingsInfo">
+  <div class="librarySettingsInfoTitle">
+    ライブラリに保存されるもの
+  </div>
+
+  <div class="librarySavedItems">
+
+    <div class="librarySavedItem">
+      <span class="librarySavedItemIcon">🎵</span>
+
+      <div>
+        <strong>音源ファイル</strong>
+        <p>
+          NORAH Studioへ登録した曲の音源を保存します。
+        </p>
+      </div>
+    </div>
+
+    <div class="librarySavedItem">
+      <span class="librarySavedItemIcon">🖼</span>
+
+      <div>
+        <strong>ジャケット画像</strong>
+        <p>
+          曲に設定したアートワークを保存します。
+        </p>
+      </div>
+    </div>
+
+    <div class="librarySavedItem">
+      <span class="librarySavedItemIcon">📝</span>
+
+      <div>
+        <strong>曲の登録情報</strong>
+        <p>
+          曲名、アーティスト、カテゴリ、お気に入りなどを保存します。
+        </p>
+      </div>
+    </div>
+
+    <div class="librarySavedItem">
+      <span class="librarySavedItemIcon">🎬</span>
+
+      <div>
+        <strong>編集データ</strong>
+        <p>
+          歌詞、テーマ、レイヤー、アニメーションなどの編集内容を保存します。
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+      <div class="librarySettingsNotice">
+        <strong>保存先を変更・移行</strong>では、
+        現在のライブラリを新しい場所へコピーした後、
+        新しい保存先へ切り替えます。
+        元のライブラリは自動削除されません。
+      </div>
+
+    </section>
+
+  </div>
+</aside>
 
 <div id="studioWorkspace">
 

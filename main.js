@@ -1,7 +1,22 @@
-const { app, BrowserWindow, ipcMain, clipboard } = require('electron');
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  clipboard,
+  dialog,
+  shell
+} = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
+
+const {
+  getLibraryRootPath,
+  setLibraryRootPath,
+  validateLibraryFolder,
+  ensureLibraryFolders,
+  migrateLibraryTo
+} = require('./libraryStore');
 
 function getBaseDir() {
   if (app.isPackaged) {
@@ -753,6 +768,288 @@ ipcMain.handle('copy-text', async (event, text) => {
   clipboard.writeText(text);
   return true;
 });
+
+/* ========================================
+   Library location
+======================================== */
+
+/*
+  現在使用しているライブラリ保存先を返す。
+*/
+ipcMain.handle(
+  'get-library-root-path',
+  async () => {
+    try {
+      ensureLibraryFolders();
+
+      return {
+        success: true,
+        path: getLibraryRootPath()
+      };
+    } catch (error) {
+      console.error(
+        'ライブラリ保存先の取得に失敗しました:',
+        error
+      );
+
+      return {
+        success: false,
+        path: '',
+        message:
+          error.message ||
+          'ライブラリ保存先を取得できませんでした。'
+      };
+    }
+  }
+);
+
+
+/*
+  現在のライブラリ保存先を、
+  Finderまたはエクスプローラーで開く。
+*/
+ipcMain.handle(
+  'open-library-root-folder',
+  async () => {
+    try {
+      ensureLibraryFolders();
+
+      const libraryRoot =
+        getLibraryRootPath();
+
+      const errorMessage =
+        await shell.openPath(libraryRoot);
+
+      /*
+        shell.openPathは成功時に空文字、
+        失敗時にエラー文字列を返す。
+      */
+      if (errorMessage) {
+        return {
+          success: false,
+          message: errorMessage
+        };
+      }
+
+      return {
+        success: true,
+        path: libraryRoot
+      };
+    } catch (error) {
+      console.error(
+        'ライブラリフォルダを開けませんでした:',
+        error
+      );
+
+      return {
+        success: false,
+        message:
+          error.message ||
+          'ライブラリフォルダを開けませんでした。'
+      };
+    }
+  }
+);
+
+
+/*
+  既存のNORAH Studio Libraryを選択し、
+  構造を検証してから切り替える。
+*/
+ipcMain.handle(
+  'select-existing-library-folder',
+  async () => {
+    try {
+      const result =
+        await dialog.showOpenDialog(
+          mainWindow,
+          {
+            title:
+              '既存のNORAH Studio Libraryを選択',
+
+            properties: [
+              'openDirectory'
+            ],
+
+            buttonLabel:
+              'このライブラリを使用'
+          }
+        );
+
+      if (
+        result.canceled ||
+        !result.filePaths.length
+      ) {
+        return {
+          success: false,
+          canceled: true
+        };
+      }
+
+      const selectedPath =
+        result.filePaths[0];
+
+      const validation =
+        validateLibraryFolder(
+          selectedPath
+        );
+
+      if (!validation.valid) {
+        return {
+          success: false,
+          canceled: false,
+          message:
+            validation.reason ||
+            'NORAH Studio Libraryとして使用できません。'
+        };
+      }
+
+      const previousPath =
+        getLibraryRootPath();
+
+      const nextPath =
+        setLibraryRootPath(
+          validation.path
+        );
+
+      return {
+        success: true,
+        canceled: false,
+        previousPath,
+        path: nextPath,
+
+        /*
+          ライブラリ切り替え後は、
+          Rendererを再読み込みする必要がある。
+        */
+        requiresReload: true
+      };
+    } catch (error) {
+      console.error(
+        '既存ライブラリへの切り替えに失敗しました:',
+        error
+      );
+
+      return {
+        success: false,
+        canceled: false,
+        message:
+          error.message ||
+          '既存ライブラリへ切り替えられませんでした。'
+      };
+    }
+  }
+);
+
+
+
+/*
+  現在のLibraryを新しい場所へ安全にコピー移行する。
+*/
+ipcMain.handle(
+  'migrate-library-folder',
+  async () => {
+    try {
+      const currentLibraryRoot =
+        getLibraryRootPath();
+
+      const result =
+        await dialog.showOpenDialog(
+          mainWindow,
+          {
+            title:
+              '新しいライブラリ保存先を選択',
+
+            /*
+              ここではLibraryそのものではなく、
+              Libraryを作成する親フォルダを選ぶ。
+            */
+            properties: [
+              'openDirectory',
+              'createDirectory'
+            ],
+
+            buttonLabel:
+              'ここへ移行',
+
+            defaultPath:
+              path.dirname(
+                currentLibraryRoot
+              )
+          }
+        );
+
+      if (
+        result.canceled ||
+        !result.filePaths.length
+      ) {
+        return {
+          success: false,
+          canceled: true
+        };
+      }
+
+      const selectedParent =
+        result.filePaths[0];
+
+      /*
+        選択した場所の中に、
+        NORAH Studio Libraryを作成する。
+      */
+      const destinationRoot =
+        path.join(
+          selectedParent,
+          'NORAH Studio Library'
+        );
+
+      const migrationResult =
+        migrateLibraryTo(
+          destinationRoot
+        );
+
+      return {
+        ...migrationResult,
+        canceled: false,
+        requiresReload: true
+      };
+    } catch (error) {
+      console.error(
+        'ライブラリ移行に失敗しました:',
+        error
+      );
+
+      return {
+        success: false,
+        canceled: false,
+        message:
+          error.message ||
+          'ライブラリを移行できませんでした。'
+      };
+    }
+  }
+);
+
+
+/*
+  Rendererを安全に再読み込みする。
+*/
+ipcMain.handle(
+  'reload-main-window',
+  async () => {
+    if (
+      !mainWindow ||
+      mainWindow.isDestroyed()
+    ) {
+      return false;
+    }
+
+    mainWindow.reload();
+
+    return true;
+  }
+);
+
+
 
 ipcMain.handle('open-visualizer-window', async () => {
   openVisualizerWindow();
