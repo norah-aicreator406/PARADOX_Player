@@ -1215,3 +1215,15 @@ html, body {
     linear
     infinite;
 }
+
+/* ========================================
+   Output Routing Visibility
+======================================== */
+
+#songInfo.output-routing-hidden {
+  display: none !important;
+}
+
+#lyricsLayer.output-routing-hidden {
+  display: none !important;
+}

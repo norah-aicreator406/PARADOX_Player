@@ -1909,7 +1909,208 @@ body {
 }
 
 
+/* ========================================
+   Output Routing
+======================================== */
 
+.outputRoutingPanel {
+  display: none;
+
+  position: fixed;
+  right: 28px;
+  bottom: 146px;
+
+  width: 370px;
+  max-width: calc(100vw - 40px);
+
+  z-index: 6000;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(28, 31, 40, 0.98),
+      rgba(15, 17, 23, 0.98)
+    );
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.12);
+
+  border-radius: 20px;
+
+  box-shadow:
+    0 28px 80px
+    rgba(0, 0, 0, 0.58);
+
+  backdrop-filter: blur(20px);
+}
+
+.outputRoutingPanel.show {
+  display: block;
+}
+
+.outputRoutingHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  padding: 16px 18px;
+
+  border-bottom:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+}
+
+.outputRoutingTitle {
+  font-size: 14px;
+  font-weight: 800;
+
+  letter-spacing: 0.08em;
+
+  color: var(--accent);
+}
+
+.outputRoutingDescription {
+  margin-top: 4px;
+
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.outputRoutingCloseButton {
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+
+  padding: 0;
+
+  border-radius: 10px;
+
+  font-size: 18px;
+}
+
+.outputRoutingContent {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  padding: 18px;
+}
+
+.outputRoutingSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.outputRoutingLabel {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.outputRoutingLabel span {
+  font-size: 13px;
+  font-weight: 800;
+
+  color: #ffffff;
+}
+
+.outputRoutingLabel small {
+  font-size: 11px;
+
+  color: var(--text-muted);
+}
+
+.outputRoutingOptions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 7px;
+
+  padding: 5px;
+
+  border-radius: 14px;
+
+  background:
+    rgba(255, 255, 255, 0.035);
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.07);
+}
+
+.outputRoutingOption {
+  min-width: 0;
+  min-height: 36px;
+
+  padding: 0 8px;
+
+  border-radius: 10px;
+
+  background: transparent;
+
+  color: var(--text-muted);
+
+  border:
+    1px solid
+    transparent;
+
+  font-size: 12px;
+}
+
+.outputRoutingOption:hover {
+  transform: none;
+
+  background:
+    rgba(255, 255, 255, 0.06);
+
+  box-shadow: none;
+}
+
+.outputRoutingOption.active {
+  background:
+    rgba(19, 241, 211, 0.14);
+
+  color: var(--accent);
+
+  border-color:
+    rgba(19, 241, 211, 0.48);
+
+  box-shadow:
+    0 0 16px
+    rgba(19, 241, 211, 0.10);
+}
+
+.outputRoutingOption[
+  data-routing-value="off"
+].active {
+  background:
+    rgba(239, 68, 68, 0.14);
+
+  color: #ff9ca3;
+
+  border-color:
+    rgba(239, 68, 68, 0.40);
+
+  box-shadow: none;
+}
+
+#outputRoutingButton.active {
+  color: var(--accent);
+
+  border-color:
+    rgba(19, 241, 211, 0.48);
+
+  background:
+    rgba(19, 241, 211, 0.12);
+}
 
 </style>
 </head>
@@ -2631,12 +2832,160 @@ body {
 </div>
 
   <div class="bottomRightTools">
-  <button onclick="copyCurrent()" title="コピー">コピー</button>
-  <button onclick="openQueueModal()" title="予約">予約</button>
-  <button onclick="openVisualizer()" title="Visualiser">Visualiser</button>
-  <button onclick="openLyricsOutput()" title="Lyrics">Lyrics</button>
-  <button id="openBottomEditorButton" title="Editor">Editor</button>
+  <button
+    onclick="copyCurrent()"
+    title="コピー"
+  >
+    コピー
+  </button>
+
+  <button
+    onclick="openQueueModal()"
+    title="予約"
+  >
+    予約
+  </button>
+
+  <button
+    onclick="openVisualizer()"
+    title="Visualizer Outputを開く"
+  >
+    Visualizer
+  </button>
+
+  <button
+    onclick="openLyricsOutput()"
+    title="Lyrics Outputを開く"
+  >
+    Lyrics
+  </button>
+
+  <button
+    id="outputRoutingButton"
+    type="button"
+    title="表示先設定"
+    aria-expanded="false"
+  >
+    Output
+  </button>
+
+  <button
+    id="openBottomEditorButton"
+    title="Editor"
+  >
+    Editor
+  </button>
+</div>
   
+<div
+  id="outputRoutingPanel"
+  class="outputRoutingPanel"
+  aria-hidden="true"
+>
+  <div class="outputRoutingHeader">
+    <div>
+      <div class="outputRoutingTitle">
+        Output Routing
+      </div>
+
+      <div class="outputRoutingDescription">
+        表示要素ごとに出力先を選択
+      </div>
+    </div>
+
+    <button
+      id="closeOutputRoutingButton"
+      class="outputRoutingCloseButton"
+      type="button"
+      aria-label="閉じる"
+    >
+      ×
+    </button>
+  </div>
+
+  <div class="outputRoutingContent">
+
+    <section class="outputRoutingSection">
+      <div class="outputRoutingLabel">
+        <span>Lyrics</span>
+
+        <small>
+          同期歌詞
+        </small>
+      </div>
+
+      <div
+        class="outputRoutingOptions"
+        data-routing-component="lyrics"
+      >
+        <button
+          type="button"
+          class="outputRoutingOption"
+          data-routing-value="visualizer"
+        >
+          Visualizer
+        </button>
+
+        <button
+          type="button"
+          class="outputRoutingOption"
+          data-routing-value="lyrics"
+        >
+          Lyrics
+        </button>
+
+        <button
+          type="button"
+          class="outputRoutingOption"
+          data-routing-value="off"
+        >
+          OFF
+        </button>
+      </div>
+    </section>
+
+    <section class="outputRoutingSection">
+      <div class="outputRoutingLabel">
+        <span>Song Info</span>
+
+        <small>
+          曲名・アーティスト・時間
+        </small>
+      </div>
+
+      <div
+        class="outputRoutingOptions"
+        data-routing-component="songInfo"
+      >
+        <button
+          type="button"
+          class="outputRoutingOption"
+          data-routing-value="visualizer"
+        >
+          Visualizer
+        </button>
+
+        <button
+          type="button"
+          class="outputRoutingOption"
+          data-routing-value="lyrics"
+        >
+          Lyrics
+        </button>
+
+        <button
+          type="button"
+          class="outputRoutingOption"
+          data-routing-value="off"
+        >
+          OFF
+        </button>
+      </div>
+    </section>
+
+  </div>
+</div>
+
 </div>
 
 </div>

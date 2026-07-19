@@ -83,6 +83,23 @@ let currentLyricsOutputTime = {
 let currentLyricsOutputSong = null;
 let currentLyricsOutputAspectRatio = '9:16';
 
+/*
+  出力先ルーティング
+
+  visualizer:
+    Visualizer Outputに表示
+
+  lyrics:
+    Lyrics Outputに表示
+
+  off:
+    どちらにも表示しない
+*/
+let currentOutputRouting = {
+  lyrics: 'visualizer',
+  songInfo: 'visualizer'
+};
+
 const ARTIST_ORDER = [
   'norah',
   'PELL',
@@ -205,36 +222,168 @@ function createWindow() {
 }
 
 function openVisualizerWindow() {
-  if (visualizerWindow && !visualizerWindow.isDestroyed()) {
+  if (
+    visualizerWindow &&
+    !visualizerWindow.isDestroyed()
+  ) {
     visualizerWindow.focus();
     return;
   }
 
-  visualizerWindow = new BrowserWindow({
-    width: 540,
-    height: 960,
-    title: 'PARADOX Visualizer',
-    backgroundColor: '#000000',
-    alwaysOnTop: true,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+  visualizerWindow =
+    new BrowserWindow({
+      width: 540,
+      height: 960,
+      title: 'PARADOX Visualizer',
+      backgroundColor: '#000000',
+      alwaysOnTop: true,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false
+      }
+    });
+
+  visualizerWindow.loadFile(
+    'visualizer.html'
+  );
+
+  visualizerWindow
+    .webContents
+    .once(
+      'did-finish-load',
+      () => {
+        /*
+         * テーマを復元
+         */
+        if (currentVisualTheme) {
+          visualizerWindow
+            .webContents
+            .send(
+              'visual-theme',
+              currentVisualTheme
+            );
+        }
+
+        /*
+         * 現在の曲情報と
+         * ジャケットを復元
+         */
+        if (currentLyricsOutputSong) {
+          visualizerWindow
+            .webContents
+            .send(
+              'visualizer-song',
+              currentLyricsOutputSong
+            );
+        }
+
+        /*
+         * 歌詞の表示状態を復元
+         */
+        visualizerWindow
+          .webContents
+          .send(
+            'visualizer-lyrics-visible',
+            currentOutputRouting
+              .lyrics ===
+              'visualizer'
+          );
+
+        /*
+         * Song Infoの表示状態を復元
+         */
+        visualizerWindow
+          .webContents
+          .send(
+            'visualizer-song-info-visible',
+            currentOutputRouting
+              .songInfo ===
+              'visualizer'
+          );
+      }
+    );
+
+  visualizerWindow.setAlwaysOnTop(
+    true
+  );
+
+  visualizerWindow.on(
+    'closed',
+    () => {
+      visualizerWindow = null;
     }
-  });
+  );
+}
 
-  visualizerWindow.loadFile('visualizer.html');
 
-visualizerWindow.webContents.once('did-finish-load', () => {
-  if (currentVisualTheme) {
-    visualizerWindow.webContents.send('visual-theme', currentVisualTheme);
+function isVisualizerDestination(
+  componentName
+) {
+  return (
+    currentOutputRouting[
+      componentName
+    ] === 'visualizer'
+  );
+}
+
+
+function isLyricsOutputDestination(
+  componentName
+) {
+  return (
+    currentOutputRouting[
+      componentName
+    ] === 'lyrics'
+  );
+}
+
+
+function sendOutputVisibilityState() {
+  if (
+  visualizerWindow &&
+  !visualizerWindow.isDestroyed()
+) {
+  visualizerWindow
+    .webContents
+    .send(
+      'visualizer-lyrics-visible',
+      currentOutputRouting
+        .lyrics ===
+        'visualizer'
+    );
+
+  visualizerWindow
+    .webContents
+    .send(
+      'visualizer-song-info-visible',
+      currentOutputRouting
+        .songInfo ===
+        'visualizer'
+    );
+}
+
+  if (
+    lyricsOutputWindow &&
+    !lyricsOutputWindow.isDestroyed()
+  ) {
+    lyricsOutputWindow
+      .webContents
+      .send(
+        'lyrics-output-lyrics-visible',
+        isLyricsOutputDestination(
+          'lyrics'
+        )
+      );
+
+    lyricsOutputWindow
+      .webContents
+      .send(
+        'lyrics-output-song-info-visible',
+        isLyricsOutputDestination(
+          'songInfo'
+        )
+      );
   }
-});
-
-visualizerWindow.setAlwaysOnTop(true);
-
-  visualizerWindow.on('closed', () => {
-    visualizerWindow = null;
-  });
 }
 
 
@@ -343,6 +492,24 @@ hasShadow: true,
             'lyrics-output-time',
             currentLyricsOutputTime
           );
+
+          lyricsOutputWindow
+  .webContents
+  .send(
+    'lyrics-output-lyrics-visible',
+    isLyricsOutputDestination(
+      'lyrics'
+    )
+  );
+
+lyricsOutputWindow
+  .webContents
+  .send(
+    'lyrics-output-song-info-visible',
+    isLyricsOutputDestination(
+      'songInfo'
+    )
+  );
       }
     );
 
@@ -486,7 +653,10 @@ ipcMain.handle('send-background-to-visualizer', async (event, background) => {
 
 ipcMain.handle(
   'send-lyrics-to-visualizer',
-  async (event, lyrics) => {
+  async (
+    event,
+    lyrics
+  ) => {
     console.log(
       '🔥 MAIN RECEIVED LYRICS:',
       JSON.stringify(
@@ -497,15 +667,23 @@ ipcMain.handle(
     );
 
     /*
-      Lyrics Outputを後から開いた場合でも
-      最新の歌詞を表示できるよう保持する
+      出力先を切り替えた時や、
+      Outputを後から開いた時のために
+      最新データ自体は常に保存する。
     */
     currentLyricsOutputData =
       lyrics || null;
 
-    let sentToAnyOutput = false;
+    let sentToAnyOutput =
+      false;
 
+    /*
+      Lyricsの表示先がVisualizerの場合
+    */
     if (
+      isVisualizerDestination(
+        'lyrics'
+      ) &&
       visualizerWindow &&
       !visualizerWindow.isDestroyed()
     ) {
@@ -519,7 +697,13 @@ ipcMain.handle(
       sentToAnyOutput = true;
     }
 
+    /*
+      Lyricsの表示先がLyrics Outputの場合
+    */
     if (
+      isLyricsOutputDestination(
+        'lyrics'
+      ) &&
       lyricsOutputWindow &&
       !lyricsOutputWindow.isDestroyed()
     ) {
@@ -613,92 +797,53 @@ ipcMain.handle(
 
 ipcMain.handle(
   'send-song-to-visualizer',
-  async (event, song) => {
+  async (
+    event,
+    song
+  ) => {
+    /*
+     * 最新の曲データを保存
+     */
     currentLyricsOutputSong =
       song || null;
 
     /*
-      従来動作を維持：
-      曲送信時にVisualizerがなければ開く
-    */
+     * 曲データ自体はVisualizerへ常に送る。
+     *
+     * Song Infoの表示・非表示は
+     * visualizer-song-info-visibleで制御する。
+     *
+     * これによりSong InfoがLyrics出力でも、
+     * Visualizerのジャケットや動画は更新される。
+     */
     if (
-      !visualizerWindow ||
-      visualizerWindow.isDestroyed()
-    ) {
-      openVisualizerWindow();
-    }
-
-    const sendToVisualizer =
-      () => {
-        if (
-          !visualizerWindow ||
-          visualizerWindow.isDestroyed()
-        ) {
-          return;
-        }
-
-        visualizerWindow
-          .webContents
-          .send(
-            'visualizer-song',
-            song
-          );
-      };
-
-    if (
-      visualizerWindow
-        .webContents
-        .isLoading()
+      visualizerWindow &&
+      !visualizerWindow.isDestroyed()
     ) {
       visualizerWindow
         .webContents
-        .once(
-          'did-finish-load',
-          sendToVisualizer
+        .send(
+          'visualizer-song',
+          currentLyricsOutputSong
         );
-    } else {
-      sendToVisualizer();
     }
 
     /*
-      Lyrics Outputは自動では開かない。
-      開いている場合だけ曲情報を同期する。
-    */
+     * Lyrics Outputにも曲データを常に送る。
+     *
+     * Lyrics Output側のSong Info表示は
+     * lyrics-output-song-info-visibleで制御する。
+     */
     if (
       lyricsOutputWindow &&
       !lyricsOutputWindow.isDestroyed()
     ) {
-      const sendToLyricsOutput =
-        () => {
-          if (
-            !lyricsOutputWindow ||
-            lyricsOutputWindow.isDestroyed()
-          ) {
-            return;
-          }
-
-          lyricsOutputWindow
-            .webContents
-            .send(
-              'lyrics-output-song',
-              song
-            );
-        };
-
-      if (
-        lyricsOutputWindow
-          .webContents
-          .isLoading()
-      ) {
-        lyricsOutputWindow
-          .webContents
-          .once(
-            'did-finish-load',
-            sendToLyricsOutput
-          );
-      } else {
-        sendToLyricsOutput();
-      }
+      lyricsOutputWindow
+        .webContents
+        .send(
+          'lyrics-output-song',
+          currentLyricsOutputSong
+        );
     }
 
     return true;
@@ -730,24 +875,34 @@ ipcMain.handle('send-visualizer-level', async (event, visualizerData) => {
 
 ipcMain.handle(
   'send-visualizer-time',
-  async (event, timeData) => {
+  async (
+    event,
+    timeData
+  ) => {
     currentLyricsOutputTime = {
-  current:
-    String(
-      timeData?.current ||
-      '00:00'
-    ),
+      current:
+        String(
+          timeData?.current ||
+          '00:00'
+        ),
 
-  duration:
-    String(
-      timeData?.duration ||
-      '00:00'
-    )
-};
+      duration:
+        String(
+          timeData?.duration ||
+          '00:00'
+        )
+    };
 
-    let sentToAnyOutput = false;
+    let sentToAnyOutput =
+      false;
 
+    /*
+      時間表示はSong Infoの一部として扱う。
+    */
     if (
+      isVisualizerDestination(
+        'songInfo'
+      ) &&
       visualizerWindow &&
       !visualizerWindow.isDestroyed()
     ) {
@@ -755,13 +910,16 @@ ipcMain.handle(
         .webContents
         .send(
           'visualizer-time',
-          timeData
+          currentLyricsOutputTime
         );
 
       sentToAnyOutput = true;
     }
 
     if (
+      isLyricsOutputDestination(
+        'songInfo'
+      ) &&
       lyricsOutputWindow &&
       !lyricsOutputWindow.isDestroyed()
     ) {
@@ -778,6 +936,159 @@ ipcMain.handle(
     return sentToAnyOutput;
   }
 );
+
+
+ipcMain.handle(
+  'set-output-routing',
+  async (
+    event,
+    routing
+  ) => {
+    const validDestinations =
+      new Set([
+        'visualizer',
+        'lyrics',
+        'off'
+      ]);
+
+    const nextLyrics =
+      validDestinations.has(
+        routing?.lyrics
+      )
+        ? routing.lyrics
+        : currentOutputRouting.lyrics;
+
+    const nextSongInfo =
+      validDestinations.has(
+        routing?.songInfo
+      )
+        ? routing.songInfo
+        : currentOutputRouting.songInfo;
+
+    currentOutputRouting = {
+      lyrics: nextLyrics,
+      songInfo: nextSongInfo
+    };
+
+    sendOutputVisibilityState();
+
+    /*
+      出力先を変更した直後に
+      最新データを新しい出力先へ送る。
+    */
+    if (
+      isVisualizerDestination(
+        'lyrics'
+      ) &&
+      currentLyricsOutputData &&
+      visualizerWindow &&
+      !visualizerWindow.isDestroyed()
+    ) {
+      visualizerWindow
+        .webContents
+        .send(
+          'visualizer-lyrics',
+          currentLyricsOutputData
+        );
+    }
+
+    if (
+      isLyricsOutputDestination(
+        'lyrics'
+      ) &&
+      currentLyricsOutputData &&
+      lyricsOutputWindow &&
+      !lyricsOutputWindow.isDestroyed()
+    ) {
+      lyricsOutputWindow
+        .webContents
+        .send(
+          'lyrics-output-data',
+          currentLyricsOutputData
+        );
+    }
+
+    /*
+ * 曲データはルーティングに関係なく両方へ再送する。
+ *
+ * Visualizerではジャケットや背景動画の更新にも
+ * 曲データを使用しているため、送信を止めてはいけない。
+ */
+if (
+  visualizerWindow &&
+  !visualizerWindow.isDestroyed()
+) {
+  visualizerWindow
+    .webContents
+    .send(
+      'visualizer-song',
+      currentLyricsOutputSong
+    );
+}
+
+if (
+  lyricsOutputWindow &&
+  !lyricsOutputWindow.isDestroyed()
+) {
+  lyricsOutputWindow
+    .webContents
+    .send(
+      'lyrics-output-song',
+      currentLyricsOutputSong
+    );
+}
+
+/*
+ * 時間はSong Infoの表示先だけへ送る。
+ */
+if (
+  isVisualizerDestination(
+    'songInfo'
+  ) &&
+  visualizerWindow &&
+  !visualizerWindow.isDestroyed()
+) {
+  visualizerWindow
+    .webContents
+    .send(
+      'visualizer-time',
+      currentLyricsOutputTime
+    );
+}
+
+if (
+  isLyricsOutputDestination(
+    'songInfo'
+  ) &&
+  lyricsOutputWindow &&
+  !lyricsOutputWindow.isDestroyed()
+) {
+  lyricsOutputWindow
+    .webContents
+    .send(
+      'lyrics-output-time',
+      currentLyricsOutputTime
+    );
+}
+
+    return {
+      ...currentOutputRouting
+    };
+  }
+);
+
+
+ipcMain.handle(
+  'get-output-routing',
+  async () => {
+    return {
+      ...currentOutputRouting
+    };
+  }
+);
+
+
+
 
 ipcMain.handle('send-visualizer-enabled', async (event, enabled) => {
   if (!visualizerWindow || visualizerWindow.isDestroyed()) return false;
@@ -800,28 +1111,60 @@ ipcMain.handle('send-visualizer-template', async (event, templateName) => {
   return true;
 });
 
-ipcMain.handle('send-visual-theme', async (event, theme) => {
-  console.log('[Main] send-visual-theme:', theme);
+ipcMain.handle(
+  'send-visual-theme',
+  async (
+    event,
+    theme
+  ) => {
+    console.log(
+      '[Main] send-visual-theme:',
+      theme
+    );
 
-  currentVisualTheme = theme;
+    currentVisualTheme =
+      theme;
 
-  if (!visualizerWindow || visualizerWindow.isDestroyed()) {
-    openVisualizerWindow();
+    if (
+      !visualizerWindow ||
+      visualizerWindow.isDestroyed()
+    ) {
+      openVisualizerWindow();
+      return true;
+    }
+
+    if (
+      visualizerWindow
+        .webContents
+        .isLoading()
+    ) {
+      visualizerWindow
+        .webContents
+        .once(
+          'did-finish-load',
+          () => {
+            visualizerWindow
+              .webContents
+              .send(
+                'visual-theme',
+                currentVisualTheme
+              );
+          }
+        );
+
+      return true;
+    }
+
+    visualizerWindow
+      .webContents
+      .send(
+        'visual-theme',
+        currentVisualTheme
+      );
+
     return true;
   }
-
-  if (visualizerWindow.webContents.isLoading()) {
-    visualizerWindow.webContents.once('did-finish-load', () => {
-      visualizerWindow.webContents.send('visual-theme', currentVisualTheme);
-    });
-
-    return true;
-  }
-
-  visualizerWindow.webContents.send('visual-theme', currentVisualTheme);
-
-  return true;
-});
+);
 
 ipcMain.handle('send-visualizer-effect-settings', async (event, settings) => {
   if (!visualizerWindow || visualizerWindow.isDestroyed()) return false;

@@ -124,31 +124,45 @@ ipcRenderer.on('visualizer-song', (event, song) => {
   document.getElementById('artist').textContent = song.artist || '';
 
   const coverImage = document.getElementById('coverImage');
-  const coverFrame = document.getElementById('coverFrame');
+const coverFrame = document.getElementById('coverFrame');
 
-  const coverUrl = song.artworkUrl || song.coverUrl || '';
+const coverUrl =
+  song?.artworkUrl ||
+  song?.coverUrl ||
+  '';
 
-if (coverUrl) {
-  console.log('cover set:', coverUrl);
-
-  coverImage.onload = () => {
-    console.log('cover loaded');
-  };
-
-  coverImage.onerror = (error) => {
-    console.error('cover load failed:', error);
-  };
-
-  coverImage.src = coverUrl;
-  coverFrame.style.display = 'block';
-} else {
-  console.log('ジャケットなし');
-
+if (coverImage && coverFrame) {
+  // 前の曲の読み込み処理を解除
   coverImage.onload = null;
   coverImage.onerror = null;
+
+  // 前のジャケットを必ず消す
   coverImage.removeAttribute('src');
-  coverImage.src = '';
   coverFrame.style.display = 'none';
+
+  if (coverUrl) {
+    console.log('cover set:', coverUrl);
+
+    coverImage.onload = () => {
+      console.log('cover loaded:', coverUrl);
+      coverFrame.style.display = 'block';
+    };
+
+    coverImage.onerror = (error) => {
+      console.error(
+        'cover load failed:',
+        coverUrl,
+        error
+      );
+
+      coverImage.removeAttribute('src');
+      coverFrame.style.display = 'none';
+    };
+
+    coverImage.src = coverUrl;
+  } else {
+    console.log('ジャケットなし');
+  }
 }
 
   const bgVideo = document.getElementById('bgVideo');
@@ -1660,6 +1674,30 @@ function setVisualizerEnabled(enabled) {
   }
 }
 
+
+
+ipcRenderer.on(
+  'visualizer-lyrics-visible',
+  (
+    event,
+    visible
+  ) => {
+    const lyricsLayer =
+      document.getElementById(
+        'lyricsLayer'
+      );
+
+    if (!lyricsLayer) {
+      return;
+    }
+
+    lyricsLayer.style.display =
+      visible
+        ? ''
+        : 'none';
+  }
+);
+
 ipcRenderer.on('visualizer-enabled', (event, enabled) => {
   setVisualizerEnabled(enabled);
 });
@@ -1985,3 +2023,112 @@ let videoAnalyser = null;
 let videoSourceNode = null;
 let videoAnalyserDataArray = null;
 let videoVisualizerAnimationId = null;
+
+
+/* ========================================
+   Output Routing Visibility
+======================================== */
+
+function setVisualizerSongInfoVisible(
+  visible
+) {
+  const songInfo =
+    document.getElementById(
+      'songInfo'
+    );
+
+  if (!songInfo) {
+    console.warn(
+      '[Visualizer Routing] #songInfoが見つかりません'
+    );
+
+    return;
+  }
+
+  songInfo.classList.toggle(
+    'output-routing-hidden',
+    !Boolean(visible)
+  );
+
+  console.log(
+    '[Visualizer Routing] Song Info:',
+    visible
+      ? 'SHOW'
+      : 'HIDE'
+  );
+}
+
+
+function setVisualizerLyricsVisible(
+  visible
+) {
+  const lyricsLayer =
+    document.getElementById(
+      'lyricsLayer'
+    );
+
+  if (!lyricsLayer) {
+    console.warn(
+      '[Visualizer Routing] #lyricsLayerが見つかりません'
+    );
+
+    return;
+  }
+
+  lyricsLayer.classList.toggle(
+    'output-routing-hidden',
+    !Boolean(visible)
+  );
+
+  console.log(
+    '[Visualizer Routing] Lyrics:',
+    visible
+      ? 'SHOW'
+      : 'HIDE'
+  );
+}
+
+
+ipcRenderer.on(
+  'visualizer-song-info-visible',
+  (
+    event,
+    visible
+  ) => {
+    const songInfo =
+      document.getElementById(
+        'songInfo'
+      );
+
+    if (!songInfo) {
+      console.warn(
+        '[Visualizer Routing] #songInfoが見つかりません'
+      );
+
+      return;
+    }
+
+    songInfo.classList.toggle(
+      'output-routing-hidden',
+      !Boolean(visible)
+    );
+
+    console.log(
+      '[Visualizer Routing] Song Info:',
+      visible ? 'SHOW' : 'HIDE'
+    );
+  }
+);
+
+
+ipcRenderer.on(
+  'visualizer-lyrics-visible',
+  (
+    event,
+    visible
+  ) => {
+    setVisualizerLyricsVisible(
+      visible
+    );
+  }
+);

@@ -36,6 +36,28 @@ let activeLibraryFilter = {
 const MAX_QUEUE = 5;
 const RECENT_PLAYED_LIMIT = 10;
 
+
+/* ========================================
+   Output routing
+======================================== */
+
+const OUTPUT_ROUTING_STORAGE_KEY =
+  'norahStudioOutputRouting';
+
+const VALID_OUTPUT_DESTINATIONS =
+  new Set([
+    'visualizer',
+    'lyrics',
+    'off'
+  ]);
+
+let outputRouting = {
+  lyrics: 'visualizer',
+  songInfo: 'visualizer'
+};
+
+
+
 let libraryTabs = [];
 
 const LIBRARY_TABS_KEY = 'norahStudioLibraryTabs';
@@ -543,6 +565,122 @@ ensureLibraryFolders();
 loadLibraryTabs();
 renderLibraryTabs();
 renderLibrarySongs();
+
+const outputRoutingButton =
+  document.getElementById(
+    'outputRoutingButton'
+  );
+
+const outputRoutingPanel =
+  document.getElementById(
+    'outputRoutingPanel'
+  );
+
+const closeOutputRoutingButton =
+  document.getElementById(
+    'closeOutputRoutingButton'
+  );
+
+
+outputRoutingButton
+  ?.addEventListener(
+    'click',
+    event => {
+      event.stopPropagation();
+
+      toggleOutputRoutingPanel();
+    }
+  );
+
+
+closeOutputRoutingButton
+  ?.addEventListener(
+    'click',
+    closeOutputRoutingPanel
+  );
+
+
+document
+  .querySelectorAll(
+    '.outputRoutingOption'
+  )
+  .forEach(button => {
+    button.addEventListener(
+      'click',
+      async event => {
+        event.stopPropagation();
+
+        const group =
+          button.closest(
+            '.outputRoutingOptions'
+          );
+
+        const componentName =
+          group?.dataset
+            ?.routingComponent;
+
+        const destination =
+          button.dataset
+            .routingValue;
+
+        await changeOutputRouting(
+          componentName,
+          destination
+        );
+      }
+    );
+  });
+
+
+document.addEventListener(
+  'click',
+  event => {
+    if (
+      !outputRoutingPanel ||
+      !outputRoutingPanel
+        .classList
+        .contains('show')
+    ) {
+      return;
+    }
+
+    const clickedInsidePanel =
+      outputRoutingPanel
+        .contains(
+          event.target
+        );
+
+    const clickedButton =
+      outputRoutingButton
+        ?.contains(
+          event.target
+        );
+
+    if (
+      !clickedInsidePanel &&
+      !clickedButton
+    ) {
+      closeOutputRoutingPanel();
+    }
+  }
+);
+
+
+document.addEventListener(
+  'keydown',
+  event => {
+    if (
+      event.key === 'Escape'
+    ) {
+      closeOutputRoutingPanel();
+    }
+  }
+);
+
+
+initializeOutputRouting();
+
+
 });
 
 
@@ -1613,6 +1751,269 @@ async function openLyricsOutput() {
   } catch (error) {
     console.error('Lyrics Outputを開けませんでした:', error);
   }
+}
+
+function normalizeOutputRouting(
+  routing
+) {
+  return {
+    lyrics:
+      VALID_OUTPUT_DESTINATIONS.has(
+        routing?.lyrics
+      )
+        ? routing.lyrics
+        : 'visualizer',
+
+    songInfo:
+      VALID_OUTPUT_DESTINATIONS.has(
+        routing?.songInfo
+      )
+        ? routing.songInfo
+        : 'visualizer'
+  };
+}
+
+
+function loadOutputRoutingFromStorage() {
+  const saved =
+    localStorage.getItem(
+      OUTPUT_ROUTING_STORAGE_KEY
+    );
+
+  if (!saved) {
+    return {
+      lyrics: 'visualizer',
+      songInfo: 'visualizer'
+    };
+  }
+
+  try {
+    return normalizeOutputRouting(
+      JSON.parse(saved)
+    );
+  } catch (error) {
+    console.warn(
+      'Output Routingの読込に失敗:',
+      error
+    );
+
+    localStorage.removeItem(
+      OUTPUT_ROUTING_STORAGE_KEY
+    );
+
+    return {
+      lyrics: 'visualizer',
+      songInfo: 'visualizer'
+    };
+  }
+}
+
+
+function saveOutputRoutingToStorage() {
+  localStorage.setItem(
+    OUTPUT_ROUTING_STORAGE_KEY,
+    JSON.stringify(
+      outputRouting
+    )
+  );
+}
+
+
+function updateOutputRoutingUI() {
+  document
+    .querySelectorAll(
+      '.outputRoutingOptions'
+    )
+    .forEach(group => {
+      const componentName =
+        group.dataset
+          .routingComponent;
+
+      const currentValue =
+        outputRouting[
+          componentName
+        ];
+
+      group
+        .querySelectorAll(
+          '.outputRoutingOption'
+        )
+        .forEach(button => {
+          button.classList.toggle(
+            'active',
+            button.dataset
+              .routingValue ===
+              currentValue
+          );
+        });
+    });
+}
+
+
+async function sendOutputRoutingToMain() {
+  try {
+    const result =
+      await ipcRenderer.invoke(
+        'set-output-routing',
+        outputRouting
+      );
+
+    outputRouting =
+      normalizeOutputRouting(
+        result
+      );
+
+    saveOutputRoutingToStorage();
+    updateOutputRoutingUI();
+
+    return true;
+  } catch (error) {
+    console.error(
+      'Output Routingの送信に失敗:',
+      error
+    );
+
+    return false;
+  }
+}
+
+
+async function changeOutputRouting(
+  componentName,
+  destination
+) {
+  if (
+    componentName !== 'lyrics' &&
+    componentName !== 'songInfo'
+  ) {
+    return;
+  }
+
+  if (
+    !VALID_OUTPUT_DESTINATIONS.has(
+      destination
+    )
+  ) {
+    return;
+  }
+
+  outputRouting = {
+    ...outputRouting,
+
+    [componentName]:
+      destination
+  };
+
+  saveOutputRoutingToStorage();
+  updateOutputRoutingUI();
+
+  await sendOutputRoutingToMain();
+}
+
+
+function openOutputRoutingPanel() {
+  const panel =
+    document.getElementById(
+      'outputRoutingPanel'
+    );
+
+  const button =
+    document.getElementById(
+      'outputRoutingButton'
+    );
+
+  if (!panel) {
+    return;
+  }
+
+  panel.classList.add(
+    'show'
+  );
+
+  panel.setAttribute(
+    'aria-hidden',
+    'false'
+  );
+
+  button?.classList.add(
+    'active'
+  );
+
+  button?.setAttribute(
+    'aria-expanded',
+    'true'
+  );
+}
+
+
+function closeOutputRoutingPanel() {
+  const panel =
+    document.getElementById(
+      'outputRoutingPanel'
+    );
+
+  const button =
+    document.getElementById(
+      'outputRoutingButton'
+    );
+
+  if (!panel) {
+    return;
+  }
+
+  panel.classList.remove(
+    'show'
+  );
+
+  panel.setAttribute(
+    'aria-hidden',
+    'true'
+  );
+
+  button?.classList.remove(
+    'active'
+  );
+
+  button?.setAttribute(
+    'aria-expanded',
+    'false'
+  );
+}
+
+
+function toggleOutputRoutingPanel() {
+  const panel =
+    document.getElementById(
+      'outputRoutingPanel'
+    );
+
+  if (!panel) {
+    return;
+  }
+
+  if (
+    panel.classList.contains(
+      'show'
+    )
+  ) {
+    closeOutputRoutingPanel();
+  } else {
+    openOutputRoutingPanel();
+  }
+}
+
+
+async function initializeOutputRouting() {
+  outputRouting =
+    loadOutputRoutingFromStorage();
+
+  /*
+   * Main Processが再起動した場合でも
+   * Player側の保存値を復元する。
+   */
+  await sendOutputRoutingToMain();
+
+  updateOutputRoutingUI();
 }
 
 function toggleSettingsPanel() {
