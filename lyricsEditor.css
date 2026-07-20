@@ -1281,10 +1281,17 @@ input[type="range"] {
 
 #editorPreviewCanvas {
   position: relative;
+
   width: 1080px;
   height: 1920px;
+
+  flex: 0 0 auto;
+  flex-shrink: 0;
+
   transform-origin: center center;
-  transform: scale(var(--editor-preview-canvas-scale, 1));
+  transform: scale(
+    var(--editor-preview-canvas-scale, 1)
+  );
 }
 
 .lyricsSelectionBox {

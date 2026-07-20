@@ -4711,17 +4711,27 @@ function getCurrentInspectorStyle() {
 
 
 function getEditorPreviewScale() {
-  const stage = document.getElementById('editorPreviewStage');
+  const stage =
+    document.getElementById(
+      'editorPreviewStage'
+    );
+
   if (!stage) return 1;
 
-  const BASE_WIDTH = 1080;
-  const BASE_HEIGHT = 1920;
+  const isWide =
+    stage.classList.contains(
+      'ratio-16-9'
+    );
 
-  const rect = stage.getBoundingClientRect();
+  const baseWidth =
+    isWide ? 1920 : 1080;
+
+  const baseHeight =
+    isWide ? 1080 : 1920;
 
   return Math.min(
-    rect.width / BASE_WIDTH,
-    rect.height / BASE_HEIGHT
+    stage.clientWidth / baseWidth,
+    stage.clientHeight / baseHeight
   );
 }
 
@@ -4743,8 +4753,8 @@ function sendLyricsBlockToVisualizer(
   if (!block) return;
 
   /*
-   * 再生中は単体送信せず、
-   * 現在表示対象の全ブロックを送る。
+   * 再生中は現在表示対象の全ブロックを送る。
+   * 編集中のブロックだけは最新データへ差し替える。
    */
   if (
     editorAudio &&
@@ -4754,16 +4764,26 @@ function sendLyricsBlockToVisualizer(
     const activeBlocks =
       getCurrentEditorLyricsBlocks();
 
+    const syncedBlocks =
+      activeBlocks.map(activeBlock => {
+        if (
+          activeBlock.id === block.id
+        ) {
+          return block;
+        }
+
+        return activeBlock;
+      });
+
     sendLyricsBlocksToVisualizer(
-      activeBlocks
+      syncedBlocks
     );
 
     return;
   }
 
   /*
-   * 停止中は対象ブロックを
-   * 単体でVisualizerへ送る。
+   * 停止中は対象ブロックを単体で送る。
    */
   const payload =
     buildLyricsPayloadForVisualizer(
@@ -4822,27 +4842,44 @@ function sendLyricsBlocksToVisualizer(blocks) {
 
 
 function resizeEditorPreviewCanvas() {
-  const stage = document.getElementById('editorPreviewStage');
-  const canvas = document.getElementById('editorPreviewCanvas');
+  const stage =
+    document.getElementById(
+      'editorPreviewStage'
+    );
+
+  const canvas =
+    document.getElementById(
+      'editorPreviewCanvas'
+    );
 
   if (!stage || !canvas) return;
 
-  const isWide = stage.classList.contains('ratio-16-9');
+  const isWide =
+    stage.classList.contains(
+      'ratio-16-9'
+    );
 
-  const baseWidth = isWide ? 1920 : 1080;
-  const baseHeight = isWide ? 1080 : 1920;
+  const baseWidth =
+    isWide ? 1920 : 1080;
 
-  canvas.style.width = `${baseWidth}px`;
-  canvas.style.height = `${baseHeight}px`;
+  const baseHeight =
+    isWide ? 1080 : 1920;
 
-  const rect = stage.getBoundingClientRect();
+  canvas.style.width =
+    `${baseWidth}px`;
+
+  canvas.style.height =
+    `${baseHeight}px`;
 
   const scale = Math.min(
-    rect.width / baseWidth,
-    rect.height / baseHeight
+    stage.clientWidth / baseWidth,
+    stage.clientHeight / baseHeight
   );
 
-  canvas.style.setProperty('--editor-preview-canvas-scale', String(scale));
+  canvas.style.setProperty(
+    '--editor-preview-canvas-scale',
+    String(scale)
+  );
 }
 
 window.addEventListener(

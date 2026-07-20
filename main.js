@@ -246,21 +246,27 @@ function openVisualizerWindow() {
   }
 
   visualizerWindow =
-    new BrowserWindow({
-      width: 540,
-      height: 960,
-      title: 'PARADOX Visualizer',
-      backgroundColor: '#000000',
-      alwaysOnTop: true,
-      webPreferences: {
-        nodeIntegration: true,
-        contextIsolation: false
-      }
-    });
+  new BrowserWindow({
+    width: 540,
+    height: 960,
+    useContentSize: true,
+    title: 'PARADOX Visualizer',
+    backgroundColor: '#000000',
+    alwaysOnTop: true,
 
-  visualizerWindow.loadFile(
-    'visualizer.html'
-  );
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    }
+  });
+
+visualizerWindow.setAspectRatio(
+  9 / 16
+);
+
+visualizerWindow.loadFile(
+  'visualizer.html'
+);
 
   visualizerWindow
     .webContents
