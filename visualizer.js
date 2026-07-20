@@ -2165,6 +2165,34 @@ ipcRenderer.on(
   document.body.appendChild(flashLayer);
 
 
+  /* ========================================
+   Performance Mode：White Out Layer
+======================================== */
+
+const whiteOutLayer =
+  document.createElement('div');
+
+whiteOutLayer.id =
+  'performanceWhiteOutLayer';
+
+Object.assign(whiteOutLayer.style, {
+  position: 'fixed',
+  inset: '0',
+  zIndex: '999998',
+  pointerEvents: 'none',
+  background: '#ffffff',
+  opacity: '0',
+  visibility: 'hidden',
+  mixBlendMode: 'screen',
+  willChange: 'opacity'
+});
+
+document.body.appendChild(
+  whiteOutLayer
+);
+
+
+
   const flashAnimationStyle =
   document.createElement('style');
 
@@ -2194,6 +2222,13 @@ document.head.appendChild(
     speed: 1,
     startedAt: 0,
   };
+
+
+  const whiteOutState = {
+  active: false,
+  intensity: 1,
+  speed: 1
+};
 
   function clamp(value, min, max) {
     return Math.min(
@@ -2312,41 +2347,168 @@ document.head.appendChild(
   }
 }
 
-  performanceIpcRenderer.on(
-    'performance-effect',
-    (event, payload) => {
-      if (
-        !payload ||
-        payload.effect !== 'flash'
-      ) {
-        return;
-      }
 
+function activateWhiteOut(params = {}) {
+  whiteOutState.intensity = clamp(
+    params.intensity ?? 1,
+    0,
+    1
+  );
+
+  whiteOutState.speed = clamp(
+    params.speed ?? 1,
+    0.1,
+    10
+  );
+
+  /*
+   * speedが大きいほど、
+   * 白くなる時間を短くする
+   */
+  const fadeInDuration =
+    240 / whiteOutState.speed;
+
+  whiteOutState.active = true;
+
+  whiteOutLayer.style.visibility =
+    'visible';
+
+  whiteOutLayer.style.transition =
+    `opacity ${fadeInDuration}ms ease-out`;
+
+  whiteOutLayer.style.opacity =
+    String(whiteOutState.intensity);
+
+  console.log(
+    '[Performance White Out] Activated',
+    {
+      intensity:
+        whiteOutState.intensity,
+      speed:
+        whiteOutState.speed
+    }
+  );
+}
+
+
+function deactivateWhiteOut() {
+  if (!whiteOutState.active) {
+    return;
+  }
+
+  whiteOutState.active = false;
+
+  const fadeOutDuration =
+    320 / whiteOutState.speed;
+
+  whiteOutLayer.style.transition =
+    `opacity ${fadeOutDuration}ms ease-in`;
+
+  whiteOutLayer.style.opacity = '0';
+
+  window.setTimeout(() => {
+    if (!whiteOutState.active) {
+      whiteOutLayer.style.visibility =
+        'hidden';
+    }
+  }, fadeOutDuration + 30);
+
+  console.log(
+    '[Performance White Out] Deactivated'
+  );
+}
+
+
+
+function updateWhiteOutParameters(
+  params = {}
+) {
+  if (
+    params.intensity !== undefined
+  ) {
+    whiteOutState.intensity = clamp(
+      params.intensity,
+      0,
+      1
+    );
+
+    if (whiteOutState.active) {
+      whiteOutLayer.style.opacity =
+        String(
+          whiteOutState.intensity
+        );
+    }
+  }
+
+  if (params.speed !== undefined) {
+    whiteOutState.speed = clamp(
+      params.speed,
+      0.1,
+      10
+    );
+  }
+}
+
+
+
+
+  performanceIpcRenderer.on(
+  'performance-effect',
+  (event, payload) => {
+    if (!payload) {
+      return;
+    }
+
+    if (payload.effect === 'flash') {
       updateFlashParameters(
-        payload.params
+        payload.params || {}
       );
 
       if (payload.active) {
-        activateFlash(payload.params);
+        activateFlash(
+          payload.params || {}
+        );
       } else {
         deactivateFlash();
       }
-
-      console.log(
-        '[Performance Visualizer]',
-        payload
-      );
     }
-  );
 
-  window.PerformanceFlash = {
-    activate: activateFlash,
-    deactivate: deactivateFlash,
-    setParameters:
-      updateFlashParameters
-  };
+    if (payload.effect === 'whiteOut') {
+      updateWhiteOutParameters(
+        payload.params || {}
+      );
 
-  console.log(
-    '[Performance Visualizer] Flash initialized'
-  );
+      if (payload.active) {
+        activateWhiteOut(
+          payload.params || {}
+        );
+      } else {
+        deactivateWhiteOut();
+      }
+    }
+
+    console.log(
+      '[Performance Visualizer]',
+      payload
+    );
+  }
+);
+
+window.PerformanceFlash = {
+  activate: activateFlash,
+  deactivate: deactivateFlash,
+  setParameters:
+    updateFlashParameters
+};
+
+window.PerformanceWhiteOut = {
+  activate: activateWhiteOut,
+  deactivate: deactivateWhiteOut,
+  setParameters:
+    updateWhiteOutParameters
+};
+
+console.log(
+  '[Performance Visualizer] Flash and White Out initialized'
+);
 })();

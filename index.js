@@ -3864,38 +3864,91 @@ function isTypingTarget(target) {
     target?.isContentEditable === true
   );
 }
+
 window.addEventListener('keydown', event => {
   if (isTypingTarget(event.target)) {
     return;
   }
 
-  if (
-    event.code !== 'Space' ||
-    !event.shiftKey
-  ) {
-    return;
-  }
-
-  event.preventDefault();
-
   if (event.repeat) {
     return;
   }
 
-  window.PerformanceEngine?.activate('flash', {
-    intensity: 1,
-    speed: 8
-  });
+  /*
+   * Flash
+   * Shift + Space
+   */
+  if (
+    event.code === 'Space' &&
+    event.shiftKey
+  ) {
+    event.preventDefault();
 
-  console.log('[Performance] Flash ON');
-});
+    window.PerformanceEngine?.activate(
+      'flash',
+      {
+        intensity: 1,
+        speed: 6
+      }
+    );
 
-window.addEventListener('keyup', event => {
-  if (event.code !== 'Space') {
+    console.log(
+      '[Performance] Flash ON'
+    );
+
     return;
   }
 
-  window.PerformanceEngine?.deactivate('flash');
+  /*
+   * White Out
+   * Shift + W
+   */
+  if (
+    event.code === 'KeyW' &&
+    event.shiftKey
+  ) {
+    event.preventDefault();
 
-  console.log('[Performance] Flash OFF');
+    window.PerformanceEngine?.activate(
+      'whiteOut',
+      {
+        intensity: 1,
+        speed: 1
+      }
+    );
+
+    console.log(
+      '[Performance] White Out ON'
+    );
+  }
+});
+
+window.addEventListener('keyup', event => {
+  /*
+   * Flash解除
+   */
+  if (event.code === 'Space') {
+    window.PerformanceEngine?.deactivate(
+      'flash'
+    );
+
+    console.log(
+      '[Performance] Flash OFF'
+    );
+
+    return;
+  }
+
+  /*
+   * White Out解除
+   */
+  if (event.code === 'KeyW') {
+    window.PerformanceEngine?.deactivate(
+      'whiteOut'
+    );
+
+    console.log(
+      '[Performance] White Out OFF'
+    );
+  }
 });
