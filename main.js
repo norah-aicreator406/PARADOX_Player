@@ -1558,3 +1558,26 @@ ipcMain.handle('open-lyrics-editor-window', (event, data) => {
 app.whenReady().then(() => {
   createWindow();
 });
+
+
+ipcMain.on('performance-effect', (event, payload) => {
+  if (
+    !visualizerWindow ||
+    visualizerWindow.isDestroyed()
+  ) {
+    console.warn(
+      '[Performance] Visualizer window is not available'
+    );
+    return;
+  }
+
+  visualizerWindow.webContents.send(
+    'performance-effect',
+    payload
+  );
+
+  console.log(
+    '[Performance] Sent to Visualizer:',
+    payload
+  );
+});

@@ -2132,3 +2132,223 @@ ipcRenderer.on(
     );
   }
 );
+
+
+(function initializePerformanceFlash() {
+  if (window.__performanceFlashInitialized) {
+    return;
+  }
+
+  window.__performanceFlashInitialized = true;
+
+  const { ipcRenderer: performanceIpcRenderer } =
+    require('electron');
+
+  const flashLayer =
+    document.createElement('div');
+
+  flashLayer.id =
+    'performanceFlashLayer';
+
+  Object.assign(flashLayer.style, {
+    position: 'fixed',
+    inset: '0',
+    zIndex: '999999',
+    pointerEvents: 'none',
+    background: '#ffffff',
+    opacity: '0',
+    visibility: 'hidden',
+    mixBlendMode: 'screen',
+    willChange: 'opacity'
+  });
+
+  document.body.appendChild(flashLayer);
+
+  const flashState = {
+    active: false,
+    intensity: 1,
+    speed: 1,
+    startedAt: 0,
+    animationFrameId: null,
+    currentOpacity: 0
+  };
+
+  function clamp(value, min, max) {
+    return Math.min(
+      Math.max(Number(value) || 0, min),
+      max
+    );
+  }
+
+  function renderFlash(timestamp) {
+    if (!flashState.active) {
+      flashState.animationFrameId = null;
+      return;
+    }
+
+    const elapsedSeconds =
+      (timestamp - flashState.startedAt) / 1000;
+
+    /*
+     * speed:
+     * 1 = 1秒に約1回
+     * 将来MIDIツマミから変更可能
+     */
+    const phase =
+      elapsedSeconds *
+      flashState.speed *
+      Math.PI *
+      2;
+
+    /*
+     * 滑らかな明滅。
+     * 後でストロボ型にも変更可能。
+     */
+    const pulse =
+      (Math.sin(phase) + 1) / 2;
+
+    const opacity =
+      flashState.intensity *
+      (0.15 + pulse * 0.85);
+
+    flashState.currentOpacity =
+      opacity;
+
+    flashLayer.style.opacity =
+      String(opacity);
+
+    flashState.animationFrameId =
+      requestAnimationFrame(renderFlash);
+  }
+
+  function activateFlash(params = {}) {
+    flashState.intensity =
+      clamp(
+        params.intensity ?? 1,
+        0,
+        1
+      );
+
+    flashState.speed =
+      clamp(
+        params.speed ?? 1,
+        0.1,
+        20
+      );
+
+    flashState.active = true;
+    flashState.startedAt =
+      performance.now();
+
+    flashLayer.style.visibility =
+      'visible';
+
+    /*
+     * 押した瞬間は即座に強く光らせる
+     */
+    flashLayer.style.transition =
+      'none';
+
+    flashLayer.style.opacity =
+      String(flashState.intensity);
+
+    if (
+      flashState.animationFrameId === null
+    ) {
+      flashState.animationFrameId =
+        requestAnimationFrame(renderFlash);
+    }
+  }
+
+  function deactivateFlash() {
+    flashState.active = false;
+
+    if (
+      flashState.animationFrameId !== null
+    ) {
+      cancelAnimationFrame(
+        flashState.animationFrameId
+      );
+
+      flashState.animationFrameId = null;
+    }
+
+    /*
+     * 離したあと自然に消える
+     */
+    flashLayer.style.transition =
+      'opacity 160ms ease-out';
+
+    flashLayer.style.opacity =
+      '0';
+
+    window.setTimeout(() => {
+      if (!flashState.active) {
+        flashLayer.style.visibility =
+          'hidden';
+      }
+    }, 180);
+  }
+
+  function updateFlashParameters(
+    params = {}
+  ) {
+    if (
+      params.intensity !== undefined
+    ) {
+      flashState.intensity =
+        clamp(
+          params.intensity,
+          0,
+          1
+        );
+    }
+
+    if (params.speed !== undefined) {
+      flashState.speed =
+        clamp(
+          params.speed,
+          0.1,
+          20
+        );
+    }
+  }
+
+  performanceIpcRenderer.on(
+    'performance-effect',
+    (event, payload) => {
+      if (
+        !payload ||
+        payload.effect !== 'flash'
+      ) {
+        return;
+      }
+
+      updateFlashParameters(
+        payload.params
+      );
+
+      if (payload.active) {
+        activateFlash(payload.params);
+      } else {
+        deactivateFlash();
+      }
+
+      console.log(
+        '[Performance Visualizer]',
+        payload
+      );
+    }
+  );
+
+  window.PerformanceFlash = {
+    activate: activateFlash,
+    deactivate: deactivateFlash,
+    setParameters:
+      updateFlashParameters
+  };
+
+  console.log(
+    '[Performance Visualizer] Flash initialized'
+  );
+})();

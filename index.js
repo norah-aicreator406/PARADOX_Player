@@ -3855,3 +3855,47 @@ function updateLibrarySearchClearButton() {
     input.value.trim().length > 0
   );
 }
+
+function isTypingTarget(target) {
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement ||
+    target?.isContentEditable === true
+  );
+}
+window.addEventListener('keydown', event => {
+  if (isTypingTarget(event.target)) {
+    return;
+  }
+
+  if (
+    event.code !== 'Space' ||
+    !event.shiftKey
+  ) {
+    return;
+  }
+
+  event.preventDefault();
+
+  if (event.repeat) {
+    return;
+  }
+
+  window.PerformanceEngine?.activate('flash', {
+    intensity: 1,
+    speed: 1
+  });
+
+  console.log('[Performance] Flash ON');
+});
+
+window.addEventListener('keyup', event => {
+  if (event.code !== 'Space') {
+    return;
+  }
+
+  window.PerformanceEngine?.deactivate('flash');
+
+  console.log('[Performance] Flash OFF');
+});
