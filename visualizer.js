@@ -2164,13 +2164,35 @@ ipcRenderer.on(
 
   document.body.appendChild(flashLayer);
 
+
+  const flashAnimationStyle =
+  document.createElement('style');
+
+flashAnimationStyle.textContent = `
+  @keyframes performanceFlashStrobe {
+    0%,
+    49.999% {
+      opacity: var(--flash-intensity, 1);
+    }
+
+    50%,
+    100% {
+      opacity: 0;
+    }
+  }
+`;
+
+document.head.appendChild(
+  flashAnimationStyle
+);
+
+
+
   const flashState = {
     active: false,
     intensity: 1,
     speed: 1,
     startedAt: 0,
-    animationFrameId: null,
-    currentOpacity: 0
   };
 
   function clamp(value, min, max) {
@@ -2180,139 +2202,115 @@ ipcRenderer.on(
     );
   }
 
-  function renderFlash(timestamp) {
-    if (!flashState.active) {
-      flashState.animationFrameId = null;
-      return;
-    }
-
-    const elapsedSeconds =
-      (timestamp - flashState.startedAt) / 1000;
-
-    /*
-     * speed:
-     * 1 = 1秒に約1回
-     * 将来MIDIツマミから変更可能
-     */
-    const phase =
-      elapsedSeconds *
-      flashState.speed *
-      Math.PI *
-      2;
-
-    /*
-     * 滑らかな明滅。
-     * 後でストロボ型にも変更可能。
-     */
-    const pulse =
-      (Math.sin(phase) + 1) / 2;
-
-    const opacity =
-      flashState.intensity *
-      (0.15 + pulse * 0.85);
-
-    flashState.currentOpacity =
-      opacity;
-
-    flashLayer.style.opacity =
-      String(opacity);
-
-    flashState.animationFrameId =
-      requestAnimationFrame(renderFlash);
-  }
+  
 
   function activateFlash(params = {}) {
-    flashState.intensity =
-      clamp(
-        params.intensity ?? 1,
-        0,
-        1
-      );
+  flashState.intensity = clamp(
+    params.intensity ?? 1,
+    0,
+    1
+  );
 
-    flashState.speed =
-      clamp(
-        params.speed ?? 1,
-        0.1,
-        20
-      );
+  flashState.speed = clamp(
+    params.speed ?? 6,
+    0.1,
+    20
+  );
 
-    flashState.active = true;
-    flashState.startedAt =
-      performance.now();
+  flashLayer.style.setProperty(
+    '--flash-intensity',
+    String(flashState.intensity)
+  );
 
-    flashLayer.style.visibility =
-      'visible';
+  flashLayer.style.visibility = 'visible';
+  flashLayer.style.transition = 'none';
 
-    /*
-     * 押した瞬間は即座に強く光らせる
-     */
-    flashLayer.style.transition =
-      'none';
+  /*
+   * 発動中なら開始位置をリセットせず、
+   * 速度と強さだけ更新する。
+   */
+  if (flashState.active) {
+    flashLayer.style.animationDuration =
+      `${1 / flashState.speed}s`;
 
-    flashLayer.style.opacity =
-      String(flashState.intensity);
-
-    if (
-      flashState.animationFrameId === null
-    ) {
-      flashState.animationFrameId =
-        requestAnimationFrame(renderFlash);
-    }
+    return;
   }
+
+  flashState.active = true;
+
+  /*
+   * 例：
+   * speed 8 → 1周期 0.125秒
+   */
+  flashLayer.style.animation =
+    `performanceFlashStrobe ${
+      1 / flashState.speed
+    }s steps(1, end) infinite`;
+
+  console.log(
+    '[Performance Flash] Activated',
+    {
+      speed: flashState.speed,
+      intensity: flashState.intensity
+    }
+  );
+}
 
   function deactivateFlash() {
-    flashState.active = false;
+  flashState.active = false;
 
-    if (
-      flashState.animationFrameId !== null
-    ) {
-      cancelAnimationFrame(
-        flashState.animationFrameId
-      );
+  /*
+   * 現在のアニメーションを停止
+   */
+  flashLayer.style.animation = 'none';
 
-      flashState.animationFrameId = null;
+  /*
+   * キーを離した後に軽くフェードアウト
+   */
+  flashLayer.style.transition =
+    'opacity 160ms ease-out';
+
+  flashLayer.style.opacity = '0';
+
+  window.setTimeout(() => {
+    if (!flashState.active) {
+      flashLayer.style.visibility =
+        'hidden';
     }
-
-    /*
-     * 離したあと自然に消える
-     */
-    flashLayer.style.transition =
-      'opacity 160ms ease-out';
-
-    flashLayer.style.opacity =
-      '0';
-
-    window.setTimeout(() => {
-      if (!flashState.active) {
-        flashLayer.style.visibility =
-          'hidden';
-      }
-    }, 180);
-  }
+  }, 180);
+}
 
   function updateFlashParameters(
-    params = {}
+  params = {}
+) {
+  if (
+    params.intensity !== undefined
   ) {
-    if (
-      params.intensity !== undefined
-    ) {
-      flashState.intensity =
-        clamp(
-          params.intensity,
-          0,
-          1
-        );
-    }
+    flashState.intensity = clamp(
+      params.intensity,
+      0,
+      1
+    );
 
-    if (params.speed !== undefined) {
-      flashState.speed =
-        clamp(
-          params.speed,
-          0.1,
-          20
-        );
+    flashLayer.style.setProperty(
+      '--flash-intensity',
+      String(flashState.intensity)
+    );
+  }
+
+  if (params.speed !== undefined) {
+    flashState.speed = clamp(
+      params.speed,
+      0.1,
+      20
+    );
+
+    if (flashState.active) {
+      flashLayer.style.animationDuration =
+        `${1 / flashState.speed}s`;
     }
   }
+}
 
   performanceIpcRenderer.on(
     'performance-effect',

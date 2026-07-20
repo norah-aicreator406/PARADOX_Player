@@ -3884,7 +3884,7 @@ window.addEventListener('keydown', event => {
 
   window.PerformanceEngine?.activate('flash', {
     intensity: 1,
-    speed: 1
+    speed: 8
   });
 
   console.log('[Performance] Flash ON');

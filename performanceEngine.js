@@ -5,7 +5,7 @@
   const defaultParameters = {
     flash: {
       intensity: 1,
-      speed: 1
+      speed: 6
     }
   };
 
