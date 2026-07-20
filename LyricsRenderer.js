@@ -42,6 +42,7 @@ targetElement.style.setProperty(
   'important'
 );
     targetElement.style.fontSize = `${Number(style.size) || 72}px`;
+    targetElement.style.opacity = (style.opacity ?? 100) / 100;
     targetElement.style.color = style.color || '#ffffff';
     targetElement.style.textAlign = style.align || 'center';
     targetElement.style.letterSpacing = `${Number(style.letterSpacing) || 0}px`;

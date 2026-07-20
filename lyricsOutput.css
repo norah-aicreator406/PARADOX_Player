@@ -800,3 +800,18 @@ body {
 
   opacity: .75;
 }
+
+
+.lyricsOutputBlock .lyricsLine,
+.lyricsOutputBlock .lyricsHoldWrapper,
+.lyricsOutputBlock .lyricsMotionWrapper {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.lyricsOutputBlock .lyricsLine {
+  -webkit-text-stroke: inherit !important;
+  text-shadow: inherit !important;
+}

@@ -561,6 +561,9 @@ const applyOutAnimationButton =
     'applyOutAnimationButton'
   );
 const sizeInput = document.getElementById('lyricsSize');
+const opacityInput = document.getElementById('lyricsOpacity');
+
+const opacityValue = document.getElementById('lyricsOpacityValue');
 const colorInput = document.getElementById('lyricsColor');
 const fontInput = document.getElementById('lyricsFont');
 const stylePresetInput =
@@ -604,6 +607,9 @@ function sendLyricsUpdate() {
   sizeValue.textContent =
     sizeInput.value;
 
+  opacityValue.textContent =
+  `${opacityInput.value}%`;
+
   outlineWidthValue.textContent =
     outlineWidthInput.value;
 
@@ -627,6 +633,7 @@ function sendLyricsUpdate() {
   ipcRenderer.invoke('update-selected-lyrics-layer', {
     text: textInput.value,
     size: Number(sizeInput.value),
+    opacity: Number(opacityInput.value),
     color: colorInput.value,
     font: fontInput.value,
     outlineColor: outlineColorInput.value,
@@ -673,6 +680,7 @@ blockData.animation.in = {
     blockData.style = {
   font: fontInput.value,
   size: Number(sizeInput.value),
+  opacity: Number(opacityInput.value),
   color: colorInput.value,
   align: alignInput.value,
   outlineColor: outlineColorInput.value,
@@ -2199,6 +2207,7 @@ const EDITOR_STORAGE_KEY = 'norahStudioEditorData';
  */
 [
   sizeInput,
+  opacityInput,
   outlineWidthInput,
   shadowBlurInput,
   shadowXInput,
@@ -2917,6 +2926,9 @@ function buildLyricsPayloadForVisualizer(
           style.size
         ) || 72,
 
+      opacity:
+        Number(style.opacity) || 100,
+
       color:
         style.color ||
         '#ffffff',
@@ -3562,6 +3574,7 @@ updateOutDescription();
   const style = blockData.style || {};
 
   fontInput.value = style.font || fontInput.value || 'Arial';
+  opacityInput.value = style.opacity ?? 100;
   sizeInput.value = style.size ?? 72;
   colorInput.value = style.color || '#ffffff';
   alignInput.value = style.align || 'center';
@@ -3578,6 +3591,7 @@ updateOutDescription();
   lineHeightInput.value = style.lineHeight ?? 1.2;
 
   sizeValue.textContent = sizeInput.value;
+  opacityValue.textContent = `${opacityInput.value}%`;
 
   outlineWidthValue.textContent = outlineWidthInput.value;
   shadowBlurValue.textContent = shadowBlurInput.value;
@@ -3664,8 +3678,10 @@ function createLyricsBlockData(text = '新しい歌詞') {
   fontInput.value ||
   'Noto Sans JP',
       size: Number(sizeInput.value) || 72,
+      opacity: Number(opacityInput.value),
       color: colorInput.value || '#ffffff',
       align: alignInput.value || 'center',
+      opacity: Number(style.opacity) || 100,
       outlineColor: outlineColorInput.value || '#000000',
       outlineWidth: Number(outlineWidthInput.value) || 0,
       shadowColor: shadowColorInput.value || '#000000',
@@ -4666,6 +4682,7 @@ function getCurrentInspectorStyle() {
   return {
     font: fontInput.value || 'Arial',
     size: Number(sizeInput.value) || 72,
+    opacity: Number(opacityInput.value),
     color: colorInput.value || '#ffffff',
     align: alignInput.value || 'center',
     outlineColor: outlineColorInput.value || '#000000',
