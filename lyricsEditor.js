@@ -3692,7 +3692,6 @@ function createLyricsBlockData(text = '新しい歌詞') {
       color: colorInput.value || '#ffffff',
       writingMode: writingModeInput?.value || 'horizontal',
       align: alignInput.value || 'center',
-      opacity: Number(style.opacity) || 100,
       outlineColor: outlineColorInput.value || '#000000',
       outlineWidth: Number(outlineWidthInput.value) || 0,
       shadowColor: shadowColorInput.value || '#000000',
