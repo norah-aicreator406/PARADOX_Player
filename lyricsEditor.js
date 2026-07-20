@@ -570,6 +570,7 @@ const stylePresetInput =
     document.getElementById('lyricsStylePreset');
 const outlineColorInput = document.getElementById('lyricsOutlineColor');
 const outlineWidthInput = document.getElementById('lyricsOutlineWidth');
+const writingModeInput = document.getElementById('lyricsWritingMode');
 const alignInput = document.getElementById('lyricsAlign');
 const shadowColorInput = document.getElementById('lyricsShadowColor');
 const shadowBlurInput = document.getElementById('lyricsShadowBlur');
@@ -638,6 +639,7 @@ function sendLyricsUpdate() {
     font: fontInput.value,
     outlineColor: outlineColorInput.value,
     outlineWidth: Number(outlineWidthInput.value),
+    writingMode: writingModeInput.value,
     align: alignInput.value,
     shadowColor: shadowColorInput.value,
     shadowBlur: Number(shadowBlurInput.value),
@@ -682,6 +684,7 @@ blockData.animation.in = {
   size: Number(sizeInput.value),
   opacity: Number(opacityInput.value),
   color: colorInput.value,
+  writingMode: writingModeInput.value,
   align: alignInput.value,
   outlineColor: outlineColorInput.value,
   outlineWidth: Number(outlineWidthInput.value),
@@ -2300,6 +2303,7 @@ const EDITOR_STORAGE_KEY = 'norahStudioEditorData';
  */
 [
   fontInput,
+  writingModeInput,
   alignInput
 ].forEach(input => {
   if (!input) return;
@@ -2933,6 +2937,11 @@ function buildLyricsPayloadForVisualizer(
         style.color ||
         '#ffffff',
 
+      writingMode:
+  style.writingMode ||
+  'horizontal',
+
+  
       align:
         style.align ||
         'center',
@@ -3577,6 +3586,7 @@ updateOutDescription();
   opacityInput.value = style.opacity ?? 100;
   sizeInput.value = style.size ?? 72;
   colorInput.value = style.color || '#ffffff';
+  writingModeInput.value = style.writingMode || 'horizontal';
   alignInput.value = style.align || 'center';
 
   outlineColorInput.value = style.outlineColor || '#000000';
@@ -3680,6 +3690,7 @@ function createLyricsBlockData(text = '新しい歌詞') {
       size: Number(sizeInput.value) || 72,
       opacity: Number(opacityInput.value),
       color: colorInput.value || '#ffffff',
+      writingMode: writingModeInput?.value || 'horizontal',
       align: alignInput.value || 'center',
       opacity: Number(style.opacity) || 100,
       outlineColor: outlineColorInput.value || '#000000',
@@ -4684,6 +4695,7 @@ function getCurrentInspectorStyle() {
     size: Number(sizeInput.value) || 72,
     opacity: Number(opacityInput.value),
     color: colorInput.value || '#ffffff',
+    writingMode: writingModeInput?.value || 'horizontal',
     align: alignInput.value || 'center',
     outlineColor: outlineColorInput.value || '#000000',
     outlineWidth: Number(outlineWidthInput.value) || 0,

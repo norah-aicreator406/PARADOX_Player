@@ -815,3 +815,11 @@ body {
   -webkit-text-stroke: inherit !important;
   text-shadow: inherit !important;
 }
+
+
+.lyricsMotionWrapper,
+.lyricsHoldWrapper,
+.lyricsLine {
+  writing-mode: inherit !important;
+  text-orientation: inherit !important;
+}

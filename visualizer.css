@@ -1227,3 +1227,11 @@ html, body {
 #lyricsLayer.output-routing-hidden {
   display: none !important;
 }
+
+
+.lyricsMotionWrapper,
+.lyricsHoldWrapper,
+.lyricsLine {
+  writing-mode: inherit !important;
+  text-orientation: inherit !important;
+}

@@ -13,6 +13,7 @@ window.LyricsRenderer = {
       : String(payload.text || '').split('\n');
 
     const style = payload.style || {};
+    const isVertical = style.writingMode === 'vertical';
     const position = payload.position || { x: 0, y: 0, z: 0 };
     const layout = payload.layout || {};
     console.log('RENDER layout:', layout);
@@ -44,8 +45,43 @@ targetElement.style.setProperty(
     targetElement.style.fontSize = `${Number(style.size) || 72}px`;
     targetElement.style.opacity = (style.opacity ?? 100) / 100;
     targetElement.style.color = style.color || '#ffffff';
+    targetElement.style.writingMode = isVertical
+? 'vertical-rl'
+    : 'horizontal-tb';
+
+    targetElement.style.textOrientation =
+  isVertical
+    ? 'upright'
+    : 'mixed';
+
+  const alignMap =
+  isVertical
+    ? {
+        left: 'start',
+        center: 'center',
+        right: 'end'
+      }
+    : {
+        left: 'left',
+        center: 'center',
+        right: 'right'
+      };
     targetElement.style.textAlign = style.align || 'center';
     targetElement.style.letterSpacing = `${Number(style.letterSpacing) || 0}px`;
+    const letterSpacing =
+  Number(style.letterSpacing) || 0;
+
+targetElement.style.letterSpacing =
+  `${letterSpacing}px`;
+
+/*
+ * letter-spacingは最後の文字の後ろにも
+ * 余白を作るため、横書き時の中央位置を補正する。
+ */
+targetElement.style.textIndent =
+  !isVertical
+    ? `${letterSpacing}px`
+    : '0px';
     targetElement.style.lineHeight = String(style.lineHeight || 1.2);
 
     targetElement.style.width = `${width}px`;

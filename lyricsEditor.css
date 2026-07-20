@@ -6316,3 +6316,10 @@ body.font-library-open
         0.9
       );
 }
+
+.lyricsMotionWrapper,
+.lyricsHoldWrapper,
+.lyricsLine {
+  writing-mode: inherit !important;
+  text-orientation: inherit !important;
+}
