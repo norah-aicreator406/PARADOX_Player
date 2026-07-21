@@ -228,6 +228,10 @@ function createWindow() {
     }
   });
 
+  attachPerformanceShortcuts(
+  mainWindow
+);
+
   mainWindow.loadFile('index.html');
 
   mainWindow.once('ready-to-show', () => {
@@ -262,6 +266,10 @@ function openVisualizerWindow() {
 
 visualizerWindow.setAspectRatio(
   9 / 16
+);
+
+attachPerformanceShortcuts(
+  visualizerWindow
 );
 
 visualizerWindow.loadFile(
@@ -1581,3 +1589,203 @@ ipcMain.on('performance-effect', (event, payload) => {
     payload
   );
 });
+
+
+function sendPerformanceEffect(
+  effect,
+  active,
+  params = {}
+) {
+  if (
+    !visualizerWindow ||
+    visualizerWindow.isDestroyed()
+  ) {
+    console.warn(
+      '[Performance] Visualizer window is not available'
+    );
+
+    return;
+  }
+
+  visualizerWindow.webContents.send(
+    'performance-effect',
+    {
+      effect,
+      active,
+      params
+    }
+  );
+
+  console.log(
+    '[Performance Main]',
+    {
+      effect,
+      active,
+      params
+    }
+  );
+}
+
+const activePerformanceKeys = new Map();
+
+function resolvePerformanceShortcut(input) {
+  const code = String(input.code || '');
+  const key = String(input.key || '')
+    .toLowerCase();
+
+  /*
+   * Shift + Space
+   */
+  if (
+    code === 'Space' ||
+    key === ' ' ||
+    key === 'space' ||
+    key === 'spacebar'
+  ) {
+    return {
+      keyId: 'Space',
+      effect: 'flash',
+      params: {
+        intensity: 1,
+        speed: 6
+      }
+    };
+  }
+
+  /*
+   * Shift + W
+   */
+  if (
+    code === 'KeyW' ||
+    key === 'w'
+  ) {
+    return {
+      keyId: 'KeyW',
+      effect: 'whiteOut',
+      params: {
+        intensity: 1,
+        speed: 1
+      }
+    };
+  }
+
+  /*
+   * Shift + S
+   */
+  if (
+    code === 'KeyS' ||
+    key === 's'
+  ) {
+    return {
+      keyId: 'KeyS',
+      effect: 'shake',
+      params: {
+        intensity: 8,
+        speed: 18
+      }
+    };
+  }
+
+  return null;
+}
+
+function attachPerformanceShortcuts(win) {
+  if (!win || win.isDestroyed()) {
+    return;
+  }
+
+  win.webContents.on(
+    'before-input-event',
+    (event, input) => {
+      const shortcut =
+        resolvePerformanceShortcut(input);
+
+      if (!shortcut) {
+        return;
+      }
+
+      console.log(
+        '[Performance Input]',
+        {
+          type: input.type,
+          code: input.code,
+          key: input.key,
+          shift: input.shift,
+          keyId: shortcut.keyId
+        }
+      );
+
+      /*
+       * キーを押した瞬間
+       */
+      if (input.type === 'keyDown') {
+        /*
+         * 発動開始時だけShift必須
+         */
+        if (!input.shift) {
+          return;
+        }
+
+
+        /*
+         * 押しっぱなしによる連続入力を無視
+         */
+        if (
+          input.isAutoRepeat ||
+          activePerformanceKeys.has(
+            shortcut.keyId
+          )
+        ) {
+          return;
+        }
+
+        activePerformanceKeys.set(
+          shortcut.keyId,
+          shortcut
+        );
+
+        sendPerformanceEffect(
+          shortcut.effect,
+          true,
+          shortcut.params
+        );
+
+        console.log(
+          '[Performance] ON:',
+          shortcut.effect,
+          shortcut.keyId
+        );
+
+        return;
+      }
+
+      /*
+       * キーを離した瞬間
+       *
+       * Shiftを先に離していても必ず解除する。
+       */
+      if (input.type === 'keyUp') {
+       
+
+        activePerformanceKeys.delete(
+          shortcut.keyId
+        );
+
+        sendPerformanceEffect(
+          shortcut.effect,
+          false,
+          {}
+        );
+
+        console.log(
+          '[Performance] OFF:',
+          shortcut.effect,
+          shortcut.keyId
+        );
+
+        return;
+      }
+    }
+  );
+}
+

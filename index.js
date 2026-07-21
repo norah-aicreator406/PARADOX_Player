@@ -686,16 +686,6 @@ document.addEventListener(
 );
 
 
-document.addEventListener(
-  'keydown',
-  event => {
-    if (
-      event.key === 'Escape'
-    ) {
-      closeOutputRoutingPanel();
-    }
-  }
-);
 
 
 const openLibraryFolderButton =
@@ -3865,90 +3855,4 @@ function isTypingTarget(target) {
   );
 }
 
-window.addEventListener('keydown', event => {
-  if (isTypingTarget(event.target)) {
-    return;
-  }
 
-  if (event.repeat) {
-    return;
-  }
-
-  /*
-   * Flash
-   * Shift + Space
-   */
-  if (
-    event.code === 'Space' &&
-    event.shiftKey
-  ) {
-    event.preventDefault();
-
-    window.PerformanceEngine?.activate(
-      'flash',
-      {
-        intensity: 1,
-        speed: 6
-      }
-    );
-
-    console.log(
-      '[Performance] Flash ON'
-    );
-
-    return;
-  }
-
-  /*
-   * White Out
-   * Shift + W
-   */
-  if (
-    event.code === 'KeyW' &&
-    event.shiftKey
-  ) {
-    event.preventDefault();
-
-    window.PerformanceEngine?.activate(
-      'whiteOut',
-      {
-        intensity: 1,
-        speed: 1
-      }
-    );
-
-    console.log(
-      '[Performance] White Out ON'
-    );
-  }
-});
-
-window.addEventListener('keyup', event => {
-  /*
-   * Flash解除
-   */
-  if (event.code === 'Space') {
-    window.PerformanceEngine?.deactivate(
-      'flash'
-    );
-
-    console.log(
-      '[Performance] Flash OFF'
-    );
-
-    return;
-  }
-
-  /*
-   * White Out解除
-   */
-  if (event.code === 'KeyW') {
-    window.PerformanceEngine?.deactivate(
-      'whiteOut'
-    );
-
-    console.log(
-      '[Performance] White Out OFF'
-    );
-  }
-});

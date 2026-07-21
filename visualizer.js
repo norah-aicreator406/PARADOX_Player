@@ -2215,12 +2215,26 @@ document.head.appendChild(
 );
 
 
+/* ========================================
+   Performance Mode：shake
+======================================== */
+
+const performanceShakeRoot =
+  document.getElementById(
+    'performanceShakeRoot'
+  );
+
+
+
+
+
+
+
 
   const flashState = {
     active: false,
     intensity: 1,
     speed: 1,
-    startedAt: 0,
   };
 
 
@@ -2229,6 +2243,205 @@ document.head.appendChild(
   intensity: 1,
   speed: 1
 };
+
+
+  const shakeState = {
+  active: false,
+  intensity: 8,
+  speed: 18,
+  animationId: null
+};
+
+
+let shakeLastUpdateTime = 0;
+let shakeCurrentX = 0;
+let shakeCurrentY = 0;
+let shakeTargetX = 0;
+let shakeTargetY = 0;
+
+function clampShakeValue(value, min, max) {
+  return Math.min(
+    Math.max(value, min),
+    max
+  );
+}
+
+function renderShake(timestamp) {
+  if (!shakeState.active) {
+    return;
+  }
+
+  /*
+   * speedが大きいほど、
+   * 新しい移動先を決める間隔が短くなる
+   */
+  const updateInterval =
+    1000 / shakeState.speed;
+
+  if (
+    timestamp - shakeLastUpdateTime >=
+    updateInterval
+  ) {
+    shakeLastUpdateTime = timestamp;
+
+    shakeTargetX =
+      (
+        Math.random() * 2 - 1
+      ) * shakeState.intensity;
+
+    shakeTargetY =
+      (
+        Math.random() * 2 - 1
+      ) * shakeState.intensity;
+  }
+
+  /*
+   * 現在位置から目標位置へ滑らかに近づける
+   */
+  const smoothing = 0.48;
+
+  shakeCurrentX +=
+    (
+      shakeTargetX -
+      shakeCurrentX
+    ) * smoothing;
+
+  shakeCurrentY +=
+    (
+      shakeTargetY -
+      shakeCurrentY
+    ) * smoothing;
+
+  performanceShakeRoot.style.transform =
+    `translate3d(
+      ${shakeCurrentX}px,
+      ${shakeCurrentY}px,
+      0
+    )`;
+
+  shakeState.animationId =
+    requestAnimationFrame(
+      renderShake
+    );
+}
+
+function activateShake(params = {}) {
+  if (!performanceShakeRoot) {
+    console.warn(
+      '[Performance Shake] Root not found'
+    );
+
+    return;
+  }
+
+  shakeState.intensity =
+    clampShakeValue(
+      Number(
+        params.intensity ??
+        shakeState.intensity
+      ),
+      0,
+      50
+    );
+
+  shakeState.speed =
+    clampShakeValue(
+      Number(
+        params.speed ??
+        shakeState.speed
+      ),
+      1,
+      60
+    );
+
+  if (shakeState.active) {
+    return;
+  }
+
+  shakeState.active = true;
+
+  shakeLastUpdateTime = 0;
+  shakeCurrentX = 0;
+  shakeCurrentY = 0;
+  shakeTargetX = 0;
+  shakeTargetY = 0;
+
+  performanceShakeRoot.style.transition =
+    'none';
+
+  shakeState.animationId =
+    requestAnimationFrame(
+      renderShake
+    );
+
+  console.log(
+    '[Performance Shake] Activated',
+    {
+      intensity: shakeState.intensity,
+      speed: shakeState.speed
+    }
+  );
+}
+
+function deactivateShake() {
+  if (!shakeState.active) {
+    return;
+  }
+
+  shakeState.active = false;
+
+  if (shakeState.animationId) {
+    cancelAnimationFrame(
+      shakeState.animationId
+    );
+
+    shakeState.animationId = null;
+  }
+
+  shakeCurrentX = 0;
+  shakeCurrentY = 0;
+  shakeTargetX = 0;
+  shakeTargetY = 0;
+
+  performanceShakeRoot.style.transition =
+    'transform 80ms ease-out';
+
+  performanceShakeRoot.style.transform =
+    'translate3d(0, 0, 0)';
+
+  console.log(
+    '[Performance Shake] Deactivated'
+  );
+}
+
+function updateShakeParameters(
+  params = {}
+) {
+  if (
+    params.intensity !== undefined
+  ) {
+    shakeState.intensity =
+      clampShakeValue(
+        Number(params.intensity),
+        0,
+        50
+      );
+  }
+
+  if (params.speed !== undefined) {
+    shakeState.speed =
+      clampShakeValue(
+        Number(params.speed),
+        1,
+        60
+      );
+  }
+}
+
+
+
+
+
 
   function clamp(value, min, max) {
     return Math.min(
@@ -2292,6 +2505,11 @@ document.head.appendChild(
 }
 
   function deactivateFlash() {
+
+    console.log(
+    '[Performance Flash] deactivateFlash CALLED'
+  );
+  
   flashState.active = false;
 
   /*
@@ -2487,28 +2705,52 @@ function updateWhiteOutParameters(
       }
     }
 
+    if (payload.effect === 'shake') {
+      updateShakeParameters(
+        payload.params || {}
+      );
+
+      if (payload.active) {
+        activateShake(
+          payload.params || {}
+        );
+      } else {
+        deactivateShake();
+      }
+    }
+
     console.log(
-      '[Performance Visualizer]',
-      payload
-    );
+  '[Performance Visualizer]',
+  'effect:',
+  payload.effect,
+  'active:',
+  payload.active,
+  'params:',
+  payload.params
+);
   }
 );
 
 window.PerformanceFlash = {
   activate: activateFlash,
   deactivate: deactivateFlash,
-  setParameters:
-    updateFlashParameters
+  setParameters: updateFlashParameters
 };
 
 window.PerformanceWhiteOut = {
   activate: activateWhiteOut,
   deactivate: deactivateWhiteOut,
-  setParameters:
-    updateWhiteOutParameters
+  setParameters: updateWhiteOutParameters
+};
+
+window.PerformanceShake = {
+  activate: activateShake,
+  deactivate: deactivateShake,
+  setParameters: updateShakeParameters
 };
 
 console.log(
-  '[Performance Visualizer] Flash and White Out initialized'
+  '[Performance Visualizer] Flash, White Out and Shake initialized'
 );
 })();
+

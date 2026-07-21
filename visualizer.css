@@ -1235,3 +1235,12 @@ html, body {
   writing-mode: inherit !important;
   text-orientation: inherit !important;
 }
+
+
+#performanceShakeRoot {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
