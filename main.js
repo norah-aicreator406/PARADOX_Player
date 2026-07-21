@@ -1686,6 +1686,61 @@ function resolvePerformanceShortcut(input) {
     };
   }
 
+
+  /*
+   * Shift + Z
+   */
+
+  if (
+    code === 'KeyZ' ||
+    key === 'z'
+  ) {
+  return {
+    keyId: 'KeyZ',
+    effect: 'punchZoom',
+
+    params: {
+      intensity: 16,
+      speed: 3,
+      duration: 400
+    }
+  };
+}
+
+if (
+  code === 'KeyM' ||
+  key === 'm'
+) {
+  return {
+    keyId: 'KeyM',
+    effect: 'stageSmoke',
+
+    params: {
+      density: 5,
+      opacity: 0.22,
+      speed: 1,
+      size: 1
+    }
+  };
+}
+
+if (
+  code === 'KeyM' ||
+  key === 'm'
+) {
+  return {
+    keyId: 'KeyM',
+    effect: 'stageSmoke',
+
+    params: {
+  density: 5,
+  opacity: 0.22,
+  speed: 1,
+  size: 1
+}
+  };
+}
+
   return null;
 }
 

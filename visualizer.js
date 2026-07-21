@@ -2225,6 +2225,23 @@ const performanceShakeRoot =
   );
 
 
+const performanceZoomRoot =
+  document.getElementById(
+    'performanceZoomRoot'
+  );
+
+
+const performanceSmokeCanvas =
+  document.getElementById(
+    'performanceSmokeCanvas'
+  );
+
+const performanceSmokeContext =
+  performanceSmokeCanvas.getContext(
+    '2d'
+  );
+
+
 
   const flashState = {
     active: false,
@@ -2247,6 +2264,37 @@ const shakeState = {
 
   currentAnimation: null,
   repeatTimer: null
+};
+
+
+const zoomState = {
+  active: false,
+
+  intensity: 8,
+  speed: 4,
+  duration: 210,
+
+  currentAnimation: null,
+  repeatTimer: null
+};
+
+
+const smokeState = {
+  active: false,
+
+  density: 5,
+  opacity: 0.22,
+  speed: 1,
+  size: 1,
+
+  particles: [],
+
+  animationId: null,
+  lastTimestamp: 0,
+  spawnAccumulator: 0,
+
+  canvasWidth: 0,
+  canvasHeight: 0
 };
 
 
@@ -2712,6 +2760,657 @@ function updateWhiteOutParameters(
 
 
 
+function triggerPunchZoom() {
+  if (!zoomState.active) {
+    return;
+  }
+
+  const intensity =
+    zoomState.intensity;
+
+  /*
+   * intensity 8の場合：
+   * 1.12倍まで一気に拡大
+   */
+  const peakScale =
+    1 + intensity * 0.015;
+
+  /*
+   * 少しだけ行き過ぎを戻した位置
+   */
+  const reboundScale =
+    1 + intensity * 0.004;
+
+  if (zoomState.currentAnimation) {
+    zoomState.currentAnimation.cancel();
+  }
+
+  zoomState.currentAnimation =
+    performanceZoomRoot.animate(
+      [
+        {
+          transform: 'scale3d(1, 1, 1)',
+          offset: 0
+        },
+        {
+          /*
+           * 押した瞬間に一気に前へ飛び出す
+           */
+          transform:
+            `scale3d(
+              ${peakScale},
+              ${peakScale},
+              1
+            )`,
+          offset: 0.22
+        },
+        {
+          /*
+           * 少し強めに戻す
+           */
+          transform:
+            `scale3d(
+              ${reboundScale},
+              ${reboundScale},
+              1
+            )`,
+          offset: 0.62
+        },
+        {
+          transform: 'scale3d(1, 1, 1)',
+          offset: 1
+        }
+      ],
+      {
+        duration: zoomState.duration,
+        easing:
+          'cubic-bezier(0.22, 1, 0.36, 1)',
+        fill: 'forwards'
+      }
+    );
+
+  zoomState.currentAnimation.onfinish =
+    () => {
+      zoomState.currentAnimation = null;
+
+      performanceZoomRoot.style.transform =
+        'scale3d(1, 1, 1)';
+    };
+}
+
+
+function scheduleNextPunchZoom() {
+  if (!zoomState.active) {
+    return;
+  }
+
+  /*
+   * speedが高いほど、
+   * 次のPunchまでの間隔が短くなる。
+   */
+  const interval =
+    Math.max(
+      300,
+      900 - zoomState.speed * 80
+    );
+
+  zoomState.repeatTimer =
+    setTimeout(() => {
+      if (!zoomState.active) {
+        return;
+      }
+
+      triggerPunchZoom();
+      scheduleNextPunchZoom();
+    }, interval);
+}
+
+
+function activatePunchZoom(
+  params = {}
+) {
+  zoomState.intensity = clamp(
+    params.intensity ??
+      zoomState.intensity ??
+      8,
+    1,
+    20
+  );
+
+  zoomState.speed = clamp(
+    params.speed ??
+      zoomState.speed ??
+      4,
+    1,
+    10
+  );
+
+  zoomState.duration = clamp(
+    params.duration ??
+      zoomState.duration ??
+      210,
+    100,
+    500
+  );
+
+  if (zoomState.active) {
+    return;
+  }
+
+  zoomState.active = true;
+
+  performanceZoomRoot.style.transition =
+    'none';
+
+  performanceZoomRoot.style.transformOrigin =
+    'center center';
+
+  /*
+   * 押した瞬間に1発目を発動
+   */
+  triggerPunchZoom();
+
+  /*
+   * 押し続けている場合は繰り返す
+   */
+  scheduleNextPunchZoom();
+
+  console.log(
+    '[Performance Punch Zoom] Activated',
+    {
+      intensity:
+        zoomState.intensity,
+      speed:
+        zoomState.speed,
+      duration:
+        zoomState.duration
+    }
+  );
+}
+
+
+function deactivatePunchZoom() {
+  if (!zoomState.active) {
+    return;
+  }
+
+  zoomState.active = false;
+
+  if (zoomState.repeatTimer) {
+    clearTimeout(
+      zoomState.repeatTimer
+    );
+
+    zoomState.repeatTimer = null;
+  }
+
+  if (zoomState.currentAnimation) {
+    zoomState.currentAnimation.cancel();
+    zoomState.currentAnimation = null;
+  }
+
+  performanceZoomRoot.style.transition =
+    'transform 100ms ease-out';
+
+  performanceZoomRoot.style.transform =
+    'scale(1)';
+
+  console.log(
+    '[Performance Punch Zoom] Deactivated'
+  );
+}
+
+
+function resizePerformanceSmokeCanvas() {
+  if (
+    !performanceSmokeCanvas ||
+    !performanceSmokeContext
+  ) {
+    return;
+  }
+
+  const rect =
+    performanceSmokeCanvas
+      .getBoundingClientRect();
+
+  const pixelRatio =
+    Math.min(
+      window.devicePixelRatio || 1,
+      2
+    );
+
+  smokeState.canvasWidth =
+    Math.max(1, rect.width);
+
+  smokeState.canvasHeight =
+    Math.max(1, rect.height);
+
+  performanceSmokeCanvas.width =
+    Math.round(
+      smokeState.canvasWidth *
+      pixelRatio
+    );
+
+  performanceSmokeCanvas.height =
+    Math.round(
+      smokeState.canvasHeight *
+      pixelRatio
+    );
+
+  performanceSmokeContext.setTransform(
+    pixelRatio,
+    0,
+    0,
+    pixelRatio,
+    0,
+    0
+  );
+}
+resizePerformanceSmokeCanvas();
+window.addEventListener(
+  'resize',
+  resizePerformanceSmokeCanvas
+);
+
+function createSmokeParticle() {
+  const width =
+    smokeState.canvasWidth;
+
+  const height =
+    smokeState.canvasHeight;
+
+  /*
+   * 下側全体から発生させる。
+   * 中央付近を少し多めにする。
+   */
+  const centerBias =
+    (
+      Math.random() +
+      Math.random()
+    ) / 2;
+
+  const x =
+    width *
+    (
+      0.08 +
+      centerBias * 0.84
+    );
+
+  const y =
+  height *
+  (
+    0.82 +
+    Math.random() * 0.22
+  );
+
+  const baseSize =
+    Math.min(width, height) *
+    (
+      0.09 +
+      Math.random() * 0.12
+    ) *
+    smokeState.size;
+
+  return {
+    x,
+    y,
+
+    radius:
+      baseSize,
+
+    velocityX:
+      (
+        Math.random() - 0.5
+      ) *
+      0.18 *
+      smokeState.speed,
+
+    velocityY:
+      -(
+        0.12 +
+        Math.random() * 0.2
+      ) *
+      smokeState.speed,
+
+    growth:
+      (
+        0.05 +
+        Math.random() * 0.08
+      ) *
+      smokeState.size,
+
+    alpha:
+      smokeState.opacity *
+      (
+        0.55 +
+        Math.random() * 0.45
+      ),
+
+    life: 0,
+
+    maxLife:
+      4200 +
+      Math.random() * 2600,
+
+    driftPhase:
+      Math.random() *
+      Math.PI *
+      2,
+
+    driftSpeed:
+      0.00035 +
+      Math.random() * 0.00045
+  };
+}
+
+
+function drawSmokeParticle(
+  particle,
+  timestamp
+) {
+  const context =
+    performanceSmokeContext;
+
+  const lifeProgress =
+    particle.life /
+    particle.maxLife;
+
+  /*
+   * 発生直後は徐々に見え、
+   * 後半で自然に消える。
+   */
+  const fadeIn =
+    Math.min(
+      1,
+      lifeProgress / 0.18
+    );
+
+  const fadeOut =
+    Math.max(
+      0,
+      1 -
+      Math.max(
+        0,
+        lifeProgress - 0.45
+      ) / 0.55
+    );
+
+  const alpha =
+    particle.alpha *
+    fadeIn *
+    fadeOut;
+
+  if (alpha <= 0) {
+    return;
+  }
+
+  const drift =
+    Math.sin(
+      timestamp *
+      particle.driftSpeed +
+      particle.driftPhase
+    ) *
+    particle.radius *
+    0.12;
+
+  const drawX =
+    particle.x +
+    drift;
+
+  const gradient =
+    context.createRadialGradient(
+      drawX,
+      particle.y,
+      particle.radius * 0.05,
+
+      drawX,
+      particle.y,
+      particle.radius
+    );
+
+  gradient.addColorStop(
+    0,
+    `rgba(235, 240, 245, ${
+      alpha * 0.5
+    })`
+  );
+
+  gradient.addColorStop(
+    0.32,
+    `rgba(220, 228, 235, ${
+      alpha * 0.32
+    })`
+  );
+
+  gradient.addColorStop(
+    0.68,
+    `rgba(205, 215, 225, ${
+      alpha * 0.12
+    })`
+  );
+
+  gradient.addColorStop(
+    1,
+    'rgba(200, 210, 220, 0)'
+  );
+
+  context.fillStyle =
+    gradient;
+
+  context.beginPath();
+
+  context.arc(
+    drawX,
+    particle.y,
+    particle.radius,
+    0,
+    Math.PI * 2
+  );
+
+  context.fill();
+}
+
+
+function renderPerformanceSmoke(
+  timestamp = 0
+) {
+  if (!smokeState.lastTimestamp) {
+    smokeState.lastTimestamp =
+      timestamp;
+  }
+
+  const deltaTime =
+    Math.min(
+      40,
+      timestamp -
+      smokeState.lastTimestamp
+    );
+
+  smokeState.lastTimestamp =
+    timestamp;
+
+  const context =
+    performanceSmokeContext;
+
+  const width =
+    smokeState.canvasWidth;
+
+  const height =
+    smokeState.canvasHeight;
+
+  context.clearRect(
+    0,
+    0,
+    width,
+    height
+  );
+
+  /*
+   * active中だけ新しい煙を追加。
+   */
+  if (smokeState.active) {
+    const spawnRate =
+      smokeState.density * 0.006;
+
+    smokeState.spawnAccumulator +=
+      deltaTime * spawnRate;
+
+    while (
+      smokeState.spawnAccumulator >= 1
+    ) {
+      smokeState.particles.push(
+        createSmokeParticle()
+      );
+
+      smokeState.spawnAccumulator -= 1;
+    }
+  }
+
+  smokeState.particles =
+    smokeState.particles.filter(
+      particle => {
+        particle.life +=
+          deltaTime;
+
+        particle.x +=
+          particle.velocityX *
+          deltaTime;
+
+        particle.y +=
+          particle.velocityY *
+          deltaTime;
+
+        particle.radius +=
+          particle.growth *
+          deltaTime;
+
+        drawSmokeParticle(
+          particle,
+          timestamp
+        );
+
+        return (
+          particle.life <
+          particle.maxLife
+        );
+      }
+    );
+
+  /*
+   * active中または煙が残っている間は継続。
+   */
+  if (
+    smokeState.active ||
+    smokeState.particles.length > 0
+  ) {
+    smokeState.animationId =
+      requestAnimationFrame(
+        renderPerformanceSmoke
+      );
+  } else {
+    smokeState.animationId =
+      null;
+
+    smokeState.lastTimestamp =
+      0;
+
+    context.clearRect(
+      0,
+      0,
+      width,
+      height
+    );
+  }
+}
+
+
+function updateSmokeParameters(
+  params = {}
+) {
+  smokeState.density = clamp(
+    params.density ??
+      smokeState.density,
+    1,
+    10
+  );
+
+  smokeState.opacity = clamp(
+    params.opacity ??
+      smokeState.opacity,
+    0.05,
+    0.6
+  );
+
+  smokeState.speed = clamp(
+    params.speed ??
+      smokeState.speed,
+    0.2,
+    3
+  );
+
+  smokeState.size = clamp(
+    params.size ??
+      smokeState.size,
+    0.5,
+    2
+  );
+}
+
+function activateStageSmoke(
+  params = {}
+) {
+  updateSmokeParameters(
+    params
+  );
+
+  if (smokeState.active) {
+    return;
+  }
+
+  smokeState.active = true;
+
+  resizePerformanceSmokeCanvas();
+
+  if (!smokeState.animationId) {
+    smokeState.lastTimestamp =
+      0;
+
+    smokeState.animationId =
+      requestAnimationFrame(
+        renderPerformanceSmoke
+      );
+  }
+
+  console.log(
+    '[Performance Stage Smoke] Activated',
+    {
+      density:
+        smokeState.density,
+      opacity:
+        smokeState.opacity,
+      speed:
+        smokeState.speed,
+      size:
+        smokeState.size
+    }
+  );
+}
+
+function deactivateStageSmoke() {
+  if (!smokeState.active) {
+    return;
+  }
+
+  smokeState.active = false;
+
+  smokeState.spawnAccumulator =
+    0;
+
+  console.log(
+    '[Performance Stage Smoke] Deactivated'
+  );
+}
+
 
   performanceIpcRenderer.on(
   'performance-effect',
@@ -2761,6 +3460,37 @@ function updateWhiteOutParameters(
         deactivateShake();
       }
     }
+
+
+    if (
+  payload.effect ===
+  'punchZoom'
+) {
+  if (payload.active) {
+    activatePunchZoom(
+      payload.params ?? {}
+    );
+  } else {
+    deactivatePunchZoom();
+  }
+}
+
+if (
+  payload.effect ===
+  'stageSmoke'
+) {
+  updateSmokeParameters(
+    payload.params ?? {}
+  );
+
+  if (payload.active) {
+    activateStageSmoke(
+      payload.params ?? {}
+    );
+  } else {
+    deactivateStageSmoke();
+  }
+}
 
     console.log(
   '[Performance Visualizer]',

@@ -184,4 +184,66 @@
   console.log(
     '[PerformanceEngine] Initialized'
   );
+
+const PerformanceEngine = {
+  activate(effect, params = {}) {
+    if (effect === 'flash') {
+      activateFlash(params);
+    }
+
+    if (effect === 'whiteOut') {
+      activateWhiteOut(params);
+    }
+
+    if (effect === 'shake') {
+      activateShake(params);
+    }
+
+    if (effect === 'punchZoom') {
+      activatePunchZoom(params);
+    }
+  },
+
+  deactivate(effect) {
+    if (effect === 'flash') {
+      deactivateFlash();
+    }
+
+    if (effect === 'whiteOut') {
+      deactivateWhiteOut();
+    }
+
+    if (effect === 'shake') {
+      deactivateShake();
+    }
+
+    if (effect === 'punchZoom') {
+      deactivatePunchZoom();
+    }
+  },
+
+  setParameters(effect, params = {}) {
+    if (effect === 'punchZoom') {
+      zoomState.intensity =
+        params.intensity ??
+        zoomState.intensity;
+
+      zoomState.speed =
+        params.speed ??
+        zoomState.speed;
+
+      zoomState.duration =
+        params.duration ??
+        zoomState.duration;
+    }
+
+    /*
+     * 既存のFlash、White Out、Shake処理は
+     * そのまま残す
+     */
+  } 
+};
+
+
+  
 })();
