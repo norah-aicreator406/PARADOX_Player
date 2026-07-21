@@ -2226,11 +2226,6 @@ const performanceShakeRoot =
 
 
 
-
-
-
-
-
   const flashState = {
     active: false,
     intensity: 1,
@@ -2245,19 +2240,134 @@ const performanceShakeRoot =
 };
 
 
-  const shakeState = {
+const shakeState = {
   active: false,
-  intensity: 8,
-  speed: 18,
-  animationId: null
+  intensity: 10,
+  speed: 5,
+
+  currentAnimation: null,
+  repeatTimer: null
 };
 
 
-let shakeLastUpdateTime = 0;
-let shakeCurrentX = 0;
-let shakeCurrentY = 0;
-let shakeTargetX = 0;
-let shakeTargetY = 0;
+
+function triggerShakeImpact() {
+  if (!shakeState.active) {
+    return;
+  }
+
+  const intensity = shakeState.intensity;
+
+  /*
+   * 毎回わずかに方向を変える。
+   * 横方向だけの「扉のガタガタ」に見えないよう、
+   * 縦・横・回転を組み合わせる。
+   */
+  const direction =
+    Math.random() < 0.5 ? -1 : 1;
+
+  const x1 = intensity * 0.75 * direction;
+  const x2 = intensity * -0.55 * direction;
+  const x3 = intensity * 0.32 * direction;
+  const x4 = intensity * -0.14 * direction;
+
+  const y1 = intensity * -0.65;
+  const y2 = intensity * 0.48;
+  const y3 = intensity * -0.25;
+  const y4 = intensity * 0.1;
+
+  const r1 = intensity * 0.035 * direction;
+  const r2 = intensity * -0.025 * direction;
+  const r3 = intensity * 0.012 * direction;
+
+  if (shakeState.currentAnimation) {
+    shakeState.currentAnimation.cancel();
+  }
+
+  shakeState.currentAnimation =
+    performanceShakeRoot.animate(
+      [
+        {
+          transform:
+            'translate3d(0, 0, 0) rotate(0deg) scale(1.02)',
+          offset: 0
+        },
+        {
+          transform:
+            `translate3d(${x1}px, ${y1}px, 0)
+             rotate(${r1}deg)
+             scale(1.025)`,
+          offset: 0.16
+        },
+        {
+          transform:
+            `translate3d(${x2}px, ${y2}px, 0)
+             rotate(${r2}deg)
+             scale(1.022)`,
+          offset: 0.34
+        },
+        {
+          transform:
+            `translate3d(${x3}px, ${y3}px, 0)
+             rotate(${r3}deg)
+             scale(1.018)`,
+          offset: 0.53
+        },
+        {
+          transform:
+            `translate3d(${x4}px, ${y4}px, 0)
+             rotate(0deg)
+             scale(1.01)`,
+          offset: 0.74
+        },
+        {
+          transform:
+            'translate3d(0, 0, 0) rotate(0deg) scale(1)',
+          offset: 1
+        }
+      ],
+      {
+        duration: 190,
+        easing: 'ease-out',
+        fill: 'forwards'
+      }
+    );
+
+  shakeState.currentAnimation.onfinish = () => {
+    shakeState.currentAnimation = null;
+
+    performanceShakeRoot.style.transform =
+      'translate3d(0, 0, 0) rotate(0deg) scale(1)';
+  };
+}
+
+
+function scheduleNextShakeImpact() {
+  if (!shakeState.active) {
+    return;
+  }
+
+  /*
+   * speedが高いほど次の衝撃が早く来る。
+   * 衝撃アニメーション終了後に少し静止時間を入れる。
+   */
+  const interval =
+    Math.max(
+      260,
+      780 - shakeState.speed * 65
+    );
+
+  shakeState.repeatTimer =
+    setTimeout(() => {
+      if (!shakeState.active) {
+        return;
+      }
+
+      triggerShakeImpact();
+      scheduleNextShakeImpact();
+    }, interval);
+}
+
 
 function clampShakeValue(value, min, max) {
   return Math.min(
@@ -2266,93 +2376,24 @@ function clampShakeValue(value, min, max) {
   );
 }
 
-function renderShake(timestamp) {
-  if (!shakeState.active) {
-    return;
-  }
 
-  /*
-   * speedが大きいほど、
-   * 新しい移動先を決める間隔が短くなる
-   */
-  const updateInterval =
-    1000 / shakeState.speed;
-
-  if (
-    timestamp - shakeLastUpdateTime >=
-    updateInterval
-  ) {
-    shakeLastUpdateTime = timestamp;
-
-    shakeTargetX =
-      (
-        Math.random() * 2 - 1
-      ) * shakeState.intensity;
-
-    shakeTargetY =
-      (
-        Math.random() * 2 - 1
-      ) * shakeState.intensity;
-  }
-
-  /*
-   * 現在位置から目標位置へ滑らかに近づける
-   */
-  const smoothing = 0.48;
-
-  shakeCurrentX +=
-    (
-      shakeTargetX -
-      shakeCurrentX
-    ) * smoothing;
-
-  shakeCurrentY +=
-    (
-      shakeTargetY -
-      shakeCurrentY
-    ) * smoothing;
-
-  performanceShakeRoot.style.transform =
-    `translate3d(
-      ${shakeCurrentX}px,
-      ${shakeCurrentY}px,
-      0
-    )`;
-
-  shakeState.animationId =
-    requestAnimationFrame(
-      renderShake
-    );
-}
 
 function activateShake(params = {}) {
-  if (!performanceShakeRoot) {
-    console.warn(
-      '[Performance Shake] Root not found'
-    );
+  shakeState.intensity = clamp(
+    params.intensity ??
+      shakeState.intensity ??
+      10,
+    1,
+    24
+  );
 
-    return;
-  }
-
-  shakeState.intensity =
-    clampShakeValue(
-      Number(
-        params.intensity ??
-        shakeState.intensity
-      ),
-      0,
-      50
-    );
-
-  shakeState.speed =
-    clampShakeValue(
-      Number(
-        params.speed ??
-        shakeState.speed
-      ),
-      1,
-      60
-    );
+  shakeState.speed = clamp(
+    params.speed ??
+      shakeState.speed ??
+      5,
+    1,
+    10
+  );
 
   if (shakeState.active) {
     return;
@@ -2360,19 +2401,21 @@ function activateShake(params = {}) {
 
   shakeState.active = true;
 
-  shakeLastUpdateTime = 0;
-  shakeCurrentX = 0;
-  shakeCurrentY = 0;
-  shakeTargetX = 0;
-  shakeTargetY = 0;
-
   performanceShakeRoot.style.transition =
     'none';
 
-  shakeState.animationId =
-    requestAnimationFrame(
-      renderShake
-    );
+  performanceShakeRoot.style.transformOrigin =
+    'center center';
+
+  /*
+   * キーを押した瞬間に1発目を再生
+   */
+  triggerShakeImpact();
+
+  /*
+   * 押し続けている場合のみ次の衝撃を予約
+   */
+  scheduleNextShakeImpact();
 
   console.log(
     '[Performance Shake] Activated',
@@ -2390,24 +2433,24 @@ function deactivateShake() {
 
   shakeState.active = false;
 
-  if (shakeState.animationId) {
-    cancelAnimationFrame(
-      shakeState.animationId
+  if (shakeState.repeatTimer) {
+    clearTimeout(
+      shakeState.repeatTimer
     );
 
-    shakeState.animationId = null;
+    shakeState.repeatTimer = null;
   }
 
-  shakeCurrentX = 0;
-  shakeCurrentY = 0;
-  shakeTargetX = 0;
-  shakeTargetY = 0;
+  if (shakeState.currentAnimation) {
+    shakeState.currentAnimation.cancel();
+    shakeState.currentAnimation = null;
+  }
 
   performanceShakeRoot.style.transition =
     'transform 80ms ease-out';
 
   performanceShakeRoot.style.transform =
-    'translate3d(0, 0, 0)';
+    'translate3d(0, 0, 0) rotate(0deg) scale(1)';
 
   console.log(
     '[Performance Shake] Deactivated'

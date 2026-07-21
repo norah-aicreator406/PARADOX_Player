@@ -1680,8 +1680,8 @@ function resolvePerformanceShortcut(input) {
       keyId: 'KeyS',
       effect: 'shake',
       params: {
-        intensity: 8,
-        speed: 18
+        intensity: 9,
+        speed: 4
       }
     };
   }
