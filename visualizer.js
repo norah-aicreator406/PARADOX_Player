@@ -3156,17 +3156,20 @@ function drawSmokeParticle(
   const drawX =
     particle.x +
     drift;
+  
+  const drawY =
+  particle.y + 120;
 
   const gradient =
-    context.createRadialGradient(
-      drawX,
-      particle.y,
-      particle.radius * 0.05,
+  context.createRadialGradient(
+    drawX,
+    drawY,
+    particle.radius * 0.05,
 
-      drawX,
-      particle.y,
-      particle.radius
-    );
+    drawX,
+    drawY,
+    particle.radius
+  );
 
   gradient.addColorStop(
     0,
@@ -3200,12 +3203,12 @@ function drawSmokeParticle(
   context.beginPath();
 
   context.arc(
-    drawX,
-    particle.y,
-    particle.radius,
-    0,
-    Math.PI * 2
-  );
+  drawX,
+  drawY,
+  particle.radius,
+  0,
+  Math.PI * 2
+);
 
   context.fill();
 }
