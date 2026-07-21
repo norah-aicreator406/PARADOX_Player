@@ -93,13 +93,75 @@ targetElement.style.textIndent =
     targetElement.style.overflowWrap = 'anywhere';
     targetElement.style.lineBreak = 'strict';
 
-    targetElement.style.webkitTextStroke =
-      `${Number(style.outlineWidth) || 0}px ${style.outlineColor || '#000000'}`;
+   /*
+ * 前回の装飾を一度リセット。
+ */
+targetElement.style.removeProperty(
+  '-webkit-text-stroke'
+);
 
-    targetElement.style.textShadow =
-      `${Number(style.shadowX) || 0}px ${Number(style.shadowY) || 0}px ${Number(style.shadowBlur) || 0}px ${style.shadowColor || '#000000'}`;
+targetElement.style.removeProperty(
+  'text-shadow'
+);
 
-    targetElement.innerHTML = '';
+
+/*
+ * アウトラインを再設定。
+ */
+const outlineWidth =
+  Math.max(
+    0,
+    Number(style.outlineWidth) || 0
+  );
+
+const outlineColor =
+  style.outlineColor ||
+  '#000000';
+
+if (outlineWidth > 0) {
+  targetElement.style.setProperty(
+    '-webkit-text-stroke',
+    `${outlineWidth}px ${outlineColor}`
+  );
+}
+
+
+/*
+ * 影を再設定。
+ */
+const shadowBlur =
+  Math.max(
+    0,
+    Number(style.shadowBlur) || 0
+  );
+
+const shadowX =
+  Number(style.shadowX) || 0;
+
+const shadowY =
+  Number(style.shadowY) || 0;
+
+const shadowColor =
+  style.shadowColor ||
+  '#000000';
+
+if (
+  shadowBlur > 0 ||
+  shadowX !== 0 ||
+  shadowY !== 0
+) {
+  targetElement.style.textShadow =
+    `${shadowX}px ` +
+    `${shadowY}px ` +
+    `${shadowBlur}px ` +
+    `${shadowColor}`;
+}
+
+
+/*
+ * 歌詞DOMを再構築。
+ */
+targetElement.innerHTML = '';
 
 const motionWrapper =
   document.createElement('div');
@@ -107,11 +169,16 @@ const motionWrapper =
 motionWrapper.className =
   'lyricsMotionWrapper lyricsInWrapper';
 
+
+
+
 const holdWrapper =
   document.createElement('div');
 
 holdWrapper.className =
   'lyricsHoldWrapper';
+
+
 
 holdWrapper.style.setProperty(
   'font-family',
@@ -124,13 +191,35 @@ lines.forEach(line => {
     document.createElement('div');
 
   div.className =
-    'lyricsLine';
+    'lyricsOutputLine';
 
   div.style.setProperty(
     'font-family',
     'inherit',
     'important'
   );
+
+  div.style.color =
+    style.color || '#ffffff';
+
+  if (outlineWidth > 0) {
+    div.style.setProperty(
+      '-webkit-text-stroke',
+      `${outlineWidth}px ${outlineColor}`
+    );
+  }
+
+  if (
+    shadowBlur > 0 ||
+    shadowX !== 0 ||
+    shadowY !== 0
+  ) {
+    div.style.textShadow =
+      `${shadowX}px ` +
+      `${shadowY}px ` +
+      `${shadowBlur}px ` +
+      `${shadowColor}`;
+  }
 
   div.textContent =
     line;

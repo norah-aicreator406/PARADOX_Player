@@ -447,11 +447,13 @@ function openLyricsOutputWindow() {
       title: 'NORAH Lyrics Output',
 
       /*
-        OBSでカメラ映像の上に重ねるため、
-        背景を透明にする
-      */
-      transparent: true,
-      backgroundColor: '#00000000',
+ * OBSではマゼンタをクロマキーで透過する。
+ * Electronの透明ウィンドウで発生する
+ * 文字縁の黒いフリンジを回避する。
+ */
+      transparent: false,
+backgroundColor: '#ff00ff',
+hasShadow: false,
 
       /*
         外出し画面を操作中に見失いにくくする。

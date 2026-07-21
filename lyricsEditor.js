@@ -1745,26 +1745,66 @@ function applyStylePreset() {
   const beforeState =
     captureEditorState();
 
-  colorInput.value = style.color;
+  colorInput.value =
+    style.color;
 
-  outlineColorInput.value = style.outlineColor;
-  outlineWidthInput.value = style.outlineWidth;
+  outlineColorInput.value =
+    style.outlineColor;
 
-  shadowPresetInput.value = style.shadowPreset;
-  shadowColorInput.value = style.shadowColor;
-  shadowBlurInput.value = style.shadowBlur;
-  shadowXInput.value = style.shadowX;
-  shadowYInput.value = style.shadowY;
+  outlineWidthInput.value =
+    style.outlineWidth;
 
-  letterSpacingInput.value = style.letterSpacing;
-  lineHeightInput.value = style.lineHeight;
+  shadowPresetInput.value =
+    style.shadowPreset;
+
+  shadowColorInput.value =
+    style.shadowColor;
+
+  shadowBlurInput.value =
+    style.shadowBlur;
+
+  shadowXInput.value =
+    style.shadowX;
+
+  shadowYInput.value =
+    style.shadowY;
+
+  letterSpacingInput.value =
+    style.letterSpacing;
+
+  lineHeightInput.value =
+    style.lineHeight;
 
   sendLyricsUpdate();
 
-commitEditorHistory(
-  beforeState
-);
+  commitEditorHistory(
+    beforeState
+  );
 }
+
+
+/*
+ * プリセット操作を接続
+ */
+stylePresetInput?.addEventListener(
+  'change',
+  applyStylePreset
+);
+
+shadowPresetInput?.addEventListener(
+  'change',
+  applyShadowPreset
+);
+
+/*
+ * 影プリセット変更
+ */
+shadowPresetInput?.addEventListener(
+  'change',
+  () => {
+    applyShadowPreset();
+  }
+);
 
 
 
@@ -3989,29 +4029,6 @@ if (
 
 
 
-if (lyricsBlockList) {
-  lyricsBlockList.addEventListener(
-    'click',
-    event => {
-      if (
-        event.target.closest(
-          '.lyricsBlock'
-        )
-      ) {
-        return;
-      }
-
-      selectedLyricsBlockIds.clear();
-      lastSelectedLyricsBlockId = null;
-
-      lastSelectedBlockIdBySection.delete(
-        currentSectionName
-      );
-
-      applyLyricsBlockSelectionClasses();
-    }
-  );
-}
 
 /*
 if (lyricsBlockList) {
@@ -5045,40 +5062,154 @@ function setupLyricsWidthResize() {
   });
 }
 
+function clearLyricsBlockSelection() {
+  selectedLyricsBlockIds.clear();
 
+  lastSelectedLyricsBlockId =
+    null;
+
+  lastSelectedBlockIdBySection.delete(
+    currentSectionName
+  );
+
+  cancelInspectorHistory();
+
+  applyLyricsBlockSelectionClasses();
+}
+
+
+function releaseLyricsEditorInputFocus() {
+  const activeElement =
+    document.activeElement;
+
+  if (
+    activeElement &&
+    activeElement !== document.body &&
+    typeof activeElement.blur ===
+      'function'
+  ) {
+    activeElement.blur();
+  }
+
+  /*
+   * contentEditableの文字選択やカーソルも解除。
+   */
+  const selection =
+    window.getSelection();
+
+  selection?.removeAllRanges();
+}
 
 
 function setupTimelineSeekByClick() {
-  const trackArea = document.querySelector('.timelineScrollArea');
-  const timelineContent = document.getElementById('lyricsBlockList');
+  const trackArea =
+    document.querySelector(
+      '.timelineScrollArea'
+    );
 
-  if (!trackArea || !timelineContent) return;
+  const timelineContent =
+    document.getElementById(
+      'lyricsBlockList'
+    );
 
-  timelineContent.addEventListener('mousedown', (event) => {
-  if (event.target.closest('.lyricsBlock')) return;
-  if (event.target.closest('#timelinePlayhead')) return;
+  if (
+    !trackArea ||
+    !timelineContent
+  ) {
+    return;
+  }
 
-  // 空白部分を押した時点で全選択解除
-  selectedLyricsBlockIds.clear();
-  lastSelectedLyricsBlockId = null;
-  applyLyricsBlockSelectionClasses();
+  trackArea.addEventListener(
+    'mousedown',
+    event => {
+      /*
+       * 歌詞ブロックの通常操作は妨げない。
+       */
+      if (
+        event.target.closest(
+          '.lyricsBlock'
+        )
+      ) {
+        return;
+      }
 
-  if (!editorAudio || !editorAudioReady) return;
+      /*
+       * 再生バーのドラッグ操作は妨げない。
+       */
+      if (
+        event.target.closest(
+          '#timelinePlayhead'
+        )
+      ) {
+        return;
+      }
 
-  autoFollowPlayhead = true;
+      /*
+       * 最重要：
+       * タイムライン空白を押したら、
+       * Inspectorやインライン編集から
+       * キーボードフォーカスを外す。
+       *
+       * event.preventDefault()より先に実行する。
+       */
+      releaseLyricsEditorInputFocus();
 
-    const rect = timelineContent.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const nextTime = Math.max(0, x / timelineScale);
+      /*
+       * 歌詞ブロックの選択も解除。
+       */
+      selectedLyricsBlockIds.clear();
 
-    lastEditorActiveLyricsSignature = '';
-    editorAudio.currentTime = nextTime;
+      lastSelectedLyricsBlockId =
+        null;
 
-    updateTimelinePlayhead();
-    updateEditorPreviewByTimeline();
+      lastSelectedBlockIdBySection.delete(
+        currentSectionName
+      );
 
-    event.preventDefault();
-  });
+      cancelInspectorHistory();
+
+      applyLyricsBlockSelectionClasses();
+
+      /*
+       * 音源がなくても、
+       * フォーカスと選択の解除までは実行する。
+       */
+      if (
+        !editorAudio ||
+        !editorAudioReady
+      ) {
+        return;
+      }
+
+      autoFollowPlayhead =
+        true;
+
+      const rect =
+        timelineContent
+          .getBoundingClientRect();
+
+      const x =
+        event.clientX -
+        rect.left;
+
+      const nextTime =
+        Math.max(
+          0,
+          x / timelineScale
+        );
+
+      lastEditorActiveLyricsSignature =
+        '';
+
+      editorAudio.currentTime =
+        nextTime;
+
+      updateTimelinePlayhead();
+      updateEditorPreviewByTimeline();
+
+      event.preventDefault();
+    }
+  );
 }
 
 

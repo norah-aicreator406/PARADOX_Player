@@ -199,17 +199,20 @@ function setSingleLyrics(
     payload
   );
 
-  applyLyricsInAnimation(
-    lyricsBlock,
-    animation
-  );
+ 
+applyLyricsInAnimation(
+  lyricsBlock,
+  animation
+);
 
-  applyLyricsHoldAnimation(
-    lyricsBlock,
-    animation,
-    0
-  );
+applyLyricsHoldAnimation(
+  lyricsBlock,
+  animation,
+  0
+);
+
 }
+
 
 
 /* ========================================
@@ -239,6 +242,7 @@ function setLyricsBlocks(blocks) {
           )
       )
     );
+  
 
   /*
    * 再生範囲から外れたブロックだけ削除。
@@ -364,12 +368,16 @@ function setLyricsBlocks(blocks) {
       /*
        * INは初めて表示された時だけ。
        */
-      if (isNewBlock) {
-        applyLyricsInAnimation(
-          lyricsBlock,
-          block.animation || {}
-        );
-      }
+ 
+    
+if (isNewBlock) {
+  applyLyricsInAnimation(
+    lyricsBlock,
+    block.animation || {}
+  );
+}
+
+
 
      /*
  * HOLDは受信ごとに経過時間を同期する。
@@ -384,6 +392,9 @@ function setLyricsBlocks(blocks) {
  * Lyrics Outputを途中で開いても
  * 現在の位相から開始できる。
  */
+
+
+
 if (
   isNewBlock ||
   needsRender
@@ -397,10 +408,14 @@ if (
   );
 }
 
+
+
+      
       /*
        * OUTは残り時間が継続的に変わるため、
        * データ受信ごとに更新する。
        */
+      
       applyLyricsOutAnimation(
         lyricsBlock,
         block.animation || {},
@@ -416,7 +431,6 @@ if (
       );
     });
 }
-
 
 /* ========================================
    Payload router
