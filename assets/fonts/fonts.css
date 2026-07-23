@@ -44,3 +44,91 @@
   font-weight: 400;
   font-display: block;
 }
+
+@font-face {
+  font-family: 'Audiowide';
+  src: url('./Audiowide/Audiowide-Regular.ttf')
+    format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'Dela Gothic One';
+  src: url('./Dela Gothic One/DelaGothicOne-Regular.ttf')
+    format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'Zen Maru Gothic';
+  src: url('./Zen Maru Gothic/ZenMaruGothic-Regular.ttf')
+    format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Bebas Neue';
+  src: url('./Bebas Neue/BebasNeue-Regular.ttf')
+    format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'Creepster';
+  src: url('./Creepster/Creepster-Regular.ttf')
+    format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'DotGothic16';
+  src: url('./DotGothic16/DotGothic16-Regular.ttf')
+    format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'Hachi Maru Pop';
+  src: url('./Hachi Maru Pop/HachiMaruPop-Regular.ttf')
+    format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'Reggae One';
+  src: url('./Reggae One/ReggaeOne-Regular.ttf')
+    format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'RocknRoll One';
+  src: url('./RocknRoll One/RocknRollOne-Regular.ttf')
+    format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

@@ -21,28 +21,27 @@
     "license": null
   },
   {
-    "id": "zen-maru-gothic",
-    "family": "Zen Maru Gothic",
-    "value": "Zen Maru Gothic",
-    "label": "Zen Maru Gothic",
-    "categories": [
-      "all",
-      "japanese",
-      "rounded",
-      "cute",
-      "handwriting"
-    ],
-    "tags": [
-      "日本語",
-      "丸文字",
-      "やわらかい",
-      "親しみ"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "zen-maru-gothic",
+  "family": "Zen Maru Gothic",
+  "value": "Zen Maru Gothic",
+  "label": "Zen Maru Gothic",
+  "categories": [
+    "gothic",
+    "rounded",
+    "soft"
+  ],
+  "tags": [
+    "日本語",
+    "丸ゴシック",
+    "かわいい",
+    "柔らかい",
+    "親しみやすい"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./ZenMaruGothic/ZenMaruGothic-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
     "id": "m-plus-rounded-1c",
     "family": "M PLUS Rounded 1c",
@@ -111,68 +110,93 @@
     "license": "OFL-1.1"
   },
   {
-    "id": "reggae-one",
-    "family": "Reggae One",
-    "value": "Reggae One",
-    "label": "Reggae One",
-    "categories": [
-      "all",
-      "japanese",
-      "design",
-      "bold"
-    ],
-    "tags": [
-      "日本語",
-      "個性的",
-      "力強い"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "reggae-one",
+  "family": "Reggae One",
+  "value": "Reggae One",
+  "label": "Reggae One",
+  "categories": [
+    "display",
+    "japanese",
+    "decorative"
+  ],
+  "tags": [
+    "日本語",
+    "個性的",
+    "和風",
+    "怪しい",
+    "タイトル"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./ReggaeOne/ReggaeOne-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
-    "id": "rocknroll-one",
-    "family": "RocknRoll One",
-    "value": "RocknRoll One",
-    "label": "RocknRoll One",
-    "categories": [
-      "all",
-      "japanese",
-      "design",
-      "bold"
-    ],
-    "tags": [
-      "日本語",
-      "ロック",
-      "ポップ"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "rocknroll-one",
+  "family": "RocknRoll One",
+  "value": "RocknRoll One",
+  "label": "RocknRoll One",
+  "categories": [
+    "gothic",
+    "display",
+    "bold"
+  ],
+  "tags": [
+    "日本語",
+    "ロック",
+    "力強い",
+    "タイトル",
+    "ポップ"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./RocknRollOne/RocknRollOne-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
-    "id": "bebas-neue",
-    "family": "Bebas Neue",
-    "value": "Bebas Neue",
-    "label": "Bebas Neue",
-    "categories": [
-      "all",
-      "english",
-      "bold",
-      "modern"
-    ],
-    "tags": [
-      "英語",
-      "縦長",
-      "タイトル"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "bebas-neue",
+  "family": "Bebas Neue",
+  "value": "Bebas Neue",
+  "label": "Bebas Neue",
+  "categories": [
+    "display",
+    "bold",
+    "condensed"
+  ],
+  "tags": [
+    "英字",
+    "太字",
+    "縦長",
+    "タイトル",
+    "ポスター"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./BebasNeue/BebasNeue-Regular.ttf",
+  "license": "OFL-1.1"
+},
+{
+  "id": "creepster",
+  "family": "Creepster",
+  "value": "Creepster",
+  "label": "Creepster",
+  "categories": [
+    "display",
+    "horror",
+    "decorative"
+  ],
+  "tags": [
+    "英字",
+    "ホラー",
+    "不気味",
+    "怪奇",
+    "ハロウィン"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./Creepster/Creepster-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
     "id": "playfair-display",
     "family": "Playfair Display",
@@ -237,48 +261,49 @@
     "license": null
   },
   {
-    "id": "dela-gothic-one",
-    "family": "Dela Gothic One",
-    "value": "Dela Gothic One",
-    "label": "Dela Gothic One",
-    "categories": [
-      "all",
-      "japanese",
-      "gothic",
-      "bold",
-      "design"
-    ],
-    "tags": [
-      "日本語",
-      "極太",
-      "インパクト"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "dela-gothic-one",
+  "family": "Dela Gothic One",
+  "value": "Dela Gothic One",
+  "label": "Dela Gothic One",
+  "categories": [
+    "gothic",
+    "display",
+    "bold"
+  ],
+  "tags": [
+    "日本語",
+    "極太",
+    "インパクト",
+    "タイトル",
+    "ポップ"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./DelaGothicOne/DelaGothicOne-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
-    "id": "dotgothic16",
-    "family": "DotGothic16",
-    "value": "DotGothic16",
-    "label": "DotGothic16",
-    "categories": [
-      "all",
-      "japanese",
-      "dot",
-      "design"
-    ],
-    "tags": [
-      "日本語",
-      "ドット",
-      "レトロ"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "dotgothic16",
+  "family": "DotGothic16",
+  "value": "DotGothic16",
+  "label": "DotGothic16",
+  "categories": [
+    "gothic",
+    "pixel",
+    "retro"
+  ],
+  "tags": [
+    "日本語",
+    "ドット",
+    "ピクセル",
+    "レトロ",
+    "ゲーム"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./DotGothic16/DotGothic16-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
     "id": "pixelify-sans",
     "family": "Pixelify Sans",
@@ -343,27 +368,27 @@
     "license": "OFL-1.1"
   },
   {
-    "id": "hachi-maru-pop",
-    "family": "Hachi Maru Pop",
-    "value": "Hachi Maru Pop",
-    "label": "Hachi Maru Pop",
-    "categories": [
-      "all",
-      "japanese",
-      "handwriting",
-      "cute",
-      "rounded"
-    ],
-    "tags": [
-      "日本語",
-      "手書き",
-      "かわいい"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "hachi-maru-pop",
+  "family": "Hachi Maru Pop",
+  "value": "Hachi Maru Pop",
+  "label": "Hachi Maru Pop",
+  "categories": [
+    "handwriting",
+    "rounded",
+    "cute"
+  ],
+  "tags": [
+    "日本語",
+    "手書き",
+    "丸文字",
+    "かわいい",
+    "ポップ"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./HachiMaruPop/HachiMaruPop-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
     "id": "mochiy-pop-one",
     "family": "Mochiy Pop One",
@@ -478,24 +503,25 @@
     "license": null
   },
   {
-    "id": "audiowide",
-    "family": "Audiowide",
-    "value": "Audiowide",
-    "label": "Audiowide",
-    "categories": [
-      "all",
-      "english",
-      "techno",
-      "design"
-    ],
-    "tags": [
-      "英語",
-      "近未来",
-      "タイトル"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  }
+  "id": "audiowide",
+  "family": "Audiowide",
+  "value": "Audiowide",
+  "label": "Audiowide",
+  "categories": [
+    "display",
+    "digital",
+    "futuristic"
+  ],
+  "tags": [
+    "英字",
+    "デジタル",
+    "未来的",
+    "テクノ",
+    "SF"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./Audiowide/Audiowide-Regular.ttf",
+  "license": "OFL-1.1"
+}
 ]
