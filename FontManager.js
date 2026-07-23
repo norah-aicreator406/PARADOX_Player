@@ -6,6 +6,11 @@ window.NorahFontManager =
     const path =
       require('path');
 
+    
+    const {
+  pathToFileURL
+} = require('url');
+
 
     const FONT_LIBRARY_PATH =
       path.join(
@@ -18,6 +23,139 @@ window.NorahFontManager =
 
     let fonts =
       [];
+
+
+
+    function escapeCssString(value) {
+  return String(value || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'");
+}
+
+
+function getFontFileUrl(filePath) {
+  const absolutePath =
+    path.resolve(
+      path.dirname(FONT_LIBRARY_PATH),
+      filePath
+    );
+
+  return pathToFileURL(
+    absolutePath
+  ).href;
+}
+
+
+function getFontFormat(filePath) {
+  const normalizedPath =
+    String(filePath || '')
+      .trim()
+      .toLowerCase();
+
+  if (normalizedPath.endsWith('.woff2')) {
+    return 'woff2';
+  }
+
+  if (normalizedPath.endsWith('.woff')) {
+    return 'woff';
+  }
+
+  if (normalizedPath.endsWith('.otf')) {
+    return 'opentype';
+  }
+
+  return 'truetype';
+}
+
+
+function createFontFaceCss(font) {
+  if (
+    !font ||
+    font.bundled !== true ||
+    !font.family ||
+    !font.file
+  ) {
+    return '';
+  }
+
+  const family =
+    escapeCssString(
+      font.family
+    );
+
+  const fileUrl =
+    escapeCssString(
+      getFontFileUrl(
+        font.file
+      )
+    );
+
+  const format =
+    getFontFormat(
+      font.file
+    );
+
+  const weight =
+    font.weight || 400;
+
+  const style =
+    font.style || 'normal';
+
+  return `
+@font-face {
+  font-family: '${family}';
+  src: url('${fileUrl}') format('${format}');
+  font-weight: ${weight};
+  font-style: ${style};
+  font-display: swap;
+}
+`;
+}
+
+
+function registerBundledFonts() {
+  const styleId =
+    'norah-font-manager-styles';
+
+  const oldStyle =
+    document.getElementById(
+      styleId
+    );
+
+  if (oldStyle) {
+    oldStyle.remove();
+  }
+
+
+  const cssText =
+    fonts
+      .map(
+        createFontFaceCss
+      )
+      .filter(Boolean)
+      .join('\n');
+
+
+  if (!cssText) {
+    return;
+  }
+
+
+  const styleElement =
+    document.createElement(
+      'style'
+    );
+
+  styleElement.id =
+    styleId;
+
+  styleElement.textContent =
+    cssText;
+
+  document.head.appendChild(
+    styleElement
+  );
+}
 
 
     function load() {
@@ -41,6 +179,8 @@ window.NorahFontManager =
 
         fonts =
           parsed;
+
+        registerBundledFonts();
 
         console.log(
           `[FontManager] ${fonts.length}件のフォントを読み込みました。`
