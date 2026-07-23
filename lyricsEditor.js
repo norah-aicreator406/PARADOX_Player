@@ -299,9 +299,9 @@ function setupFontOptions() {
   }
 
   const fontLibraryFonts =
-    window
-      .LyricsEditorFontLibrary
-      ?.fonts;
+  window
+    .NorahFontManager
+    ?.getAllFonts();
 
   if (
     !Array.isArray(
@@ -481,6 +481,13 @@ function setupFontOptions() {
   }
 }
 
+
+window.addEventListener(
+  'norah-fonts-reloaded',
+  () => {
+    setupFontOptions();
+  }
+);
 
 const textInput = document.getElementById('lyricsText');
 const startTimeInput = document.getElementById('lyricsStartTime');
