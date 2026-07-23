@@ -1,0 +1,46 @@
+/* ==================================================
+   NORAH Studio
+   Local Font Definitions
+================================================== */
+
+
+/* Noto Sans JP */
+@font-face {
+  font-family: "Noto Sans JP";
+
+  src:
+    url("./NotoSansJP/NotoSansJP-Regular.ttf")
+    format("truetype");
+
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}
+
+
+/* Shippori Mincho */
+@font-face {
+  font-family: "Shippori Mincho";
+
+  src:
+    url("./ShipporiMincho/ShipporiMincho-Regular.ttf")
+    format("truetype");
+
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}
+
+
+/* Klee One */
+@font-face {
+  font-family: "Klee One";
+
+  src:
+    url("./KleeOne/KleeOne-Regular.ttf")
+    format("truetype");
+
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}
