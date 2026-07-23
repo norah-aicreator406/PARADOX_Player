@@ -15,636 +15,480 @@ window.LyricsEditorFontLibrary =
       6;
 
 
-    const FONT_LIBRARY = [
-      
-        {
-  value:
-    'Noto Serif JP',
-
-  label:
-    'Noto Serif JP',
-
-  categories: [
-    'all',
-    'japanese',
-    'mincho',
-    'classic'
-  ],
-
-  tags: [
-    '日本語',
-    '明朝',
-    '上品'
-  ]
-},
-
-{
-  value:
-    'Zen Maru Gothic',
-
-  label:
-    'Zen Maru Gothic',
-
-  categories: [
-    'all',
-    'japanese',
-    'rounded',
-    'cute'
-  ],
-
-  tags: [
-    '日本語',
-    '丸文字',
-    'やわらかい'
-  ]
-},
-
-{
-  value:
-    'Zen Old Mincho',
-
-  label:
-    'Zen Old Mincho',
-
-  categories: [
-    'all',
-    'japanese',
-    'mincho',
-    'classic'
-  ],
-
-  tags: [
-    '日本語',
-    '明朝',
-    '和風'
-  ]
-},
-
-{
-  value:
-    'M PLUS Rounded 1c',
-
-  label:
-    'M PLUS Rounded 1c',
-
-  categories: [
-    'all',
-    'japanese',
-    'rounded',
-    'modern'
-  ],
-
-  tags: [
-    '日本語',
-    '丸文字',
-    'ポップ'
-  ]
-},
-
-{
-  value:
-    'Kaisei Decol',
-
-  label:
-    'Kaisei Decol',
-
-  categories: [
-    'all',
-    'japanese',
-    'design',
-    'classic'
-  ],
-
-  tags: [
-    '日本語',
-    '装飾',
-    '個性的'
-  ]
-},
-
-{
-  value:
-    'Shippori Mincho',
-
-  label:
-    'Shippori Mincho',
-
-  categories: [
-    'all',
-    'japanese',
-    'mincho',
-    'classic'
-  ],
-
-  tags: [
-    '日本語',
-    '明朝',
-    '映画的'
-  ]
-},
-
-{
-  value:
-    'Reggae One',
-
-  label:
-    'Reggae One',
-
-  categories: [
-    'all',
-    'japanese',
-    'design',
-    'bold'
-  ],
-
-  tags: [
-    '日本語',
-    '個性的',
-    '力強い'
-  ]
-},
-
-{
-  value:
-    'RocknRoll One',
-
-  label:
-    'RocknRoll One',
-
-  categories: [
-    'all',
-    'japanese',
-    'design',
-    'bold'
-  ],
-
-  tags: [
-    '日本語',
-    'ロック',
-    'ポップ'
-  ]
-},
-
-{
-  value:
-    'Bebas Neue',
-
-  label:
-    'Bebas Neue',
-
-  categories: [
-    'all',
-    'english',
-    'bold',
-    'modern'
-  ],
-
-  tags: [
-    '英語',
-    '縦長',
-    'タイトル'
-  ]
-},
-
-{
-  value:
-    'Playfair Display',
-
-  label:
-    'Playfair Display',
-
-  categories: [
-    'all',
-    'english',
-    'serif',
-    'classic'
-  ],
-
-  tags: [
-    '英語',
-    'セリフ',
-    '上品'
-  ]
-},
-
-/* ================================
-   Japanese Gothic
-================================ */
-
-{
-  value:
-    'Noto Sans JP',
-
-  label:
-    'Noto Sans JP',
-
-  categories: [
-    'all',
-    'japanese',
-    'gothic',
-    'modern'
-  ],
-
-  tags: [
-    '日本語',
-    'ゴシック',
-    '標準'
-  ]
-},
-
-{
-  value:
-    'Zen Kaku Gothic New',
-
-  label:
-    'Zen Kaku Gothic New',
-
-  categories: [
-    'all',
-    'japanese',
-    'gothic',
-    'modern'
-  ],
-
-  tags: [
-    '日本語',
-    'ゴシック',
-    'すっきり'
-  ]
-},
-
-{
-  value:
-    'Dela Gothic One',
-
-  label:
-    'Dela Gothic One',
-
-  categories: [
-    'all',
-    'japanese',
-    'gothic',
-    'bold',
-    'design'
-  ],
-
-  tags: [
-    '日本語',
-    '極太',
-    'インパクト'
-  ]
-},
-
-/* ================================
-   Dot / Pixel
-================================ */
-
-{
-  value:
-    'DotGothic16',
-
-  label:
-    'DotGothic16',
-
-  categories: [
-    'all',
-    'japanese',
-    'dot',
-    'design'
-  ],
-
-  tags: [
-    '日本語',
-    'ドット',
-    'レトロ'
-  ]
-},
-
-{
-  value:
-    'Pixelify Sans',
-
-  label:
-    'Pixelify Sans',
-
-  categories: [
-    'all',
-    'english',
-    'dot',
-    'design'
-  ],
-
-  tags: [
-    '英語',
-    'ピクセル',
-    'ゲーム'
-  ]
-},
-
-/* ================================
-   Handwriting
-================================ */
-
-{
-  value:
-    'Yomogi',
-
-  label:
-    'Yomogi',
-
-  categories: [
-    'all',
-    'japanese',
-    'handwriting',
-    'cute'
-  ],
-
-  tags: [
-    '日本語',
-    '手書き',
-    'やさしい'
-  ]
-},
-
-{
-  value:
-    'Klee One',
-
-  label:
-    'Klee One',
-
-  categories: [
-    'all',
-    'japanese',
-    'handwriting',
-    'classic'
-  ],
-
-  tags: [
-    '日本語',
-    '手書き',
-    '繊細'
-  ]
-},
-
-{
-  value:
-    'Hachi Maru Pop',
-
-  label:
-    'Hachi Maru Pop',
-
-  categories: [
-    'all',
-    'japanese',
-    'handwriting',
-    'cute',
-    'rounded'
-  ],
-
-  tags: [
-    '日本語',
-    '手書き',
-    'かわいい'
-  ]
-},
-
-{
-  value:
-    'Mochiy Pop One',
-
-  label:
-    'Mochiy Pop One',
-
-  categories: [
-    'all',
-    'japanese',
-    'cute',
-    'rounded',
-    'bold'
-  ],
-
-  tags: [
-    '日本語',
-    'ポップ',
-    'かわいい'
-  ]
-},
-
-{
-  value:
-    'Zen Maru Gothic',
-
-  label:
-    'Zen Maru Gothic',
-
-  categories: [
-    'all',
-    'japanese',
-    'rounded',
-    'cute'
-  ],
-
-  tags: [
-    '日本語',
-    '丸文字',
-    'やわらかい'
-  ]
-},
-
-/* ================================
-   Cute / Pop
-================================ */
-
-{
-  value:
-    'Mochiy Pop One',
-
-  label:
-    'Mochiy Pop One',
-
-  categories: [
-    'all',
-    'japanese',
-    'cute',
-    'rounded',
-    'bold'
-  ],
-
-  tags: [
-    '日本語',
-    'ポップ',
-    'かわいい'
-  ]
-},
-
-/* ================================
-   Horror
-================================ */
-
-{
-  value:
-    'Yuji Boku',
-
-  label:
-    'Yuji Boku',
-
-  categories: [
-    'all',
-    'japanese',
-    'handwriting',
-    'horror'
-  ],
-
-  tags: [
-    '日本語',
-    '筆文字',
-    '怪談'
-  ]
-},
-
-{
-  value:
-    'Yuji Mai',
-
-  label:
-    'Yuji Mai',
-
-  categories: [
-    'all',
-    'japanese',
-    'handwriting',
-    'horror'
-  ],
-
-  tags: [
-    '日本語',
-    '崩し字',
-    '不穏'
-  ]
-},
-
-{
-  value:
-    'Zen Old Mincho',
-
-  label:
-    'Zen Old Mincho',
-
-  categories: [
-    'all',
-    'japanese',
-    'mincho',
-    'horror',
-    'classic'
-  ],
-
-  tags: [
-    '日本語',
-    '古風',
-    '怪談'
-  ]
-},
-
-{
-  value:
-    'Shippori Mincho',
-
-  label:
-    'Shippori Mincho',
-
-  categories: [
-    'all',
-    'japanese',
-    'mincho',
-    'horror',
-    'classic'
-  ],
-
-  tags: [
-    '日本語',
-    '映画的',
-    '静かな恐怖'
-  ]
-},
-
-/* ================================
-   Techno
-================================ */
-
-{
-  value:
-    'Orbitron',
-
-  label:
-    'Orbitron',
-
-  categories: [
-    'all',
-    'english',
-    'techno',
-    'modern'
-  ],
-
-  tags: [
-    '英語',
-    'テクノ',
-    '未来'
-  ]
-},
-
-{
-  value:
-    'Audiowide',
-
-  label:
-    'Audiowide',
-
-  categories: [
-    'all',
-    'english',
-    'techno',
-    'design'
-  ],
-
-  tags: [
-    '英語',
-    '近未来',
-    'タイトル'
-  ]
+    /*
+ * ElectronのNode機能を使って、
+ * ローカルJSONからフォント一覧を同期読込する。
+ *
+ * 同期読込にする理由：
+ * Font Libraryの初期化処理を
+ * 非同期化せず、既存UIを維持するため。
+ */
+const fs =
+  require('fs');
+
+const path =
+  require('path');
+
+
+function loadFontLibraryData() {
+  const jsonPath =
+    path.join(
+      __dirname,
+      'assets',
+      'fonts',
+      'fontLibrary.json'
+    );
+
+  try {
+    const jsonText =
+      fs.readFileSync(
+        jsonPath,
+        'utf8'
+      );
+
+    const parsed =
+      JSON.parse(
+        jsonText
+      );
+
+    if (!Array.isArray(parsed)) {
+      throw new Error(
+        'fontLibrary.jsonのルートは配列である必要があります。'
+      );
+    }
+
+    return parsed;
+  } catch (error) {
+    console.error(
+      '[Font Library] JSONの読込に失敗しました。',
+      error
+    );
+
+    return [];
+  }
 }
+
+
+function validateFontLibrary(fonts) {
+  const seenIds =
+    new Set();
+
+  const duplicateIds =
+    new Set();
+
+  const seenValues =
+    new Set();
+
+  const duplicateValues =
+    new Set();
+
+
+  function findDuplicateStrings(values) {
+    const seen =
+      new Set();
+
+    const duplicates =
+      new Set();
+
+    values.forEach(value => {
+      const normalized =
+        String(value || '')
+          .trim();
+
+      if (!normalized) {
+        return;
+      }
+
+      if (seen.has(normalized)) {
+        duplicates.add(normalized);
+        return;
+      }
+
+      seen.add(normalized);
+    });
+
+    return [
+      ...duplicates
     ];
+  }
 
 
-    function readStorageArray(
-      key
+  fonts.forEach((font, index) => {
+    const itemNumber =
+      index + 1;
+
+    const id =
+      String(font?.id || '')
+        .trim();
+
+    const family =
+      String(font?.family || '')
+        .trim();
+
+    const value =
+      String(font?.value || '')
+        .trim();
+
+    const label =
+      String(font?.label || '')
+        .trim();
+
+    const source =
+      String(font?.source || '')
+        .trim();
+
+    const file =
+      typeof font?.file === 'string'
+        ? font.file.trim()
+        : font?.file;
+
+    const license =
+      typeof font?.license === 'string'
+        ? font.license.trim()
+        : font?.license;
+
+    const bundled =
+      font?.bundled;
+
+
+    /*
+     * 基本項目
+     */
+
+    if (!id) {
+      console.warn(
+        `[Font Library] ${itemNumber}件目のidが空です。`,
+        font
+      );
+    } else if (seenIds.has(id)) {
+      duplicateIds.add(id);
+    } else {
+      seenIds.add(id);
+    }
+
+
+    if (!family) {
+      console.warn(
+        `[Font Library] ${itemNumber}件目のfamilyが空です。`,
+        font
+      );
+    }
+
+
+    if (!value) {
+      console.warn(
+        `[Font Library] ${itemNumber}件目のvalueが空です。`,
+        font
+      );
+    } else if (seenValues.has(value)) {
+      duplicateValues.add(value);
+    } else {
+      seenValues.add(value);
+    }
+
+
+    if (!label) {
+      console.warn(
+        `[Font Library] "${value || id || itemNumber}"のlabelが空です。`,
+        font
+      );
+    }
+
+
+    if (
+      family &&
+      value &&
+      family !== value
     ) {
-      try {
-        const parsed =
-          JSON.parse(
-            localStorage.getItem(
-              key
-            ) || '[]'
-          );
+      console.warn(
+        `[Font Library] "${id || value}"のfamilyとvalueが一致していません。`,
+        {
+          family,
+          value,
+          font
+        }
+      );
+    }
 
-        return Array.isArray(parsed)
-          ? parsed
-          : [];
-      } catch {
-        return [];
+
+    /*
+     * categories
+     */
+
+    if (!Array.isArray(font.categories)) {
+      console.warn(
+        `[Font Library] "${id || value || itemNumber}"のcategoriesが配列ではありません。`,
+        font
+      );
+    } else {
+      const emptyCategoryIndexes =
+        [];
+
+      font.categories.forEach(
+        (category, categoryIndex) => {
+          if (
+            !String(category || '')
+              .trim()
+          ) {
+            emptyCategoryIndexes.push(
+              categoryIndex
+            );
+          }
+        }
+      );
+
+      if (emptyCategoryIndexes.length > 0) {
+        console.warn(
+          `[Font Library] "${id || value}"のcategoriesに空文字があります。`,
+          emptyCategoryIndexes
+        );
+      }
+
+      const duplicateCategories =
+        findDuplicateStrings(
+          font.categories
+        );
+
+      if (duplicateCategories.length > 0) {
+        console.warn(
+          `[Font Library] "${id || value}"のcategories内に重複があります。`,
+          duplicateCategories
+        );
       }
     }
 
 
-    function writeStorageArray(
-      key,
-      values
+    /*
+     * tags
+     */
+
+    if (!Array.isArray(font.tags)) {
+      console.warn(
+        `[Font Library] "${id || value || itemNumber}"のtagsが配列ではありません。`,
+        font
+      );
+    } else {
+      const emptyTagIndexes =
+        [];
+
+      font.tags.forEach(
+        (tag, tagIndex) => {
+          if (
+            !String(tag || '')
+              .trim()
+          ) {
+            emptyTagIndexes.push(
+              tagIndex
+            );
+          }
+        }
+      );
+
+      if (emptyTagIndexes.length > 0) {
+        console.warn(
+          `[Font Library] "${id || value}"のtagsに空文字があります。`,
+          emptyTagIndexes
+        );
+      }
+
+      const duplicateTags =
+        findDuplicateStrings(
+          font.tags
+        );
+
+      if (duplicateTags.length > 0) {
+        console.warn(
+          `[Font Library] "${id || value}"のtags内に重複があります。`,
+          duplicateTags
+        );
+      }
+    }
+
+
+    /*
+     * source
+     */
+
+    const validSources =
+      [
+        'bundled',
+        'google'
+      ];
+
+    if (!source) {
+      console.warn(
+        `[Font Library] "${id || value}"のsourceが空です。`,
+        font
+      );
+    } else if (
+      !validSources.includes(source)
     ) {
-      localStorage.setItem(
-        key,
-        JSON.stringify(values)
+      console.warn(
+        `[Font Library] "${id || value}"のsourceが未対応です。`,
+        {
+          source,
+          validSources,
+          font
+        }
       );
     }
+
+
+    /*
+     * bundled
+     */
+
+    if (typeof bundled !== 'boolean') {
+      console.warn(
+        `[Font Library] "${id || value}"のbundledがbooleanではありません。`,
+        {
+          bundled,
+          font
+        }
+      );
+    }
+
+
+    /*
+     * bundledフォントの整合性
+     */
+
+    if (source === 'bundled') {
+      if (bundled !== true) {
+        console.warn(
+          `[Font Library] "${id || value}"はsourceがbundledですが、bundledがtrueではありません。`,
+          font
+        );
+      }
+
+      if (
+        typeof file !== 'string' ||
+        !file
+      ) {
+        console.warn(
+          `[Font Library] "${id || value}"はbundledフォントですが、fileが空です。`,
+          font
+        );
+      }
+
+      if (
+        typeof license !== 'string' ||
+        !license
+      ) {
+        console.warn(
+          `[Font Library] "${id || value}"はbundledフォントですが、licenseが空です。`,
+          font
+        );
+      }
+    }
+
+
+    /*
+     * Google Fonts側の整合性
+     */
+
+    if (source === 'google') {
+      if (bundled !== false) {
+        console.warn(
+          `[Font Library] "${id || value}"はsourceがgoogleですが、bundledがfalseではありません。`,
+          font
+        );
+      }
+
+      if (
+        file !== null &&
+        file !== undefined
+      ) {
+        console.warn(
+          `[Font Library] "${id || value}"はGoogle Fontsですが、fileがnullではありません。`,
+          {
+            file,
+            font
+          }
+        );
+      }
+    }
+
+
+    /*
+     * sourceとfileの矛盾
+     */
+
+    if (
+      source !== 'bundled' &&
+      typeof file === 'string' &&
+      file
+    ) {
+      console.warn(
+        `[Font Library] "${id || value}"にはローカルfileがありますが、sourceがbundledではありません。`,
+        {
+          source,
+          file,
+          font
+        }
+      );
+    }
+  });
+
+
+  if (duplicateIds.size > 0) {
+    console.warn(
+      '[Font Library] 重複idがあります。',
+      [
+        ...duplicateIds
+      ]
+    );
+  }
+
+
+  if (duplicateValues.size > 0) {
+    console.warn(
+      '[Font Library] 重複valueがあります。',
+      [
+        ...duplicateValues
+      ]
+    );
+  }
+}
+
+
+const FONT_LIBRARY =
+  loadFontLibraryData();
+
+
+validateFontLibrary(
+  FONT_LIBRARY
+);
+
+
+function readStorageArray(
+  key
+) {
+  try {
+    const parsed =
+      JSON.parse(
+        localStorage.getItem(
+          key
+        ) || '[]'
+      );
+
+    return Array.isArray(parsed)
+      ? parsed
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeStorageArray(
+  key,
+  values
+) {
+  localStorage.setItem(
+    key,
+    JSON.stringify(values)
+  );
+}
 
 
 

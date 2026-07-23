@@ -1,0 +1,501 @@
+[
+  {
+    "id": "noto-serif-jp",
+    "family": "Noto Serif JP",
+    "value": "Noto Serif JP",
+    "label": "Noto Serif JP",
+    "categories": [
+      "all",
+      "japanese",
+      "mincho",
+      "classic"
+    ],
+    "tags": [
+      "日本語",
+      "明朝",
+      "上品"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "zen-maru-gothic",
+    "family": "Zen Maru Gothic",
+    "value": "Zen Maru Gothic",
+    "label": "Zen Maru Gothic",
+    "categories": [
+      "all",
+      "japanese",
+      "rounded",
+      "cute",
+      "handwriting"
+    ],
+    "tags": [
+      "日本語",
+      "丸文字",
+      "やわらかい",
+      "親しみ"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "m-plus-rounded-1c",
+    "family": "M PLUS Rounded 1c",
+    "value": "M PLUS Rounded 1c",
+    "label": "M PLUS Rounded 1c",
+    "categories": [
+      "all",
+      "japanese",
+      "rounded",
+      "modern"
+    ],
+    "tags": [
+      "日本語",
+      "丸文字",
+      "ポップ"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "kaisei-decol",
+    "family": "Kaisei Decol",
+    "value": "Kaisei Decol",
+    "label": "Kaisei Decol",
+    "categories": [
+      "all",
+      "japanese",
+      "design",
+      "classic"
+    ],
+    "tags": [
+      "日本語",
+      "装飾",
+      "個性的"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "shippori-mincho",
+    "family": "Shippori Mincho",
+    "value": "Shippori Mincho",
+    "label": "Shippori Mincho",
+    "categories": [
+      "all",
+      "japanese",
+      "mincho",
+      "classic",
+      "horror",
+      "emotional"
+    ],
+    "tags": [
+      "日本語",
+      "明朝",
+      "映画的",
+      "切ない",
+      "静かな恐怖"
+    ],
+    "source": "bundled",
+    "bundled": true,
+    "file": "./ShipporiMincho/ShipporiMincho-Regular.ttf",
+    "license": "OFL-1.1"
+  },
+  {
+    "id": "reggae-one",
+    "family": "Reggae One",
+    "value": "Reggae One",
+    "label": "Reggae One",
+    "categories": [
+      "all",
+      "japanese",
+      "design",
+      "bold"
+    ],
+    "tags": [
+      "日本語",
+      "個性的",
+      "力強い"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "rocknroll-one",
+    "family": "RocknRoll One",
+    "value": "RocknRoll One",
+    "label": "RocknRoll One",
+    "categories": [
+      "all",
+      "japanese",
+      "design",
+      "bold"
+    ],
+    "tags": [
+      "日本語",
+      "ロック",
+      "ポップ"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "bebas-neue",
+    "family": "Bebas Neue",
+    "value": "Bebas Neue",
+    "label": "Bebas Neue",
+    "categories": [
+      "all",
+      "english",
+      "bold",
+      "modern"
+    ],
+    "tags": [
+      "英語",
+      "縦長",
+      "タイトル"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "playfair-display",
+    "family": "Playfair Display",
+    "value": "Playfair Display",
+    "label": "Playfair Display",
+    "categories": [
+      "all",
+      "english",
+      "serif",
+      "classic"
+    ],
+    "tags": [
+      "英語",
+      "セリフ",
+      "上品"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "noto-sans-jp",
+    "family": "Noto Sans JP",
+    "value": "Noto Sans JP",
+    "label": "Noto Sans JP",
+    "categories": [
+      "all",
+      "japanese",
+      "gothic",
+      "modern"
+    ],
+    "tags": [
+      "日本語",
+      "ゴシック",
+      "標準"
+    ],
+    "source": "bundled",
+    "bundled": true,
+    "file": "./NotoSansJP/NotoSansJP-Regular.ttf",
+    "license": "OFL-1.1"
+  },
+  {
+    "id": "zen-kaku-gothic-new",
+    "family": "Zen Kaku Gothic New",
+    "value": "Zen Kaku Gothic New",
+    "label": "Zen Kaku Gothic New",
+    "categories": [
+      "all",
+      "japanese",
+      "gothic",
+      "modern"
+    ],
+    "tags": [
+      "日本語",
+      "ゴシック",
+      "すっきり"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "dela-gothic-one",
+    "family": "Dela Gothic One",
+    "value": "Dela Gothic One",
+    "label": "Dela Gothic One",
+    "categories": [
+      "all",
+      "japanese",
+      "gothic",
+      "bold",
+      "design"
+    ],
+    "tags": [
+      "日本語",
+      "極太",
+      "インパクト"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "dotgothic16",
+    "family": "DotGothic16",
+    "value": "DotGothic16",
+    "label": "DotGothic16",
+    "categories": [
+      "all",
+      "japanese",
+      "dot",
+      "design"
+    ],
+    "tags": [
+      "日本語",
+      "ドット",
+      "レトロ"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "pixelify-sans",
+    "family": "Pixelify Sans",
+    "value": "Pixelify Sans",
+    "label": "Pixelify Sans",
+    "categories": [
+      "all",
+      "english",
+      "dot",
+      "design"
+    ],
+    "tags": [
+      "英語",
+      "ピクセル",
+      "ゲーム"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "yomogi",
+    "family": "Yomogi",
+    "value": "Yomogi",
+    "label": "Yomogi",
+    "categories": [
+      "all",
+      "japanese",
+      "handwriting",
+      "cute"
+    ],
+    "tags": [
+      "日本語",
+      "手書き",
+      "やさしい"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "klee-one",
+    "family": "Klee One",
+    "value": "Klee One",
+    "label": "Klee One",
+    "categories": [
+      "all",
+      "japanese",
+      "handwriting",
+      "classic"
+    ],
+    "tags": [
+      "日本語",
+      "手書き",
+      "繊細"
+    ],
+    "source": "bundled",
+    "bundled": true,
+    "file": "./KleeOne/KleeOne-Regular.ttf",
+    "license": "OFL-1.1"
+  },
+  {
+    "id": "hachi-maru-pop",
+    "family": "Hachi Maru Pop",
+    "value": "Hachi Maru Pop",
+    "label": "Hachi Maru Pop",
+    "categories": [
+      "all",
+      "japanese",
+      "handwriting",
+      "cute",
+      "rounded"
+    ],
+    "tags": [
+      "日本語",
+      "手書き",
+      "かわいい"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "mochiy-pop-one",
+    "family": "Mochiy Pop One",
+    "value": "Mochiy Pop One",
+    "label": "Mochiy Pop One",
+    "categories": [
+      "all",
+      "japanese",
+      "cute",
+      "rounded",
+      "bold",
+      "handwriting"
+    ],
+    "tags": [
+      "日本語",
+      "ポップ",
+      "かわいい",
+      "太字"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "yuji-boku",
+    "family": "Yuji Boku",
+    "value": "Yuji Boku",
+    "label": "Yuji Boku",
+    "categories": [
+      "all",
+      "japanese",
+      "handwriting",
+      "horror"
+    ],
+    "tags": [
+      "日本語",
+      "筆文字",
+      "怪談"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "yuji-mai",
+    "family": "Yuji Mai",
+    "value": "Yuji Mai",
+    "label": "Yuji Mai",
+    "categories": [
+      "all",
+      "japanese",
+      "handwriting",
+      "horror"
+    ],
+    "tags": [
+      "日本語",
+      "崩し字",
+      "不穏"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "zen-old-mincho",
+    "family": "Zen Old Mincho",
+    "value": "Zen Old Mincho",
+    "label": "Zen Old Mincho",
+    "categories": [
+      "all",
+      "japanese",
+      "mincho",
+      "classic",
+      "horror",
+      "emotional"
+    ],
+    "tags": [
+      "日本語",
+      "明朝",
+      "和風",
+      "古風",
+      "怪談",
+      "文学的"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "orbitron",
+    "family": "Orbitron",
+    "value": "Orbitron",
+    "label": "Orbitron",
+    "categories": [
+      "all",
+      "english",
+      "techno",
+      "modern"
+    ],
+    "tags": [
+      "英語",
+      "テクノ",
+      "未来"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  },
+  {
+    "id": "audiowide",
+    "family": "Audiowide",
+    "value": "Audiowide",
+    "label": "Audiowide",
+    "categories": [
+      "all",
+      "english",
+      "techno",
+      "design"
+    ],
+    "tags": [
+      "英語",
+      "近未来",
+      "タイトル"
+    ],
+    "source": "google",
+    "bundled": false,
+    "file": null,
+    "license": null
+  }
+]
