@@ -15,58 +15,6 @@ window.LyricsEditorFontLibrary =
       6;
 
 
-    /*
- * ElectronのNode機能を使って、
- * ローカルJSONからフォント一覧を同期読込する。
- *
- * 同期読込にする理由：
- * Font Libraryの初期化処理を
- * 非同期化せず、既存UIを維持するため。
- */
-const fs =
-  require('fs');
-
-const path =
-  require('path');
-
-
-function loadFontLibraryData() {
-  const jsonPath =
-    path.join(
-      __dirname,
-      'assets',
-      'fonts',
-      'fontLibrary.json'
-    );
-
-  try {
-    const jsonText =
-      fs.readFileSync(
-        jsonPath,
-        'utf8'
-      );
-
-    const parsed =
-      JSON.parse(
-        jsonText
-      );
-
-    if (!Array.isArray(parsed)) {
-      throw new Error(
-        'fontLibrary.jsonのルートは配列である必要があります。'
-      );
-    }
-
-    return parsed;
-  } catch (error) {
-    console.error(
-      '[Font Library] JSONの読込に失敗しました。',
-      error
-    );
-
-    return [];
-  }
-}
 
 
 function validateFontLibrary(fonts) {
@@ -453,7 +401,8 @@ function validateFontLibrary(fonts) {
 
 
 const FONT_LIBRARY =
-  loadFontLibraryData();
+  window.NorahFontManager
+    .getAllFonts();
 
 
 validateFontLibrary(
@@ -818,54 +767,51 @@ let selectedFontValue =
 
 
       function getFilteredFonts() {
-        return FONT_LIBRARY.filter(
-          font => {
-            if (
-              favoritesOnly &&
-              !favorites.has(
-                font.value
-              )
-            ) {
-              return false;
-            }
+  let filteredFonts =
+    window.NorahFontManager
+      .getFontsByCategory(
+        activeCategory
+      );
 
 
-            if (
-              activeCategory !==
-                'all' &&
-              !font.categories.includes(
-                activeCategory
-              )
-            ) {
-              return false;
-            }
-
-
-            if (searchQuery) {
-              const searchableText =
-                [
-                  font.label,
-                  ...font.tags,
-                  ...font.categories
-                ]
-                  .join(' ')
-                  .toLowerCase();
-
-
-              if (
-                !searchableText.includes(
-                  searchQuery
-                )
-              ) {
-                return false;
-              }
-            }
-
-
-            return true;
-          }
+  if (searchQuery) {
+    const searchResults =
+      window.NorahFontManager
+        .searchFonts(
+          searchQuery
         );
-      }
+
+    const searchResultIds =
+      new Set(
+        searchResults.map(
+          font =>
+            font.id
+        )
+      );
+
+    filteredFonts =
+      filteredFonts.filter(
+        font =>
+          searchResultIds.has(
+            font.id
+          )
+      );
+  }
+
+
+  if (favoritesOnly) {
+    filteredFonts =
+      filteredFonts.filter(
+        font =>
+          favorites.has(
+            font.value
+          )
+      );
+  }
+
+
+  return filteredFonts;
+}
 
 
       function createFontCard(
