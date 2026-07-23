@@ -1,25 +1,26 @@
 [
   {
-    "id": "noto-serif-jp",
-    "family": "Noto Serif JP",
-    "value": "Noto Serif JP",
-    "label": "Noto Serif JP",
-    "categories": [
-      "all",
-      "japanese",
-      "mincho",
-      "classic"
-    ],
-    "tags": [
-      "日本語",
-      "明朝",
-      "上品"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "noto-serif-jp",
+  "family": "Noto Serif JP",
+  "value": "Noto Serif JP",
+  "label": "Noto Serif JP",
+  "categories": [
+    "mincho",
+    "serif",
+    "standard"
+  ],
+  "tags": [
+    "日本語",
+    "明朝",
+    "標準",
+    "上品",
+    "読みやすい"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./bundled/Noto Serif JP/NotoSerifJP-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
   "id": "zen-maru-gothic",
   "family": "Zen Maru Gothic",
@@ -39,51 +40,53 @@
   ],
   "source": "bundled",
   "bundled": true,
-  "file": "./ZenMaruGothic/ZenMaruGothic-Regular.ttf",
+  "file": "./bundled/Zen Maru Gothic/ZenMaruGothic-Regular.ttf",
   "license": "OFL-1.1"
 },
   {
-    "id": "m-plus-rounded-1c",
-    "family": "M PLUS Rounded 1c",
-    "value": "M PLUS Rounded 1c",
-    "label": "M PLUS Rounded 1c",
-    "categories": [
-      "all",
-      "japanese",
-      "rounded",
-      "modern"
-    ],
-    "tags": [
-      "日本語",
-      "丸文字",
-      "ポップ"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "m-plus-rounded-1c",
+  "family": "M PLUS Rounded 1c",
+  "value": "M PLUS Rounded 1c",
+  "label": "M PLUS Rounded 1c",
+  "categories": [
+    "gothic",
+    "rounded",
+    "soft"
+  ],
+  "tags": [
+    "日本語",
+    "丸ゴシック",
+    "かわいい",
+    "柔らかい",
+    "読みやすい"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./bundled/M PLUS Rounded 1c/MPlusRounded1c-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
-    "id": "kaisei-decol",
-    "family": "Kaisei Decol",
-    "value": "Kaisei Decol",
-    "label": "Kaisei Decol",
-    "categories": [
-      "all",
-      "japanese",
-      "design",
-      "classic"
-    ],
-    "tags": [
-      "日本語",
-      "装飾",
-      "個性的"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "kaisei-decol",
+  "family": "Kaisei Decol",
+  "value": "Kaisei Decol",
+  "label": "Kaisei Decol",
+  "categories": [
+    "mincho",
+    "decorative",
+    "japanese"
+  ],
+  "tags": [
+    "日本語",
+    "明朝",
+    "装飾",
+    "レトロ",
+    "上品"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./bundled/Kaisei Decol/KaiseiDecol-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
     "id": "shippori-mincho",
     "family": "Shippori Mincho",
@@ -106,7 +109,7 @@
     ],
     "source": "bundled",
     "bundled": true,
-    "file": "./ShipporiMincho/ShipporiMincho-Regular.ttf",
+    "file": "./bundled/ShipporiMincho/ShipporiMincho-Regular.ttf",
     "license": "OFL-1.1"
   },
   {
@@ -128,7 +131,7 @@
   ],
   "source": "bundled",
   "bundled": true,
-  "file": "./ReggaeOne/ReggaeOne-Regular.ttf",
+  "file": "./bundled/Reggae One/ReggaeOne-Regular.ttf",
   "license": "OFL-1.1"
 },
   {
@@ -150,7 +153,7 @@
   ],
   "source": "bundled",
   "bundled": true,
-  "file": "./RocknRollOne/RocknRollOne-Regular.ttf",
+  "file": "./bundled/RocknRoll One/RocknRollOne-Regular.ttf",
   "license": "OFL-1.1"
 },
   {
@@ -172,7 +175,7 @@
   ],
   "source": "bundled",
   "bundled": true,
-  "file": "./BebasNeue/BebasNeue-Regular.ttf",
+  "file": "./bundled/Bebas Neue/BebasNeue-Regular.ttf",
   "license": "OFL-1.1"
 },
 {
@@ -194,30 +197,31 @@
   ],
   "source": "bundled",
   "bundled": true,
-  "file": "./Creepster/Creepster-Regular.ttf",
+  "file": "./bundled/Creepster/Creepster-Regular.ttf",
   "license": "OFL-1.1"
 },
   {
-    "id": "playfair-display",
-    "family": "Playfair Display",
-    "value": "Playfair Display",
-    "label": "Playfair Display",
-    "categories": [
-      "all",
-      "english",
-      "serif",
-      "classic"
-    ],
-    "tags": [
-      "英語",
-      "セリフ",
-      "上品"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "playfair-display",
+  "family": "Playfair Display",
+  "value": "Playfair Display",
+  "label": "Playfair Display",
+  "categories": [
+    "serif",
+    "display",
+    "elegant"
+  ],
+  "tags": [
+    "英字",
+    "高級感",
+    "エレガント",
+    "クラシック",
+    "セリフ"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./bundled/Playfair Display/PlayfairDisplay-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
     "id": "noto-sans-jp",
     "family": "Noto Sans JP",
@@ -236,30 +240,31 @@
     ],
     "source": "bundled",
     "bundled": true,
-    "file": "./NotoSansJP/NotoSansJP-Regular.ttf",
+    "file": "./bundled/NotoSansJP/NotoSansJP-Regular.ttf",
     "license": "OFL-1.1"
   },
   {
-    "id": "zen-kaku-gothic-new",
-    "family": "Zen Kaku Gothic New",
-    "value": "Zen Kaku Gothic New",
-    "label": "Zen Kaku Gothic New",
-    "categories": [
-      "all",
-      "japanese",
-      "gothic",
-      "modern"
-    ],
-    "tags": [
-      "日本語",
-      "ゴシック",
-      "すっきり"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "zen-kaku-gothic-new",
+  "family": "Zen Kaku Gothic New",
+  "value": "Zen Kaku Gothic New",
+  "label": "Zen Kaku Gothic New",
+  "categories": [
+    "gothic",
+    "modern",
+    "standard"
+  ],
+  "tags": [
+    "日本語",
+    "ゴシック",
+    "標準",
+    "モダン",
+    "読みやすい"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./bundled/Zen Kaku Gothic New/ZenKakuGothicNew-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
   "id": "dela-gothic-one",
   "family": "Dela Gothic One",
@@ -279,7 +284,7 @@
   ],
   "source": "bundled",
   "bundled": true,
-  "file": "./DelaGothicOne/DelaGothicOne-Regular.ttf",
+  "file": "./bundled/Dela Gothic One/DelaGothicOne-Regular.ttf",
   "license": "OFL-1.1"
 },
   {
@@ -301,51 +306,53 @@
   ],
   "source": "bundled",
   "bundled": true,
-  "file": "./DotGothic16/DotGothic16-Regular.ttf",
+  "file": "./bundled/DotGothic16/DotGothic16-Regular.ttf",
   "license": "OFL-1.1"
 },
   {
-    "id": "pixelify-sans",
-    "family": "Pixelify Sans",
-    "value": "Pixelify Sans",
-    "label": "Pixelify Sans",
-    "categories": [
-      "all",
-      "english",
-      "dot",
-      "design"
-    ],
-    "tags": [
-      "英語",
-      "ピクセル",
-      "ゲーム"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "pixelify-sans",
+  "family": "Pixelify Sans",
+  "value": "Pixelify Sans",
+  "label": "Pixelify Sans",
+  "categories": [
+    "pixel",
+    "retro",
+    "display"
+  ],
+  "tags": [
+    "英字",
+    "ドット",
+    "ゲーム",
+    "レトロ",
+    "8bit"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./bundled/Pixelify Sans/PixelifySans-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
-    "id": "yomogi",
-    "family": "Yomogi",
-    "value": "Yomogi",
-    "label": "Yomogi",
-    "categories": [
-      "all",
-      "japanese",
-      "handwriting",
-      "cute"
-    ],
-    "tags": [
-      "日本語",
-      "手書き",
-      "やさしい"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "yomogi",
+  "family": "Yomogi",
+  "value": "Yomogi",
+  "label": "Yomogi",
+  "categories": [
+    "handwriting",
+    "japanese",
+    "soft"
+  ],
+  "tags": [
+    "日本語",
+    "手書き",
+    "自然",
+    "柔らかい",
+    "親しみやすい"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./bundled/Yomogi/Yomogi-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
     "id": "klee-one",
     "family": "Klee One",
@@ -364,7 +371,7 @@
     ],
     "source": "bundled",
     "bundled": true,
-    "file": "./KleeOne/KleeOne-Regular.ttf",
+    "file": "./bundled/KleeOne/KleeOne-Regular.ttf",
     "license": "OFL-1.1"
   },
   {
@@ -386,122 +393,119 @@
   ],
   "source": "bundled",
   "bundled": true,
-  "file": "./HachiMaruPop/HachiMaruPop-Regular.ttf",
+  "file": "./bundled/Hachi Maru Pop/HachiMaruPop-Regular.ttf",
   "license": "OFL-1.1"
 },
   {
-    "id": "mochiy-pop-one",
-    "family": "Mochiy Pop One",
-    "value": "Mochiy Pop One",
-    "label": "Mochiy Pop One",
-    "categories": [
-      "all",
-      "japanese",
-      "cute",
-      "rounded",
-      "bold",
-      "handwriting"
-    ],
-    "tags": [
-      "日本語",
-      "ポップ",
-      "かわいい",
-      "太字"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "mochiy-pop-one",
+  "family": "Mochiy Pop One",
+  "value": "Mochiy Pop One",
+  "label": "Mochiy Pop One",
+  "categories": [
+    "gothic",
+    "display",
+    "cute"
+  ],
+  "tags": [
+    "日本語",
+    "ポップ",
+    "かわいい",
+    "太字",
+    "タイトル"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./bundled/Mochiy Pop One/MochiyPopOne-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
-    "id": "yuji-boku",
-    "family": "Yuji Boku",
-    "value": "Yuji Boku",
-    "label": "Yuji Boku",
-    "categories": [
-      "all",
-      "japanese",
-      "handwriting",
-      "horror"
-    ],
-    "tags": [
-      "日本語",
-      "筆文字",
-      "怪談"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "yuji-boku",
+  "family": "Yuji Boku",
+  "value": "Yuji Boku",
+  "label": "Yuji Boku",
+  "categories": [
+    "handwriting",
+    "brush",
+    "japanese"
+  ],
+  "tags": [
+    "日本語",
+    "筆文字",
+    "手書き",
+    "和風",
+    "力強い"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./bundled/Yuji Boku/YujiBoku-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
-    "id": "yuji-mai",
-    "family": "Yuji Mai",
-    "value": "Yuji Mai",
-    "label": "Yuji Mai",
-    "categories": [
-      "all",
-      "japanese",
-      "handwriting",
-      "horror"
-    ],
-    "tags": [
-      "日本語",
-      "崩し字",
-      "不穏"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "yuji-mai",
+  "family": "Yuji Mai",
+  "value": "Yuji Mai",
+  "label": "Yuji Mai",
+  "categories": [
+    "handwriting",
+    "japanese",
+    "brush"
+  ],
+  "tags": [
+    "日本語",
+    "筆文字",
+    "女性的",
+    "和風",
+    "柔らかい"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./bundled/Yuji Mai/YujiMai-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
-    "id": "zen-old-mincho",
-    "family": "Zen Old Mincho",
-    "value": "Zen Old Mincho",
-    "label": "Zen Old Mincho",
-    "categories": [
-      "all",
-      "japanese",
-      "mincho",
-      "classic",
-      "horror",
-      "emotional"
-    ],
-    "tags": [
-      "日本語",
-      "明朝",
-      "和風",
-      "古風",
-      "怪談",
-      "文学的"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "zen-old-mincho",
+  "family": "Zen Old Mincho",
+  "value": "Zen Old Mincho",
+  "label": "Zen Old Mincho",
+  "categories": [
+    "mincho",
+    "traditional",
+    "japanese"
+  ],
+  "tags": [
+    "日本語",
+    "明朝",
+    "和風",
+    "古典",
+    "上品"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./bundled/Zen Old Mincho/ZenOldMincho-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
-    "id": "orbitron",
-    "family": "Orbitron",
-    "value": "Orbitron",
-    "label": "Orbitron",
-    "categories": [
-      "all",
-      "english",
-      "techno",
-      "modern"
-    ],
-    "tags": [
-      "英語",
-      "テクノ",
-      "未来"
-    ],
-    "source": "google",
-    "bundled": false,
-    "file": null,
-    "license": null
-  },
+  "id": "orbitron",
+  "family": "Orbitron",
+  "value": "Orbitron",
+  "label": "Orbitron",
+  "categories": [
+    "display",
+    "digital",
+    "futuristic"
+  ],
+  "tags": [
+    "英字",
+    "SF",
+    "デジタル",
+    "未来",
+    "テクノ"
+  ],
+  "source": "bundled",
+  "bundled": true,
+  "file": "./bundled/Orbitron/Orbitron-Regular.ttf",
+  "license": "OFL-1.1"
+},
   {
   "id": "audiowide",
   "family": "Audiowide",
@@ -521,7 +525,7 @@
   ],
   "source": "bundled",
   "bundled": true,
-  "file": "./Audiowide/Audiowide-Regular.ttf",
+  "file": "./bundled/Audiowide/Audiowide-Regular.ttf",
   "license": "OFL-1.1"
 }
 ]
