@@ -792,32 +792,103 @@ overlay.addEventListener(
       return;
     }
 
-    for (
-      const fontFile of fontFiles
-    ) {
-      const filePath =
-  window.NorahFontManager
-    .getDroppedFilePath(
-      fontFile
+    let successCount = 0;
+let failedCount = 0;
+
+for (
+  const fontFile of fontFiles
+) {
+  const filePath =
+    window.NorahFontManager
+      .getDroppedFilePath(
+        fontFile
+      );
+
+  if (!filePath) {
+    console.warn(
+      '[Font Library] ファイルパスを取得できません。',
+      fontFile.name
     );
 
-      if (!filePath) {
-        console.warn(
-          '[Font Library] ドロップされたファイルのパスを取得できません。',
-          fontFile.name
-        );
+    failedCount += 1;
+    continue;
+  }
 
-        continue;
-      }
+  const imported =
+    await window
+      .NorahFontManager
+      .importCustomFont(
+        filePath
+      );
 
-      await window
-        .NorahFontManager
-        .importCustomFont(
-          filePath
-        );
-    }
+  if (imported) {
+    successCount += 1;
+  } else {
+    failedCount += 1;
+  }
+}
+
+if (
+  successCount > 0 &&
+  failedCount === 0
+) {
+  window.alert(
+    `${successCount}件のフォントを追加しました。`
+  );
+} else if (
+  successCount > 0 &&
+  failedCount > 0
+) {
+  window.alert(
+    `${successCount}件を追加しました。\n${failedCount}件は追加できませんでした。`
+  );
+} else {
+  window.alert(
+    'フォントを追加できませんでした。'
+  );
+}
   }
 );
+
+
+
+function updateSelectedFontCards() {
+  const fontCards =
+    cardsContainer.querySelectorAll(
+      '[data-font-value]'
+    );
+
+  fontCards.forEach(
+    card => {
+      const isSelected =
+        card.dataset.fontValue ===
+        selectedFontValue;
+
+      card.classList.toggle(
+        'is-selected',
+        isSelected
+      );
+
+      card.setAttribute(
+        'aria-selected',
+        String(isSelected)
+      );
+    }
+  );
+
+  if (currentFontLabel) {
+    const selectedFont =
+      FONT_LIBRARY.find(
+        font =>
+          font.value ===
+          selectedFontValue
+      );
+
+    currentFontLabel.textContent =
+      selectedFont?.label ||
+      selectedFontValue;
+  }
+}
 
 
       function applySelectedFont(
@@ -830,21 +901,9 @@ overlay.addEventListener(
     return;
   }
 
-  /*
-   * 先に選択状態を更新する。
-   * これによりカードの枠が即座に切り替わる。
-   */
   selectedFontValue =
     fontValue;
 
-  /*
-   * lyricsEditor.js側へ反映。
-   *
-   * ここでInspectorのfontInput、
-   * 選択中ブロック、
-   * Editor Preview、
-   * Visualizerが更新される想定。
-   */
   applyFont?.(
     fontValue
   );
@@ -853,7 +912,7 @@ overlay.addEventListener(
     fontValue
   );
 
-  render();
+  updateSelectedFontCards();
 
   if (closeAfter) {
     close();
@@ -1031,6 +1090,7 @@ overlay.addEventListener(
         card.className =
           'fontLibraryCard';
 
+
         card.dataset.fontValue =
           fontData.value;
 
@@ -1080,6 +1140,9 @@ overlay.addEventListener(
           document.createElement(
             'button'
           );
+
+          card.dataset.fontValue =
+  fontData.value;
 
         favoriteButton.type =
           'button';
