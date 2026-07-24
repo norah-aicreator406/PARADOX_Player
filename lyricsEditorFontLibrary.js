@@ -678,6 +678,147 @@ let selectedFontValue =
 
 }
 
+const SUPPORTED_FONT_EXTENSIONS =
+  new Set([
+    'ttf',
+    'otf',
+    'woff',
+    'woff2'
+  ]);
+
+
+let fontDragDepth =
+  0;
+
+
+function getDroppedFontFiles(
+  dataTransfer
+) {
+  return [
+    ...(
+      dataTransfer?.files ||
+      []
+    )
+  ].filter(
+    file => {
+      const extension =
+        file.name
+          .split('.')
+          .pop()
+          ?.toLowerCase();
+
+      return (
+        extension &&
+        SUPPORTED_FONT_EXTENSIONS
+          .has(extension)
+      );
+    }
+  );
+}
+
+
+overlay.addEventListener(
+  'dragenter',
+  event => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    fontDragDepth += 1;
+
+    overlay.classList.add(
+      'is-font-dragging'
+    );
+  }
+);
+
+
+overlay.addEventListener(
+  'dragover',
+  event => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect =
+        'copy';
+    }
+  }
+);
+
+
+overlay.addEventListener(
+  'dragleave',
+  event => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    fontDragDepth =
+      Math.max(
+        0,
+        fontDragDepth - 1
+      );
+
+    if (fontDragDepth === 0) {
+      overlay.classList.remove(
+        'is-font-dragging'
+      );
+    }
+  }
+);
+
+
+overlay.addEventListener(
+  'drop',
+  async event => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    fontDragDepth = 0;
+
+    overlay.classList.remove(
+      'is-font-dragging'
+    );
+
+    const fontFiles =
+      getDroppedFontFiles(
+        event.dataTransfer
+      );
+
+    if (!fontFiles.length) {
+      window.alert(
+        '対応しているフォントファイルをドロップしてください。\n\n.ttf / .otf / .woff / .woff2'
+      );
+
+      return;
+    }
+
+    for (
+      const fontFile of fontFiles
+    ) {
+      const filePath =
+  window.NorahFontManager
+    .getDroppedFilePath(
+      fontFile
+    );
+
+      if (!filePath) {
+        console.warn(
+          '[Font Library] ドロップされたファイルのパスを取得できません。',
+          fontFile.name
+        );
+
+        continue;
+      }
+
+      await window
+        .NorahFontManager
+        .importCustomFont(
+          filePath
+        );
+    }
+  }
+);
+
 
       function applySelectedFont(
   fontValue,

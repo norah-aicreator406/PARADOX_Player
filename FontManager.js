@@ -10,7 +10,8 @@ window.NorahFontManager =
     } = require('url');
 
     const {
-  ipcRenderer
+  ipcRenderer,
+  webUtils
 } = require('electron');
 
 
@@ -414,28 +415,40 @@ window.NorahFontManager =
 }
 
 
-async function importCustomFont() {
+async function importCustomFont(
+    sourceFilePath = null
+) {
+    let filePath =
+        sourceFilePath;
 
-    const selected =
-        await ipcRenderer.invoke(
-            "font:selectCustomFile"
-        );
+    /*
+     * ファイルパスが渡されていない場合は、
+     * 従来どおりファイル選択ダイアログを開く。
+     */
+    if (!filePath) {
+        const selected =
+            await ipcRenderer.invoke(
+                "font:selectCustomFile"
+            );
 
-    if (
-        !selected.success ||
-        selected.canceled
-    ) {
-        return false;
+        if (
+            !selected.success ||
+            selected.canceled
+        ) {
+            return false;
+        }
+
+        filePath =
+            selected.filePath;
     }
 
     const result =
         await ipcRenderer.invoke(
             "font:addCustom",
-            selected.filePath
+            filePath
         );
 
     if (!result.success) {
-
         alert(
             result.message ||
             "フォントの追加に失敗しました。"
@@ -443,7 +456,6 @@ async function importCustomFont() {
 
         return false;
     }
-
 
     return true;
 }
@@ -489,6 +501,34 @@ async function removeCustomFont(
     load();
 
 
+
+
+function getDroppedFilePath(
+  file
+) {
+  try {
+    return (
+      webUtils.getPathForFile(
+        file
+      ) ||
+      file?.path ||
+      ''
+    );
+  } catch (error) {
+    console.error(
+      '[FontManager] ファイルパス取得失敗:',
+      error
+    );
+
+    return (
+      file?.path ||
+      ''
+    );
+  }
+}
+
+
+
     return {
       getAllFonts,
       getFontById,
@@ -501,6 +541,7 @@ async function removeCustomFont(
       getFontsBySource,
       reload,
       importCustomFont,
-      removeCustomFont
+      removeCustomFont,
+      getDroppedFilePath
     };
   })();
