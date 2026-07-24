@@ -10,6 +10,10 @@ const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
 
+const { ipcRenderer } = require("electron");
+
+const FontService = require("./FontService");
+
 const {
   getLibraryRootPath,
   setLibraryRootPath,
@@ -1566,9 +1570,13 @@ ipcMain.handle('open-lyrics-editor-window', (event, data) => {
 
 
 app.whenReady().then(() => {
-  createWindow();
-});
 
+    FontService.initialize();
+    console.log(FontService.getAllFonts().length);
+
+    createWindow();
+
+});
 
 ipcMain.on('performance-effect', (event, payload) => {
   if (
@@ -1591,6 +1599,26 @@ ipcMain.on('performance-effect', (event, payload) => {
     payload
   );
 });
+
+
+ipcMain.handle(
+    "font:getAll",
+    async () => {
+
+        return FontService.getAllFonts();
+
+    }
+);
+
+ipcMain.on(
+    "font:getAllSync",
+    (event) => {
+        event.returnValue =
+            FontService.getAllFonts();
+    }
+);
+
+
 
 
 function sendPerformanceEffect(

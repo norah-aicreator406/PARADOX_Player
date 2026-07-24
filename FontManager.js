@@ -1,7 +1,6 @@
 window.NorahFontManager =
   (() => {
-    const fs =
-      require('fs');
+
 
     const path =
       require('path');
@@ -9,6 +8,10 @@ window.NorahFontManager =
     const {
       pathToFileURL
     } = require('url');
+
+    const {
+  ipcRenderer
+} = require('electron');
 
 
     const FONT_ROOT_PATH =
@@ -18,28 +21,6 @@ window.NorahFontManager =
         'fonts'
       );
 
-
-    const FONT_LIBRARY_PATH =
-      path.join(
-        FONT_ROOT_PATH,
-        'fontLibrary.json'
-      );
-
-
-    const CUSTOM_FONT_DIRECTORY =
-      path.join(
-        FONT_ROOT_PATH,
-        'custom'
-      );
-
-
-    const SUPPORTED_FONT_EXTENSIONS =
-      new Set([
-        '.ttf',
-        '.otf',
-        '.woff',
-        '.woff2'
-      ]);
 
 
     let fonts =
@@ -52,28 +33,6 @@ window.NorahFontManager =
         .replace(/'/g, "\\'");
     }
 
-
-    function ensureCustomFontDirectory() {
-      if (
-        fs.existsSync(
-          CUSTOM_FONT_DIRECTORY
-        )
-      ) {
-        return;
-      }
-
-      fs.mkdirSync(
-        CUSTOM_FONT_DIRECTORY,
-        {
-          recursive: true
-        }
-      );
-
-      console.log(
-        '[FontManager] customフォルダを作成しました。',
-        CUSTOM_FONT_DIRECTORY
-      );
-    }
 
 
     function getFontFileUrl(filePath) {
@@ -91,11 +50,9 @@ window.NorahFontManager =
         )
           ? normalizedPath
           : path.resolve(
-              path.dirname(
-                FONT_LIBRARY_PATH
-              ),
-              normalizedPath
-            );
+    FONT_ROOT_PATH,
+    normalizedPath
+);
 
       return pathToFileURL(
         absolutePath
@@ -124,309 +81,7 @@ window.NorahFontManager =
 
       return 'truetype';
     }
-
-
-    function createFontId(value) {
-      const normalizedValue =
-        String(value || '')
-          .trim()
-          .toLowerCase()
-          .replace(/[_\s]+/g, '-')
-          .replace(
-            /[^\p{L}\p{N}-]+/gu,
-            ''
-          )
-          .replace(/-+/g, '-')
-          .replace(/^-|-$/g, '');
-
-      return (
-        normalizedValue ||
-        `font-${Date.now()}`
-      );
-    }
-
-
-    function createFamilyFromFileName(
-      filePath
-    ) {
-      const extension =
-        path.extname(
-          filePath
-        );
-
-      let family =
-        path.basename(
-          filePath,
-          extension
-        );
-
-      /*
-       * 一般的なウェイト・スタイル名を
-       * ファミリー名の末尾から除去します。
-       *
-       * 例：
-       * MyFont-Regular.ttf
-       * ↓
-       * MyFont
-       */
-      family =
-        family.replace(
-          /[-_ ](thin|extralight|extra-light|ultralight|light|regular|medium|semibold|semi-bold|demibold|bold|extrabold|extra-bold|black|heavy|italic|oblique)$/i,
-          ''
-        );
-
-      family =
-        family
-          .replace(/[_-]+/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim();
-
-      return (
-        family ||
-        'Custom Font'
-      );
-    }
-
-
-    function findFontFilesRecursively(
-  directoryPath
-) {
-  if (
-    !fs.existsSync(
-      directoryPath
-    )
-  ) {
-    return [];
-  }
-
-  const entries =
-    fs.readdirSync(
-      directoryPath,
-      {
-        withFileTypes: true
-      }
-    );
-
-  const foundFiles =
-    [];
-
-  entries.forEach(entry => {
-    const entryPath =
-      path.join(
-        directoryPath,
-        entry.name
-      );
-
-    try {
-      /*
-       * entry.isFile()だけに頼らず、
-       * リンク先を含めて実体を確認する。
-       */
-      const stats =
-        fs.statSync(
-          entryPath
-        );
-
-      if (stats.isDirectory()) {
-        foundFiles.push(
-          ...findFontFilesRecursively(
-            entryPath
-          )
-        );
-
-        return;
-      }
-
-      if (!stats.isFile()) {
-        console.warn(
-          '[FontManager] ファイルとして認識されなかったため除外:',
-          entryPath
-        );
-
-        return;
-      }
-
-      const extension =
-        path.extname(
-          entry.name
-        )
-          .trim()
-          .toLowerCase();
-
-      if (
-        !SUPPORTED_FONT_EXTENSIONS.has(
-          extension
-        )
-      ) {
-        console.warn(
-          '[FontManager] 非対応の拡張子:',
-          entry.name,
-          extension
-        );
-
-        return;
-      }
-
-      foundFiles.push(
-        entryPath
-      );
-    } catch (error) {
-      console.warn(
-        '[FontManager] ファイル確認に失敗:',
-        entryPath,
-        error
-      );
-    }
-  });
-
-  return foundFiles;
-}
-
-
-    function createCustomFontData(
-      filePath
-    ) {
-      const family =
-        createFamilyFromFileName(
-          filePath
-        );
-
-      return {
-        id:
-          `custom-${createFontId(family)}`,
-
-        family:
-          family,
-
-        value:
-          family,
-
-        label:
-          family,
-
-        categories: [
-          'custom'
-        ],
-
-        tags: [
-          'カスタム',
-          'ユーザー追加'
-        ],
-
-        source:
-          'custom',
-
-        bundled:
-          false,
-
-        custom:
-          true,
-
-        file:
-          filePath,
-
-        weight:
-          400,
-
-        style:
-          'normal'
-      };
-    }
-
-
-    function loadCustomFonts() {
-
-  ensureCustomFontDirectory();
-
-  console.log(
-    '[DEBUG] custom dir:',
-    CUSTOM_FONT_DIRECTORY
-  );
-
-  const customFontFiles =
-    findFontFilesRecursively(
-      CUSTOM_FONT_DIRECTORY
-    );
-
-  console.log(
-    '[DEBUG] found files:',
-    customFontFiles
-  );
-
-  const customFonts =
-    customFontFiles.map(
-      createCustomFontData
-    );
-
-  console.log(
-    '[DEBUG] custom fonts:',
-    customFonts
-  );
-
-  console.log(
-    `[FontManager] カスタムフォントを${customFonts.length}件検出しました。`
-  );
-
-  return customFonts;
-}
-
-
-    function mergeFonts(
-      bundledFonts,
-      customFonts
-    ) {
-      const mergedFonts =
-        [
-          ...bundledFonts
-        ];
-
-      const registeredFamilies =
-        new Set(
-          bundledFonts.map(font =>
-            String(
-              font.family || ''
-            )
-              .trim()
-              .toLowerCase()
-          )
-        );
-
-
-      customFonts.forEach(font => {
-        const normalizedFamily =
-          String(
-            font.family || ''
-          )
-            .trim()
-            .toLowerCase();
-
-        if (!normalizedFamily) {
-          return;
-        }
-
-        if (
-          registeredFamilies.has(
-            normalizedFamily
-          )
-        ) {
-          console.warn(
-            `[FontManager] 同じfamily名が存在するため、カスタムフォントを除外しました: ${font.family}`
-          );
-
-          return;
-        }
-
-        registeredFamilies.add(
-          normalizedFamily
-        );
-
-        mergedFonts.push(
-          font
-        );
-      });
-
-      return mergedFonts;
-    }
+    
 
 
     function createFontFaceCss(font) {
@@ -519,65 +174,44 @@ window.NorahFontManager =
 
 
     function load() {
-      try {
-        ensureCustomFontDirectory();
+  try {
+    const receivedFonts =
+      ipcRenderer.sendSync(
+        'font:getAllSync'
+      );
 
-        const jsonText =
-          fs.readFileSync(
-            FONT_LIBRARY_PATH,
-            'utf8'
-          );
-
-        const parsed =
-          JSON.parse(
-            jsonText
-          );
-
-        if (!Array.isArray(parsed)) {
-          throw new Error(
-            'fontLibrary.jsonのルートは配列である必要があります。'
-          );
-        }
-
-
-        const bundledFonts =
-          parsed;
-
-        const customFonts =
-          loadCustomFonts();
-
-
-        fonts =
-          mergeFonts(
-            bundledFonts,
-            customFonts
-          );
-
-
-        registerFonts();
-
-
-        console.log(
-          `[FontManager] 合計${fonts.length}件のフォントを読み込みました。`
-        );
-
-        console.log(
-          `[FontManager] bundled: ${bundledFonts.length}件 / custom: ${customFonts.length}件`
-        );
-
-        return fonts;
-      } catch (error) {
-        fonts =
-          [];
-
-        console.error(
-          '[FontManager] フォントの読み込みに失敗しました。',
-          error
-        );
-
-        return fonts;
-      }
+    if (!Array.isArray(receivedFonts)) {
+      throw new Error(
+        'Main Processから受信したフォント一覧が配列ではありません。'
+      );
     }
+
+    fonts =
+      [
+        ...receivedFonts
+      ];
+
+    registerFonts();
+
+    console.log(
+      `[FontManager] 合計${fonts.length}件のフォントを読み込みました。`
+    );
+
+    return [
+      ...fonts
+    ];
+  } catch (error) {
+    fonts =
+      [];
+
+    console.error(
+      '[FontManager] フォントの読み込みに失敗しました。',
+      error
+    );
+
+    return [];
+  }
+}
 
 
     function getAllFonts() {
@@ -758,10 +392,6 @@ window.NorahFontManager =
     }
 
 
-    function getCustomFontDirectory() {
-      return CUSTOM_FONT_DIRECTORY;
-    }
-
 
     function reload() {
   const reloadedFonts =
@@ -797,7 +427,6 @@ window.NorahFontManager =
       getBundledFonts,
       getCustomFonts,
       getFontsBySource,
-      getCustomFontDirectory,
       reload
     };
   })();
