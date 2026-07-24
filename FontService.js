@@ -1,8 +1,6 @@
 const fs = require("fs");
 const path = require("path");
 
-const os = require("os");
-
 class FontService {
     constructor() {
     this.fonts = [];
@@ -13,6 +11,7 @@ class FontService {
     this.libraryPath = path.join(this.fontRoot, "fontLibrary.json");
     this.bundledDir = path.join(this.fontRoot, "bundled");
     this.customDir = path.join(this.fontRoot, "custom");
+    
 }
 
    initialize() {
@@ -70,11 +69,66 @@ loadCustomFonts() {
                 continue;
             }
 
-            fonts.push({
-                family: path.basename(entry.name, ext),
-                file: path.relative(this.fontRoot, fullPath).replace(/\\/g, "/"),
-                type: "custom"
-            });
+            const family =
+    path.basename(
+        entry.name,
+        ext
+    );
+
+const fontId =
+    family
+        .trim()
+        .toLowerCase()
+        .replace(/[_\s]+/g, "-")
+        .replace(/[^\p{L}\p{N}-]+/gu, "")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+
+fonts.push({
+    id:
+        `custom-${fontId}`,
+
+    family:
+        family,
+
+    value:
+        family,
+
+    label:
+        family,
+
+    categories: [
+        "custom"
+    ],
+
+    tags: [
+        "カスタム",
+        "ユーザー追加"
+    ],
+
+    source:
+        "custom",
+
+    bundled:
+        false,
+
+    custom:
+        true,
+
+    file:
+        path
+            .relative(
+                this.fontRoot,
+                fullPath
+            )
+            .replace(/\\/g, "/"),
+
+    weight:
+        400,
+
+    style:
+        "normal"
+});
         }
     };
 
@@ -89,16 +143,142 @@ loadCustomFonts() {
         return [...this.fonts];
     }
 
+    addCustomFont(sourceFilePath) {
+    try {
+        const normalizedSourcePath =
+            String(sourceFilePath || '')
+                .trim();
+
+        if (!normalizedSourcePath) {
+            throw new Error(
+                '追加するフォントファイルが指定されていません。'
+            );
+        }
+
+        if (!fs.existsSync(normalizedSourcePath)) {
+            throw new Error(
+                `フォントファイルが見つかりません: ${normalizedSourcePath}`
+            );
+        }
+
+        const extension =
+            path.extname(normalizedSourcePath)
+                .toLowerCase();
+
+        const supportedExtensions =
+            new Set([
+                '.ttf',
+                '.otf',
+                '.woff',
+                '.woff2'
+            ]);
+
+        if (!supportedExtensions.has(extension)) {
+            throw new Error(
+                `対応していないフォント形式です: ${extension}`
+            );
+        }
+
+        if (!fs.existsSync(this.customDir)) {
+            fs.mkdirSync(
+                this.customDir,
+                {
+                    recursive: true
+                }
+            );
+        }
+
+        const originalFileName =
+            path.basename(normalizedSourcePath);
+
+        let destinationPath =
+    path.join(
+        this.customDir,
+        originalFileName
+    );
+
+if (
+    path.resolve(normalizedSourcePath) !==
+    path.resolve(destinationPath)
+) {
+    const baseName =
+        path.basename(
+            originalFileName,
+            extension
+        );
+
+    let duplicateIndex =
+        1;
+
+    while (
+        fs.existsSync(destinationPath)
+    ) {
+        destinationPath =
+            path.join(
+                this.customDir,
+                `${baseName}-${duplicateIndex}${extension}`
+            );
+
+        duplicateIndex +=
+            1;
+    }
+
+    fs.copyFileSync(
+        normalizedSourcePath,
+        destinationPath
+    );
+}
+
+        this.reload();
+
+        return {
+            success: true,
+            filePath: destinationPath,
+            fonts: this.getAllFonts()
+        };
+    } catch (error) {
+        console.error(
+            '[FontService] カスタムフォントの追加に失敗しました。',
+            error
+        );
+
+        return {
+            success: false,
+            message:
+                error instanceof Error
+                    ? error.message
+                    : String(error)
+        };
+    }
+}
+
+reload() {
+    this.fonts =
+        [];
+
+    this.loadBundledFonts();
+
+    const customFonts =
+        this.loadCustomFonts();
+
+    this.fonts.push(
+        ...customFonts
+    );
+
+    console.log(
+        `[FontService] reloaded : ${this.fonts.length}`
+    );
+
+    return this.getAllFonts();
+}
+
+
     setFonts(fonts) {
         this.fonts = Array.isArray(fonts)
             ? [...fonts]
             : [];
     }
 
-    reload() {
-        console.log("[FontService] reload");
-        return this.fonts;
-    }
 }
 
 module.exports = new FontService();

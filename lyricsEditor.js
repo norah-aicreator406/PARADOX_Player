@@ -8184,6 +8184,47 @@ document
 
 
 
+  const addCustomFontButton =
+  document.getElementById(
+    'addCustomFontButton'
+  );
+
+if (addCustomFontButton) {
+  addCustomFontButton.addEventListener(
+    'click',
+    async () => {
+      addCustomFontButton.disabled =
+        true;
+
+      try {
+        const added =
+          await window.NorahFontManager
+            .importCustomFont();
+
+        if (added) {
+          console.log(
+            '[Font UI] フォントを追加しました。'
+          );
+        }
+      } catch (error) {
+        console.error(
+          '[Font UI] フォント追加処理に失敗しました。',
+          error
+        );
+
+        alert(
+          'フォントの追加に失敗しました。'
+        );
+      } finally {
+        addCustomFontButton.disabled =
+          false;
+      }
+    }
+  );
+}
+
+
+
 ensurePreviewCenterGuides();
 setupPreviewLyricsDrag();
 resizeEditorPreviewCanvas();

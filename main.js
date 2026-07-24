@@ -1619,6 +1619,64 @@ ipcMain.on(
 );
 
 
+ipcMain.handle(
+    'font:addCustom',
+    async (
+        event,
+        sourceFilePath
+    ) => {
+        return FontService.addCustomFont(
+            sourceFilePath
+        );
+    }
+);
+
+
+ipcMain.handle(
+    "font:selectCustomFile",
+    async () => {
+        const result =
+            await dialog.showOpenDialog({
+                title:
+                    "追加するフォントを選択",
+                properties: [
+                    "openFile"
+                ],
+                filters: [
+                    {
+                        name:
+                            "Font Files",
+                        extensions: [
+                            "ttf",
+                            "otf",
+                            "woff",
+                            "woff2"
+                        ]
+                    }
+                ]
+            });
+
+        if (
+            result.canceled ||
+            result.filePaths.length === 0
+        ) {
+            return {
+                success: false,
+                canceled: true
+            };
+        }
+
+        return {
+            success: true,
+            canceled: false,
+            filePath:
+                result.filePaths[0]
+        };
+    }
+);
+
+
+
 
 
 function sendPerformanceEffect(

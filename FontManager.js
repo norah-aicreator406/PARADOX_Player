@@ -414,6 +414,54 @@ window.NorahFontManager =
 }
 
 
+async function importCustomFont() {
+
+    const selected =
+        await ipcRenderer.invoke(
+            "font:selectCustomFile"
+        );
+
+    if (
+        !selected.success ||
+        selected.canceled
+    ) {
+        return false;
+    }
+
+    const result =
+        await ipcRenderer.invoke(
+            "font:addCustom",
+            selected.filePath
+        );
+
+    if (!result.success) {
+
+        alert(
+            result.message ||
+            "フォントの追加に失敗しました。"
+        );
+
+        return false;
+    }
+
+    load();
+
+    window.dispatchEvent(
+        new CustomEvent(
+            "norah-fonts-reloaded",
+            {
+                detail: {
+                    fonts:
+                        getAllFonts()
+                }
+            }
+        )
+    );
+
+    return true;
+}
+
+
     load();
 
 
@@ -427,6 +475,7 @@ window.NorahFontManager =
       getBundledFonts,
       getCustomFonts,
       getFontsBySource,
-      reload
+      reload,
+      importCustomFont
     };
   })();
