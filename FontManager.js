@@ -444,22 +444,46 @@ async function importCustomFont() {
         return false;
     }
 
-    load();
-
-    window.dispatchEvent(
-        new CustomEvent(
-            "norah-fonts-reloaded",
-            {
-                detail: {
-                    fonts:
-                        getAllFonts()
-                }
-            }
-        )
-    );
 
     return true;
 }
+
+
+async function removeCustomFont(
+    fontId
+) {
+
+    const result =
+        await ipcRenderer.invoke(
+            "font:removeCustom",
+            fontId
+        );
+
+    if (!result.success) {
+
+        alert(
+            result.message ||
+            "削除に失敗しました。"
+        );
+
+        return false;
+    }
+
+    return true;
+}
+
+    ipcRenderer.on(
+      'font:updated',
+      () => {
+
+        console.log(
+          '[FontManager] フォント更新通知を受信しました。'
+        );
+
+        reload();
+
+      }
+    );
 
 
     load();
@@ -476,6 +500,7 @@ async function importCustomFont() {
       getCustomFonts,
       getFontsBySource,
       reload,
-      importCustomFont
+      importCustomFont,
+      removeCustomFont
     };
   })();

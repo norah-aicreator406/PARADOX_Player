@@ -1625,9 +1625,18 @@ ipcMain.handle(
         event,
         sourceFilePath
     ) => {
-        return FontService.addCustomFont(
-            sourceFilePath
-        );
+        const result =
+    FontService.addCustomFont(
+        sourceFilePath
+    );
+
+if (result.success) {
+
+    notifyFontLibraryUpdated();
+
+}
+
+return result;
     }
 );
 
@@ -1674,6 +1683,47 @@ ipcMain.handle(
         };
     }
 );
+
+
+ipcMain.handle(
+    "font:removeCustom",
+    async (
+        event,
+        fontId
+    ) => {
+       const result =
+    FontService.removeCustomFont(
+        fontId
+    );
+
+if (result.success) {
+
+    notifyFontLibraryUpdated();
+
+}
+
+return result;
+    }
+);
+
+
+function notifyFontLibraryUpdated() {
+
+    const windows = BrowserWindow.getAllWindows();
+
+    windows.forEach(win => {
+
+        if (win.isDestroyed()) {
+            return;
+        }
+
+        win.webContents.send(
+            "font:updated"
+        );
+
+    });
+
+}
 
 
 

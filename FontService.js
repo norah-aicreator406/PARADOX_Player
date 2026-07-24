@@ -252,6 +252,58 @@ if (
     }
 }
 
+removeCustomFont(fontId) {
+    try {
+
+        const targetFont =
+    this.fonts.find(font =>
+        font.id === fontId &&
+        (
+            font.custom === true ||
+            font.source === "custom"
+        )
+    );
+
+        if (!targetFont) {
+            return {
+                success: false,
+                message: "カスタムフォントが見つかりません。"
+            };
+        }
+
+        const fullPath =
+            path.join(
+                this.fontRoot,
+                targetFont.file
+            );
+
+        if (fs.existsSync(fullPath)) {
+            fs.unlinkSync(fullPath);
+        }
+
+        this.reload();
+
+        return {
+            success: true,
+            fonts: this.getAllFonts()
+        };
+
+    } catch (error) {
+
+        console.error(
+            "[FontService] removeCustomFont",
+            error
+        );
+
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+}
+
+
+
 reload() {
     this.fonts =
         [];

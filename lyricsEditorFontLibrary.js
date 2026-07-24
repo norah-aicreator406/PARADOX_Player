@@ -258,10 +258,11 @@ function validateFontLibrary(fonts) {
      */
 
     const validSources =
-      [
-        'bundled',
-        'google'
-      ];
+  [
+    'bundled',
+    'google',
+    'custom'
+  ];
 
     if (!source) {
       console.warn(
@@ -363,10 +364,11 @@ function validateFontLibrary(fonts) {
      */
 
     if (
-      source !== 'bundled' &&
-      typeof file === 'string' &&
-      file
-    ) {
+  source !== 'bundled' &&
+  source !== 'custom' &&
+  typeof file === 'string' &&
+  file
+) {
       console.warn(
         `[Font Library] "${id || value}"にはローカルfileがありますが、sourceがbundledではありません。`,
         {
@@ -400,7 +402,7 @@ function validateFontLibrary(fonts) {
 }
 
 
-const FONT_LIBRARY =
+let FONT_LIBRARY =
   window.NorahFontManager
     .getAllFonts();
 
@@ -612,6 +614,69 @@ let selectedFontValue =
         saveFavorites();
         render();
       }
+
+      async function deleteCustomFont(
+  fontData
+) {
+  if (
+  !fontData ||
+  (
+    fontData.custom !== true &&
+    fontData.source !== 'custom'
+  )
+) {
+  return;
+}
+
+  const confirmed =
+    window.confirm(
+      `「${fontData.label}」を削除しますか？\n\nこの操作ではカスタムフォントファイルも削除されます。`
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const removed =
+    await window.NorahFontManager
+      .removeCustomFont(
+        fontData.id
+      );
+
+  if (!removed) {
+    return;
+  }
+
+  favorites.delete(
+    fontData.value
+  );
+
+  saveFavorites();
+
+  recentFonts =
+    recentFonts.filter(
+      value =>
+        value !== fontData.value
+    );
+
+  writeStorageArray(
+    RECENT_KEY,
+    recentFonts
+  );
+
+  if (
+    selectedFontValue ===
+    fontData.value
+  ) {
+    selectedFontValue =
+      'Noto Sans JP';
+
+    applyFont?.(
+      selectedFontValue
+    );
+  }
+
+}
 
 
       function applySelectedFont(
@@ -913,6 +978,48 @@ let selectedFontValue =
         );
 
 
+        let deleteButton =
+  null;
+
+if (
+  fontData.custom === true ||
+  fontData.source === 'custom'
+) {
+  deleteButton =
+    document.createElement(
+      'button'
+    );
+
+  deleteButton.type =
+    'button';
+
+  deleteButton.className =
+    'fontLibraryDeleteButton';
+
+  deleteButton.textContent =
+    '🗑';
+
+  deleteButton.setAttribute(
+    'aria-label',
+    `${fontData.label}を削除`
+  );
+
+  deleteButton.title =
+    'カスタムフォントを削除';
+
+  deleteButton.addEventListener(
+    'click',
+    async event => {
+      event.stopPropagation();
+
+      await deleteCustomFont(
+        fontData
+      );
+    }
+  );
+}
+
+
       const selectedMark =
   document.createElement(
     'span'
@@ -931,11 +1038,17 @@ selectedMark.setAttribute(
 
 
 
-       header.append(
+header.append(
   name,
   selectedMark,
   favoriteButton
 );
+
+if (deleteButton) {
+  header.appendChild(
+    deleteButton
+  );
+}
 
 
         const preview =
@@ -1032,12 +1145,12 @@ card.addEventListener(
      * カード選択として扱わない。
      */
     if (
-      event.target.closest(
-        '.fontLibraryFavoriteButton'
-      )
-    ) {
-      return;
-    }
+  event.target.closest(
+    '.fontLibraryFavoriteButton, .fontLibraryDeleteButton'
+  )
+) {
+  return;
+}
 
     if (clickTimer) {
       clearTimeout(
@@ -1070,12 +1183,15 @@ card.addEventListener(
   'dblclick',
   event => {
     if (
-      event.target.closest(
-        '.fontLibraryFavoriteButton'
-      )
-    ) {
-      return;
-    }
+  event.target.closest(
+  '.fontLibraryFavoriteButton, .fontLibraryDeleteButton'
+)||
+  event.target.closest(
+    '.fontLibraryDeleteButton'
+  )
+) {
+  return;
+}
 
     if (clickTimer) {
       clearTimeout(
@@ -1267,6 +1383,28 @@ card.addEventListener(
         close
       );
 
+      window.addEventListener(
+  'norah-fonts-reloaded',
+  event => {
+    const receivedFonts =
+      event.detail?.fonts;
+
+    FONT_LIBRARY =
+      Array.isArray(receivedFonts)
+        ? [
+            ...receivedFonts
+          ]
+        : window.NorahFontManager
+            .getAllFonts();
+
+    validateFontLibrary(
+      FONT_LIBRARY
+    );
+
+    render();
+  }
+);
+
 
 
       document.addEventListener(
@@ -1286,6 +1424,97 @@ card.addEventListener(
       );
 
 
+
+      window.addEventListener(
+  'norah-fonts-reloaded',
+  () => {
+    console.log(
+      '[Font Library] フォント一覧を更新します。'
+    );
+
+    FONT_LIBRARY =
+      window.NorahFontManager
+        ?.getAllFonts?.() || [];
+
+    validateFontLibrary(
+      FONT_LIBRARY
+    );
+
+    /*
+     * 削除済みフォントを
+     * お気に入りから取り除く。
+     */
+    const availableFontValues =
+      new Set(
+        FONT_LIBRARY.map(
+          fontData =>
+            fontData.value
+        )
+      );
+
+    [...favorites].forEach(
+      fontValue => {
+        if (
+          !availableFontValues.has(
+            fontValue
+          )
+        ) {
+          favorites.delete(
+            fontValue
+          );
+        }
+      }
+    );
+
+    saveFavorites();
+
+    /*
+     * 削除済みフォントを
+     * 最近使用したフォントから取り除く。
+     */
+    recentFonts =
+      recentFonts.filter(
+        fontValue =>
+          availableFontValues.has(
+            fontValue
+          )
+      );
+
+    writeStorageArray(
+      RECENT_KEY,
+      recentFonts
+    );
+
+    /*
+     * 現在選択中のフォントが
+     * 削除されていた場合の退避処理。
+     */
+    if (
+      selectedFontValue &&
+      !availableFontValues.has(
+        selectedFontValue
+      )
+    ) {
+      selectedFontValue =
+        availableFontValues.has(
+          'Noto Sans JP'
+        )
+          ? 'Noto Sans JP'
+          : FONT_LIBRARY[0]?.value ||
+            '';
+
+      if (selectedFontValue) {
+        applyFont?.(
+          selectedFontValue
+        );
+      }
+    }
+
+    render();
+  }
+);
+
+
       return {
         open,
         close,
@@ -1295,8 +1524,12 @@ card.addEventListener(
 
 
     return {
-      create,
-      fonts:
-        FONT_LIBRARY
-    };
+  create,
+
+  get fonts() {
+    return [
+      ...FONT_LIBRARY
+    ];
+  }
+};
   })();
