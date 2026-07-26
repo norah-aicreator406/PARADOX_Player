@@ -130,7 +130,7 @@ let currentSongInfoItems = {
 };
 
 
-let currentSongInfoEditorSettings = {
+const DEFAULT_SONG_INFO_EDITOR_SETTINGS = {
   visible: true,
 
   title: '',
@@ -155,6 +155,148 @@ let currentSongInfoEditorSettings = {
     }
   }
 };
+
+
+let currentSongInfoEditorSettings = {
+  ...DEFAULT_SONG_INFO_EDITOR_SETTINGS,
+
+  positionByRatio: {
+    '16:9': {
+      ...DEFAULT_SONG_INFO_EDITOR_SETTINGS
+        .positionByRatio['16:9']
+    },
+
+    '9:16': {
+      ...DEFAULT_SONG_INFO_EDITOR_SETTINGS
+        .positionByRatio['9:16']
+    }
+  }
+};
+
+
+/*
+  Song Info設定ファイルの保存場所
+*/
+function getSongInfoSettingsFilePath() {
+  return path.join(
+    app.getPath('userData'),
+    'song-info-settings.json'
+  );
+}
+
+
+/*
+  保存済みのSong Info設定を読み込む
+*/
+function loadSongInfoEditorSettings() {
+  const filePath =
+    getSongInfoSettingsFilePath();
+
+  try {
+    if (!fs.existsSync(filePath)) {
+      console.log(
+        '[Song Info] 保存済み設定なし。初期値を使用します。'
+      );
+
+      return;
+    }
+
+    const fileText =
+      fs.readFileSync(
+        filePath,
+        'utf8'
+      );
+
+    const savedSettings =
+      JSON.parse(fileText);
+
+    if (
+      !savedSettings ||
+      typeof savedSettings !== 'object'
+    ) {
+      console.warn(
+        '[Song Info] 保存データが不正なため初期値を使用します。'
+      );
+
+      return;
+    }
+
+    currentSongInfoEditorSettings = {
+      ...DEFAULT_SONG_INFO_EDITOR_SETTINGS,
+      ...savedSettings,
+
+      positionByRatio: {
+        '16:9': {
+          ...DEFAULT_SONG_INFO_EDITOR_SETTINGS
+            .positionByRatio['16:9'],
+
+          ...savedSettings
+            .positionByRatio?.['16:9']
+        },
+
+        '9:16': {
+          ...DEFAULT_SONG_INFO_EDITOR_SETTINGS
+            .positionByRatio['9:16'],
+
+          ...savedSettings
+            .positionByRatio?.['9:16']
+        }
+      }
+    };
+
+    console.log(
+      '[Song Info] 設定を読み込みました:',
+      currentSongInfoEditorSettings
+    );
+  } catch (error) {
+    console.error(
+      '[Song Info] 設定の読み込みに失敗しました:',
+      error
+    );
+  }
+}
+
+
+/*
+  現在のSong Info設定を保存する
+*/
+function saveSongInfoEditorSettings() {
+  const filePath =
+    getSongInfoSettingsFilePath();
+
+  try {
+    fs.mkdirSync(
+      path.dirname(filePath),
+      {
+        recursive: true
+      }
+    );
+
+    fs.writeFileSync(
+      filePath,
+      JSON.stringify(
+        currentSongInfoEditorSettings,
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    console.log(
+      '[Song Info] 設定を保存しました:',
+      filePath
+    );
+
+    return true;
+  } catch (error) {
+    console.error(
+      '[Song Info] 設定の保存に失敗しました:',
+      error
+    );
+
+    return false;
+  }
+}
 
 const ARTIST_ORDER = [
   'norah',
@@ -940,6 +1082,29 @@ ipcMain.handle('send-background-to-visualizer', async (event, background) => {
 
 
 
+ipcMain.handle(
+  'get-song-info-editor-settings',
+  async () => {
+    return {
+      ...currentSongInfoEditorSettings,
+
+      positionByRatio: {
+        '16:9': {
+          ...currentSongInfoEditorSettings
+            .positionByRatio['16:9']
+        },
+
+        '9:16': {
+          ...currentSongInfoEditorSettings
+            .positionByRatio['9:16']
+        }
+      }
+    };
+  }
+);
+
+
+
 
 
 ipcMain.handle(
@@ -985,10 +1150,30 @@ ipcMain.handle(
       }
     };
 
+    /*
+      最後に編集したSong Info設定を保存
+    */
+    saveSongInfoEditorSettings();
+
+    /*
+      VisualizerとLyrics Outputへ反映
+    */
     sendSongInfoEditorSettings();
 
     return {
-      ...currentSongInfoEditorSettings
+      ...currentSongInfoEditorSettings,
+
+      positionByRatio: {
+        '16:9': {
+          ...currentSongInfoEditorSettings
+            .positionByRatio['16:9']
+        },
+
+        '9:16': {
+          ...currentSongInfoEditorSettings
+            .positionByRatio['9:16']
+        }
+      }
     };
   }
 );
@@ -2030,10 +2215,19 @@ ipcMain.handle('open-lyrics-editor-window', (event, data) => {
 
 app.whenReady().then(() => {
 
-    FontService.initialize();
-    console.log(FontService.getAllFonts().length);
+  FontService.initialize();
 
-    createWindow();
+  console.log(
+    FontService.getAllFonts().length
+  );
+
+  /*
+    ウィンドウを開く前に、
+    前回のSong Info設定を復元する
+  */
+  loadSongInfoEditorSettings();
+
+  createWindow();
 
 });
 

@@ -641,7 +641,7 @@ function applyLyricsOutputSongInfoPosition() {
       };
 
   const positionScale =
-    0.43;
+    1;
 
   const x =
     (Number(position.x) || 0) *
