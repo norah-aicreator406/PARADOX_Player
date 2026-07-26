@@ -3062,33 +3062,31 @@ function updateEditorPreviewByTimeline() {
 
   lastEditorActiveLyricsSignature = signature;
 
-  if (currentBlocks.length === 0) {
-    previousEditorActiveLyricsIds = new Set();
-    const previewLyrics =
-      document.getElementById('editorPreviewLyrics');
+ if (currentBlocks.length === 0) {
+  previousEditorActiveLyricsIds = new Set();
 
-    const layer =
-      document.getElementById('editorPreviewLyricsLayer');
+  const previewLyrics =
+    document.getElementById(
+      'editorPreviewLyrics'
+    );
 
-    if (previewLyrics) {
-      previewLyrics.innerHTML = '';
-    }
+  const layer =
+    document.getElementById(
+      'editorPreviewLyricsLayer'
+    );
 
-    if (layer) {
-      layer.innerHTML = '';
-    }
-
-    if (lastSentPreviewLyricsSignature !== '[]') {
-      lastSentPreviewLyricsSignature = '[]';
-
-      ipcRenderer.invoke(
-        'send-lyrics-to-visualizer',
-        null
-      );
-    }
-
-    return;
+  if (previewLyrics) {
+    previewLyrics.innerHTML = '';
   }
+
+  if (layer) {
+    layer.innerHTML = '';
+  }
+
+  lastSentPreviewLyricsSignature = '[]';
+
+  return;
+}
 
   renderEditorActiveLyrics(currentBlocks);
   sendLyricsBlocksToVisualizer(currentBlocks);

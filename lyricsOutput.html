@@ -47,41 +47,7 @@
 </head>
 
 <body>
-  <header id="lyricsOutputToolbar">
-    <div class="lyricsOutputDragArea">
-      <span class="lyricsOutputToolbarIcon">
-        T
-      </span>
-
-      <span class="lyricsOutputToolbarTitle">
-        Lyrics Output
-      </span>
-
-      <span class="lyricsOutputToolbarHint">
-        ここをドラッグして移動
-      </span>
-    </div>
-
-    <div class="lyricsOutputWindowActions">
-      <button
-        id="lyricsOutputMinimizeButton"
-        type="button"
-        aria-label="最小化"
-        title="最小化"
-      >
-        −
-      </button>
-
-      <button
-        id="lyricsOutputCloseButton"
-        type="button"
-        aria-label="閉じる"
-        title="閉じる"
-      >
-        ×
-      </button>
-    </div>
-  </header>
+  
 
   <main id="lyricsOutputStage">
     <div id="lyricsOutputCanvas">
@@ -117,7 +83,8 @@
       </section>
     </div>
   </main>
-
+  
+  <script src="./FontManager.js"></script>
   <script src="./LyricsRenderer.js"></script>
   <script src="./LyricsAnimationEngine.js"></script>
   <script src="./lyricsOutput.js"></script>

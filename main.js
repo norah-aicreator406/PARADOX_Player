@@ -1,3 +1,6 @@
+console.log('[Main] 起動ファイル:', __filename);
+
+
 const {
   app,
   BrowserWindow,
@@ -444,6 +447,8 @@ function openLyricsOutputWindow() {
     new BrowserWindow({
       width: initialSize.width,
       height: initialSize.height,
+
+      useContentSize: true,
 
       minWidth: 320,
       minHeight: 320,
@@ -1620,24 +1625,36 @@ ipcMain.on(
 
 
 ipcMain.handle(
-    'font:addCustom',
-    async (
-        event,
+  'font:addCustom',
+  async (
+    event,
+    sourceFilePath
+  ) => {
+    console.log(
+  '[Main] font:addCustom 実行:',
+  sourceFilePath
+);
+
+    const result =
+      await FontService.addCustomFont(
         sourceFilePath
-    ) => {
-        const result =
-    FontService.addCustomFont(
-        sourceFilePath
+      );
+
+    console.log(
+      '[Main] addCustomFont result:',
+      result
     );
 
-if (result.success) {
+    if (result.success) {
+      console.log(
+        '[Main] フォント追加成功。全画面へ通知します。'
+      );
 
-    notifyFontLibraryUpdated();
-
-}
-
-return result;
+      notifyFontLibraryUpdated();
     }
+
+    return result;
+  }
 );
 
 
@@ -1708,21 +1725,30 @@ return result;
 
 
 function notifyFontLibraryUpdated() {
+  const windows =
+    BrowserWindow.getAllWindows();
 
-    const windows = BrowserWindow.getAllWindows();
+  console.log(
+    '[Main] 通知対象ウィンドウ数:',
+    windows.length
+  );
 
-    windows.forEach(win => {
+  windows.forEach((win, index) => {
+    if (win.isDestroyed()) {
+      return;
+    }
 
-        if (win.isDestroyed()) {
-            return;
-        }
+    console.log(
+      '[Main] font:updated送信:',
+      index,
+      win.getTitle(),
+      win.webContents.getURL()
+    );
 
-        win.webContents.send(
-            "font:updated"
-        );
-
-    });
-
+    win.webContents.send(
+      'font:updated'
+    );
+  });
 }
 
 

@@ -100,6 +100,78 @@ createVisualizerBars();
 
 const { ipcRenderer } = require('electron');
 
+ipcRenderer.on(
+  'font:updated',
+  async () => {
+    console.log(
+      '[Visualizer] font:updated received'
+    );
+
+    try {
+      if (
+        window.NorahFontManager &&
+        typeof window.NorahFontManager.reload ===
+          'function'
+      ) {
+        await window.NorahFontManager.reload();
+      }
+
+      /*
+       * 新しい@font-faceの読み込み完了を待つ。
+       */
+      if (document.fonts?.ready) {
+        await document.fonts.ready;
+      }
+
+      /*
+       * 表示中の歌詞にfont-familyを再評価させる。
+       */
+      const lyricsElements =
+        document.querySelectorAll(
+          [
+            '.visualizerLyricsBlock',
+            '.lyricsOutputLine',
+            '.lyricsLayer',
+            '.lyricsHoldWrapper'
+          ].join(',')
+        );
+
+      lyricsElements.forEach(element => {
+       const currentFont =
+  getComputedStyle(element)
+    .fontFamily;
+
+        if (!currentFont) {
+          return;
+        }
+
+        element.style.setProperty(
+          'font-family',
+          'sans-serif',
+          'important'
+        );
+
+        requestAnimationFrame(() => {
+          element.style.setProperty(
+            'font-family',
+            currentFont,
+            'important'
+          );
+        });
+      });
+
+      console.log(
+        '[Visualizer] fonts reloaded'
+      );
+    } catch (error) {
+      console.error(
+        '[Visualizer] font reload failed:',
+        error
+      );
+    }
+  }
+);
+
 function playSongChangeAnimation(callback) {
   const coverFrame = document.getElementById('coverFrame');
   const songInfo = document.getElementById('songInfo');

@@ -442,6 +442,11 @@ async function importCustomFont(
             selected.filePath;
     }
 
+    console.log(
+  '[FontManager] font:addCustomを呼び出します:',
+  filePath
+);
+
     const result =
         await ipcRenderer.invoke(
             "font:addCustom",

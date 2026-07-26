@@ -25,12 +25,15 @@ body {
   user-select: none;
 }
 
+body {
+  position: relative;
+  user-select: none;
+  -webkit-app-region: drag;
+}
+
 #lyricsOutputStage {
   position: fixed;
-  top: 46px;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
 
   overflow: hidden;
   background: transparent;
@@ -114,130 +117,7 @@ body {
 }
 */
 
-/* ========================================
-   Lyrics Output window toolbar
-======================================== */
 
-#lyricsOutputToolbar {
-  position: fixed;
-  z-index: 10000;
-
-  top: 0;
-  left: 0;
-  right: 0;
-
-  height: 46px;
-
-  display: flex;
-  align-items: stretch;
-
-  color: #ffffff;
-
-  background:
-    linear-gradient(
-      90deg,
-      rgba(16, 18, 31, 0.96),
-      rgba(12, 24, 27, 0.96)
-    );
-
-  border-bottom:
-    1px solid
-    rgba(92, 255, 226, 0.35);
-
-  box-shadow:
-    0 8px 24px
-    rgba(0, 0, 0, 0.3);
-
-  pointer-events: auto;
-}
-
-.lyricsOutputDragArea {
-  flex: 1;
-
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  padding: 0 14px;
-
-  /*
-   * Electronウィンドウの移動領域
-   */
-  -webkit-app-region: drag;
-
-  cursor: grab;
-}
-
-.lyricsOutputDragArea:active {
-  cursor: grabbing;
-}
-
-.lyricsOutputToolbarIcon {
-  display: grid;
-  place-items: center;
-
-  width: 26px;
-  height: 26px;
-
-  border-radius: 7px;
-
-  color: #7fffea;
-  background:
-    rgba(71, 238, 211, 0.13);
-
-  border:
-    1px solid
-    rgba(71, 238, 211, 0.45);
-
-  font-weight: 800;
-}
-
-.lyricsOutputToolbarTitle {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
-.lyricsOutputToolbarHint {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.46);
-}
-
-.lyricsOutputWindowActions {
-  display: flex;
-  align-items: stretch;
-
-  /*
-   * ドラッグ領域からボタンを除外する
-   */
-  -webkit-app-region: no-drag;
-}
-
-.lyricsOutputWindowActions button {
-  width: 46px;
-
-  border: 0;
-  border-left:
-    1px solid
-    rgba(255, 255, 255, 0.08);
-
-  color: rgba(255, 255, 255, 0.84);
-  background: transparent;
-
-  font-size: 20px;
-  cursor: pointer;
-}
-
-.lyricsOutputWindowActions button:hover {
-  background:
-    rgba(255, 255, 255, 0.09);
-}
-
-#lyricsOutputCloseButton:hover {
-  background:
-    rgba(230, 62, 83, 0.88);
-  color: #ffffff;
-}
 
 /* ========================================
    Lyrics Renderer compatibility
