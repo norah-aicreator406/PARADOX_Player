@@ -92,6 +92,7 @@ let lyricsEditorWindow = null;
 let currentLyricsEditorData = null;
 let currentVisualTheme = null;
 
+
 /*
   Lyrics Outputを後から開いた場合でも、
   現在の歌詞と再生情報を復元するためのキャッシュ
@@ -204,9 +205,12 @@ function openLyricsEditorWindow() {
   }
 });
 
-  lyricsEditorWindow.on('closed', () => {
+  lyricsEditorWindow.on(
+  'closed',
+  () => {
     lyricsEditorWindow = null;
-  });
+  }
+);
 }
 
 
@@ -247,6 +251,7 @@ function createWindow() {
   });
 }
 
+
 function openVisualizerWindow() {
   if (
     visualizerWindow &&
@@ -273,6 +278,16 @@ function openVisualizerWindow() {
 
 visualizerWindow.setAspectRatio(
   9 / 16
+);
+
+visualizerWindow.setContentSize(
+  540,
+  960
+);
+
+visualizerWindow.on(
+  'resize',
+  enforceVisualizerContentRatio
 );
 
 attachPerformanceShortcuts(
@@ -373,6 +388,55 @@ function isLyricsOutputDestination(
   );
 }
 
+let isAdjustingLyricsOutputSize =
+  false;
+
+function enforceLyricsOutputContentRatio() {
+  if (
+    isAdjustingLyricsOutputSize ||
+    !lyricsOutputWindow ||
+    lyricsOutputWindow.isDestroyed()
+  ) {
+    return;
+  }
+
+  const [
+    currentWidth,
+    currentHeight
+  ] =
+    lyricsOutputWindow.getContentSize();
+
+  const targetRatio =
+    currentLyricsOutputAspectRatio === '16:9'
+      ? 16 / 9
+      : 9 / 16;
+
+  const targetHeight =
+    Math.round(
+      currentWidth / targetRatio
+    );
+
+  if (
+    Math.abs(
+      currentHeight -
+      targetHeight
+    ) <= 1
+  ) {
+    return;
+  }
+
+  isAdjustingLyricsOutputSize =
+    true;
+
+  lyricsOutputWindow.setContentSize(
+    currentWidth,
+    targetHeight
+  );
+
+  isAdjustingLyricsOutputSize =
+    false;
+}
+
 
 function sendOutputVisibilityState() {
   if (
@@ -397,6 +461,7 @@ function sendOutputVisibilityState() {
         'visualizer'
     );
 }
+
 
   if (
     lyricsOutputWindow &&
@@ -492,9 +557,28 @@ hasShadow: true,
       }
     });
 
-  lyricsOutputWindow.loadFile(
-    'lyricsOutput.html'
-  );
+
+  
+    lyricsOutputWindow.setAspectRatio(
+  currentLyricsOutputAspectRatio === '16:9'
+    ? 16 / 9
+    : 9 / 16
+);
+
+lyricsOutputWindow.setContentSize(
+  initialSize.width,
+  initialSize.height
+);
+
+lyricsOutputWindow.on(
+  'resize',
+  enforceLyricsOutputContentRatio
+);
+
+lyricsOutputWindow.loadFile(
+  'lyricsOutput.html'
+);
+
 
   lyricsOutputWindow
     .webContents
@@ -706,13 +790,31 @@ ipcMain.handle(
       )
     );
 
-    /*
-      出力先を切り替えた時や、
-      Outputを後から開いた時のために
-      最新データ自体は常に保存する。
-    */
     currentLyricsOutputData =
       lyrics || null;
+
+    console.log(
+      '[Lyrics Output Routing]',
+      {
+        source:
+          lyrics?.source,
+
+        destinationEnabled:
+          isLyricsOutputDestination(
+            'lyrics'
+          ),
+
+        hasWindow:
+          Boolean(
+            lyricsOutputWindow
+          ),
+
+        destroyed:
+          lyricsOutputWindow
+            ? lyricsOutputWindow.isDestroyed()
+            : null
+      }
+    );
 
     let sentToAnyOutput =
       false;
@@ -760,6 +862,8 @@ ipcMain.handle(
     return sentToAnyOutput;
   }
 );
+
+
 
 ipcMain.handle('send-overlay-to-visualizer', async (event, overlay) => {
   if (!visualizerWindow || visualizerWindow.isDestroyed()) return false;
@@ -1495,22 +1599,69 @@ ipcMain.handle('send-visualizer-effect-settings', async (event, settings) => {
   return true;
 });
 
-ipcMain.handle('set-visualizer-aspect-ratio', async (event, ratio) => {
-  if (!visualizerWindow || visualizerWindow.isDestroyed()) return false;
+let currentVisualizerAspectRatio =
+  '9:16';
 
-  if (ratio === '16:9') {
-    visualizerWindow.setSize(1280, 720);
-  } else {
-    visualizerWindow.setSize(540, 960);
+let isAdjustingVisualizerSize =
+  false;
+
+function enforceVisualizerContentRatio() {
+  if (
+    isAdjustingVisualizerSize ||
+    !visualizerWindow ||
+    visualizerWindow.isDestroyed()
+  ) {
+    return;
   }
 
-  visualizerWindow.webContents.send('visualizer-aspect-ratio', ratio);
-  return true;
-});
+  const [
+    currentWidth,
+    currentHeight
+  ] =
+    visualizerWindow.getContentSize();
+
+  const targetRatio =
+    currentVisualizerAspectRatio ===
+    '16:9'
+      ? 16 / 9
+      : 9 / 16;
+
+  const targetHeight =
+    Math.round(
+      currentWidth / targetRatio
+    );
+
+  if (
+    Math.abs(
+      currentHeight -
+      targetHeight
+    ) <= 1
+  ) {
+    return;
+  }
+
+  isAdjustingVisualizerSize =
+    true;
+
+  visualizerWindow.setContentSize(
+    currentWidth,
+    targetHeight
+  );
+
+  isAdjustingVisualizerSize =
+    false;
+}
 
 ipcMain.handle(
   'set-lyrics-output-aspect-ratio',
   async (event, ratio) => {
+
+
+    currentVisualizerAspectRatio =
+  ratio === '16:9'
+    ? '16:9'
+    : '9:16';
+
     if (
       ratio !== '16:9' &&
       ratio !== '9:16'
@@ -1528,17 +1679,25 @@ ipcMain.handle(
       return true;
     }
 
-    if (ratio === '16:9') {
-      lyricsOutputWindow.setSize(
-        1280,
-        720
-      );
-    } else {
-      lyricsOutputWindow.setSize(
-        540,
-        960
-      );
-    }
+   if (ratio === '16:9') {
+  lyricsOutputWindow.setAspectRatio(
+    16 / 9
+  );
+
+  lyricsOutputWindow.setContentSize(
+    1280,
+    720
+  );
+} else {
+  lyricsOutputWindow.setAspectRatio(
+    9 / 16
+  );
+
+  lyricsOutputWindow.setContentSize(
+    540,
+    960
+  );
+}
 
     lyricsOutputWindow
       .webContents

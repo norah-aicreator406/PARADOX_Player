@@ -35,52 +35,28 @@ function resizeLyricsOutputCanvas() {
     return;
   }
 
-  const availableWidth =
-    stage.clientWidth;
+  const ratio =
+    currentAspectRatio === '16:9'
+      ? '16:9'
+      : '9:16';
 
-  const availableHeight =
-    stage.clientHeight;
+  const result =
+    window.NorahViewport.fitCanvas({
+      container: stage,
+      canvas,
+      ratio,
+      cssVariable:
+        '--lyrics-output-scale'
+    });
 
-  const isWide =
-    currentAspectRatio ===
-    '16:9';
-
-  const baseWidth =
-    isWide
-      ? 1920
-      : 1080;
-
-  const baseHeight =
-    isWide
-      ? 1080
-      : 1920;
-
-  canvas.style.width =
-    `${baseWidth}px`;
-
-  canvas.style.height =
-    `${baseHeight}px`;
-
-  const scale =
-    Math.min(
-      availableWidth /
-        baseWidth,
-
-      availableHeight /
-        baseHeight
-    );
-
-  canvas.style.setProperty(
-    '--lyrics-output-scale',
-    String(scale)
-  );
-
-  document.documentElement
-    .style
-    .setProperty(
-      '--lyrics-output-scale',
-      String(scale)
-    );
+  if (result) {
+    document.documentElement
+      .style
+      .setProperty(
+        '--lyrics-output-scale',
+        String(result.scale)
+      );
+  }
 }
 
 window.addEventListener(
@@ -193,6 +169,17 @@ function setSingleLyrics(
     layout,
     animation
   };
+
+  console.log(
+  '[Lyrics Output setSingleLyrics]',
+  {
+    lines,
+    style,
+    position,
+    layout,
+    animation
+  }
+);
 
   window.LyricsRenderer.render(
     lyricsBlock,
@@ -456,23 +443,27 @@ function receiveLyricsPayload(
       : 1
   );
 
+
+  if (
+  source === 'player' &&
+  hasBlocks
+) {
   /*
-   * Editorからの新形式。
+   * EditorがLyrics Outputを制御中なら、
+   * Playerから届く更新では上書きしない。
    */
   if (
-    source ===
-      'lyrics-editor' &&
-    hasBlocks
+    lyricsEditorControlsOutput
   ) {
-    lyricsEditorControlsOutput =
-      true;
-
-    setLyricsBlocks(
-      lyricsPayload.blocks
-    );
-
     return;
   }
+
+  setLyricsBlocks(
+    lyricsPayload.blocks
+  );
+
+  return;
+}
 
   /*
    * Playerからの新形式。

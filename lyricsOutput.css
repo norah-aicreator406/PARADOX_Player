@@ -67,7 +67,7 @@ body {
 
   transform-origin: center center;
 
-  overflow: visible;
+  overflow: hidden;
   background: transparent;
 }
 
@@ -765,5 +765,7 @@ body,
 #lyricsOutputCanvas {
   background-color: #ff00ff !important;
 }
+
+
 
 

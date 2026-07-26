@@ -66,7 +66,13 @@ targetElement.style.setProperty(
         center: 'center',
         right: 'right'
       };
-    targetElement.style.textAlign = style.align || 'center';
+    const resolvedAlign =
+  alignMap[
+    style.align || 'center'
+  ] || 'center';
+
+targetElement.style.textAlign =
+  resolvedAlign;
     targetElement.style.letterSpacing = `${Number(style.letterSpacing) || 0}px`;
     const letterSpacing =
   Number(style.letterSpacing) || 0;
@@ -77,11 +83,12 @@ targetElement.style.letterSpacing =
 /*
  * letter-spacingは最後の文字の後ろにも
  * 余白を作るため、横書き時の中央位置を補正する。
- */
+ 
 targetElement.style.textIndent =
   !isVertical
     ? `${letterSpacing}px`
     : '0px';
+    */
     targetElement.style.lineHeight = String(style.lineHeight || 1.2);
 
     targetElement.style.width = `${width}px`;
@@ -236,5 +243,79 @@ motionWrapper.appendChild(
 targetElement.appendChild(
   motionWrapper
 );
+
+requestAnimationFrame(() => {
+  const targetRect =
+    targetElement.getBoundingClientRect();
+
+    const firstLine =
+  targetElement.querySelector(
+    '.lyricsOutputLine'
+  );
+
+const firstLineRect =
+  firstLine
+    ? firstLine.getBoundingClientRect()
+    : null;
+
+const computedStyle =
+  firstLine
+    ? window.getComputedStyle(
+        firstLine
+      )
+    : null;
+
+  const canvas =
+  targetElement.closest(
+    '#lyricsOutputCanvas, ' +
+    '#visualizerCanvas, ' +
+    '#editorPreviewCanvas, ' +
+    '#lyricsPreviewCanvas, ' +
+    '#editorCanvas, ' +
+    '.editorPreviewCanvas'
+  );
+
+  const canvasRect =
+    canvas?.getBoundingClientRect();
+
+  console.log(
+    '📐 LYRICS GEOMETRY',
+    {
+      page: document.title,
+
+      position,
+
+      layout,
+
+      target: targetRect,
+
+firstLine: firstLineRect,
+
+font: computedStyle
+  ? {
+      family:
+        computedStyle.fontFamily,
+
+      size:
+        computedStyle.fontSize,
+
+      weight:
+        computedStyle.fontWeight,
+
+      letterSpacing:
+        computedStyle.letterSpacing,
+
+      textAlign:
+        computedStyle.textAlign,
+
+      textIndent:
+        computedStyle.textIndent
+    }
+  : null,
+
+canvas: canvasRect
+    }
+  );
+});
   }
 };
