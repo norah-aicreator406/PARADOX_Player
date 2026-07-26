@@ -651,6 +651,139 @@ document
     );
   });
 
+function initializeScreenPanel() {
+  const screenButton =
+    document.getElementById(
+      'screenButton'
+    );
+
+  const screenPanel =
+    document.getElementById(
+      'screenPanel'
+    );
+
+  if (!screenButton || !screenPanel) {
+    console.error(
+      'スクリーンUIが見つかりません',
+      {
+        screenButton,
+        screenPanel
+      }
+    );
+
+    return;
+  }
+
+  screenButton.addEventListener(
+    'click',
+    () => {
+      const isHidden =
+        screenPanel.getAttribute(
+          'aria-hidden'
+        ) === 'true';
+
+      screenPanel.setAttribute(
+        'aria-hidden',
+        isHidden ? 'false' : 'true'
+      );
+
+      screenButton.setAttribute(
+        'aria-expanded',
+        isHidden ? 'true' : 'false'
+      );
+    }
+  );
+
+  const visualizerScreenOptions =
+    document.querySelectorAll(
+      'input[name="visualizerScreen"]'
+    );
+
+  visualizerScreenOptions.forEach(
+    (radio) => {
+      radio.addEventListener(
+        'change',
+        async () => {
+          if (!radio.checked) {
+            return;
+          }
+
+          await ipcRenderer.invoke(
+            'set-visualizer-screen',
+            radio.value
+          );
+        }
+      );
+    }
+  );
+
+  const lyricsScreenOptions =
+    document.querySelectorAll(
+      'input[name="lyricsScreen"]'
+    );
+
+  lyricsScreenOptions.forEach(
+    (radio) => {
+      radio.addEventListener(
+        'change',
+        async () => {
+          if (!radio.checked) {
+            return;
+          }
+
+          await ipcRenderer.invoke(
+            'set-lyrics-output-screen',
+            radio.value
+          );
+        }
+      );
+    }
+  );
+}
+
+
+const lyricsDestinationOptions =
+  document.querySelectorAll(
+    'input[name="lyricsDestination"]'
+  );
+
+lyricsDestinationOptions.forEach(
+  (radio) => {
+    radio.addEventListener(
+      'change',
+      async () => {
+        if (!radio.checked) {
+          return;
+        }
+
+        try {
+          await ipcRenderer.invoke(
+            'set-output-routing',
+            {
+              lyrics: radio.value
+            }
+          );
+        } catch (error) {
+          console.error(
+            '歌詞の表示先を変更できませんでした:',
+            error
+          );
+        }
+      }
+    );
+  }
+);
+
+if (
+  document.readyState === 'loading'
+) {
+  document.addEventListener(
+    'DOMContentLoaded',
+    initializeScreenPanel
+  );
+} else {
+  initializeScreenPanel();
+}
 
 document.addEventListener(
   'click',
@@ -2072,14 +2205,6 @@ async function copyCurrent() {
   await ipcRenderer.invoke('copy-text', text);
 }
 
-
-async function openVisualizer() {
-  try {
-    await ipcRenderer.invoke('open-visualizer-window');
-  } catch (error) {
-    console.error('Visualizerを開けませんでした:', error);
-  }
-}
 
 async function openLyricsOutput() {
   try {
@@ -3854,5 +3979,7 @@ function isTypingTarget(target) {
     target?.isContentEditable === true
   );
 }
+
+
 
 

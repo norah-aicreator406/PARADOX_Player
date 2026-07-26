@@ -1820,6 +1820,8 @@ ipcRenderer.on('lyrics-editor-data', (event, data) => {
   currentEditorSong = data;
   currentProjectPath = data.projectPath || null;
 
+    updateEditorSongInfoPreview();
+
   if (data.audioPath) {
   setupEditorAudioPlayer(data.audioPath);
 }
@@ -2208,6 +2210,867 @@ let currentEditorSong = null;
 let currentProjectPath = null;
 let editorAudio = null;
 let editorAudioReady = false;
+
+/* ==================================================
+   Song Info Editor State
+================================================== */
+
+const SONG_INFO_STORAGE_KEY =
+  'norahStudioSongInfoSettings';
+
+
+let songInfoSettings = {
+  visible:
+    true,
+
+  title:
+    '',
+
+  artist:
+    '',
+
+  showTitle:
+    true,
+
+  showArtist:
+    true,
+
+  showTime:
+    true,
+
+  positionByRatio: {
+    '16:9': {
+      x: 0,
+      y: 0
+    },
+
+    '9:16': {
+      x: 0,
+      y: 0
+    }
+  }
+};
+
+
+let selectedEditorObject =
+  'lyrics';
+
+
+function getCurrentSongInfoPosition() {
+  const ratio =
+    getCurrentEditorAspectRatio();
+
+  const savedPosition =
+    songInfoSettings
+      ?.positionByRatio
+      ?.[ratio];
+
+  return {
+    x:
+      Number(
+        savedPosition?.x
+      ) || 0,
+
+    y:
+      Number(
+        savedPosition?.y
+      ) || 0
+  };
+}
+
+
+/* ==================================================
+   Song Info Inspector
+================================================== */
+
+const songInfoInspector =
+  document.getElementById(
+    'songInfoInspector'
+  );
+
+const songInfoVisibilityToggle =
+  document.getElementById(
+    'songInfoVisibilityToggle'
+  );
+
+const songInfoTitleInput =
+  document.getElementById(
+    'songInfoTitleInput'
+  );
+
+const songInfoArtistInput =
+  document.getElementById(
+    'songInfoArtistInput'
+  );
+
+const songInfoShowTitle =
+  document.getElementById(
+    'songInfoShowTitle'
+  );
+
+const songInfoShowArtist =
+  document.getElementById(
+    'songInfoShowArtist'
+  );
+
+const songInfoShowTime =
+  document.getElementById(
+    'songInfoShowTime'
+  );
+
+
+function updateSongInfoInspector() {
+  if (
+    !songInfoInspector
+  ) {
+    return;
+  }
+
+
+  if (songInfoTitleInput) {
+    songInfoTitleInput.value =
+      songInfoSettings.title ||
+      currentEditorSong?.title ||
+      currentEditorSong?.name ||
+      '';
+  }
+
+
+  if (songInfoArtistInput) {
+    songInfoArtistInput.value =
+      songInfoSettings.artist ||
+      currentEditorSong?.artist ||
+      '';
+  }
+
+
+  if (songInfoShowTitle) {
+    songInfoShowTitle.checked =
+      songInfoSettings.showTitle !==
+      false;
+  }
+
+
+  if (songInfoShowArtist) {
+    songInfoShowArtist.checked =
+      songInfoSettings.showArtist !==
+      false;
+  }
+
+
+  if (songInfoShowTime) {
+    songInfoShowTime.checked =
+      songInfoSettings.showTime !==
+      false;
+  }
+
+
+  if (
+    songInfoVisibilityToggle
+  ) {
+    const visible =
+      songInfoSettings.visible !==
+      false;
+
+
+    songInfoVisibilityToggle
+      .classList.toggle(
+        'is-active',
+        visible
+      );
+
+    songInfoVisibilityToggle
+      .setAttribute(
+        'aria-pressed',
+        String(visible)
+      );
+
+    songInfoVisibilityToggle
+      .textContent =
+        visible
+          ? 'ON'
+          : 'OFF';
+  }
+}
+
+
+function applySongInfoInspectorChange() {
+  updateEditorSongInfoPreview();
+
+  saveSongInfoSettingsLocally();
+}
+
+
+songInfoVisibilityToggle
+  ?.addEventListener(
+    'click',
+    () => {
+      songInfoSettings.visible =
+        songInfoSettings.visible ===
+        false;
+
+      updateSongInfoInspector();
+
+      applySongInfoInspectorChange();
+    }
+  );
+
+
+songInfoTitleInput
+  ?.addEventListener(
+    'input',
+    () => {
+      songInfoSettings.title =
+        songInfoTitleInput.value;
+
+      applySongInfoInspectorChange();
+    }
+  );
+
+
+songInfoArtistInput
+  ?.addEventListener(
+    'input',
+    () => {
+      songInfoSettings.artist =
+        songInfoArtistInput.value;
+
+      applySongInfoInspectorChange();
+    }
+  );
+
+
+songInfoShowTitle
+  ?.addEventListener(
+    'change',
+    () => {
+      songInfoSettings.showTitle =
+        songInfoShowTitle.checked;
+
+      applySongInfoInspectorChange();
+    }
+  );
+
+
+songInfoShowArtist
+  ?.addEventListener(
+    'change',
+    () => {
+      songInfoSettings.showArtist =
+        songInfoShowArtist.checked;
+
+      applySongInfoInspectorChange();
+    }
+  );
+
+
+songInfoShowTime
+  ?.addEventListener(
+    'change',
+    () => {
+      songInfoSettings.showTime =
+        songInfoShowTime.checked;
+
+      applySongInfoInspectorChange();
+    }
+  );
+
+
+function updateEditorSongInfoPreview() {
+  const songInfo =
+    document.getElementById(
+      'editorPreviewSongInfo'
+    );
+
+  const title =
+    document.getElementById(
+      'editorPreviewSongTitle'
+    );
+
+  const artist =
+    document.getElementById(
+      'editorPreviewSongArtist'
+    );
+
+  const time =
+    document.getElementById(
+      'editorPreviewSongTime'
+    );
+
+
+  if (!songInfo) {
+    return;
+  }
+
+
+  const titleText =
+    songInfoSettings.title ||
+    currentEditorSong?.title ||
+    currentEditorSong?.name ||
+    'Song Title';
+
+
+  const artistText =
+    songInfoSettings.artist ||
+    currentEditorSong?.artist ||
+    'Artist';
+
+
+  if (title) {
+    title.textContent =
+      titleText;
+
+    title.classList.toggle(
+      'is-hidden',
+      songInfoSettings.showTitle ===
+        false
+    );
+  }
+
+
+  if (artist) {
+    artist.textContent =
+      artistText;
+
+    artist.classList.toggle(
+      'is-hidden',
+      songInfoSettings.showArtist ===
+        false
+    );
+  }
+
+
+  if (time) {
+    time.classList.toggle(
+      'is-hidden',
+      songInfoSettings.showTime ===
+        false
+    );
+  }
+
+
+  songInfo.classList.toggle(
+    'is-hidden',
+    songInfoSettings.visible ===
+      false
+  );
+
+
+  const position =
+    getCurrentSongInfoPosition();
+
+
+  songInfo.style.setProperty(
+    '--song-info-x',
+    `${position.x}px`
+  );
+
+  songInfo.style.setProperty(
+    '--song-info-y',
+    `${position.y}px`
+  );
+
+
+  const isSelected =
+    selectedEditorObject ===
+    'songInfo';
+
+
+  songInfo.classList.toggle(
+    'is-selected',
+    isSelected
+  );
+
+
+  document
+    .getElementById(
+      'songInfoLayerItem'
+    )
+    ?.classList.toggle(
+      'is-selected',
+      isSelected
+    );
+}
+
+
+function selectSongInfoEditorObject() {
+  selectedEditorObject =
+    'songInfo';
+
+
+  showInspectorByType(
+    'Song Info'
+  );
+
+
+  updateEditorSongInfoPreview();
+
+  updateSongInfoInspector();
+}
+
+
+function setupSongInfoLayerSelection() {
+  const layerItem =
+    document.getElementById(
+      'songInfoLayerItem'
+    );
+
+  const songInfo =
+    document.getElementById(
+      'editorPreviewSongInfo'
+    );
+
+
+  layerItem?.addEventListener(
+    'click',
+    event => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      selectSongInfoEditorObject();
+    }
+  );
+
+
+  songInfo?.addEventListener(
+    'mousedown',
+    event => {
+      selectSongInfoEditorObject();
+
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  );
+}
+
+
+/* ==================================================
+   Common Preview Object Drag
+================================================== */
+
+function setupPreviewObjectDrag({
+  element,
+  getPosition,
+  setPosition,
+  onSelect = null,
+  onDragStart = null,
+  onDragMove = null,
+  onDragEnd = null,
+  snapToCenter = true
+}) {
+  const canvas =
+    document.getElementById(
+      'editorPreviewCanvas'
+    );
+
+  if (
+    !element ||
+    !canvas ||
+    typeof getPosition !== 'function' ||
+    typeof setPosition !== 'function'
+  ) {
+    return;
+  }
+
+  // 同じ要素への二重登録を防止
+  if (
+    element.dataset
+      .previewObjectDragInitialized ===
+    'true'
+  ) {
+    return;
+  }
+
+  element.dataset
+    .previewObjectDragInitialized =
+    'true';
+
+
+  let isDragging = false;
+  let hasMoved = false;
+
+  let startMouseX = 0;
+  let startMouseY = 0;
+
+  let startX = 0;
+  let startY = 0;
+
+
+  function finishDrag() {
+    if (!isDragging) {
+      return;
+    }
+
+    isDragging = false;
+
+    element.classList.remove(
+      'is-dragging'
+    );
+
+    hidePreviewCenterGuides();
+
+    if (
+      hasMoved &&
+      typeof onDragEnd === 'function'
+    ) {
+      onDragEnd();
+    }
+
+    hasMoved = false;
+  }
+
+
+  element.addEventListener(
+    'mousedown',
+    event => {
+      if (event.button !== 0) {
+        return;
+      }
+
+      /*
+       * リサイズ・回転ハンドルを
+       * ドラッグした場合は移動しない。
+       */
+      if (
+        event.target.closest(
+          '.selectionHandle'
+        ) ||
+        event.target.closest(
+          '.selectionSideHandle'
+        ) ||
+        event.target.closest(
+          '.rotationHandle'
+        )
+      ) {
+        return;
+      }
+
+
+      const position =
+        getPosition() || {
+          x: 0,
+          y: 0
+        };
+
+
+      startX =
+        Number(position.x) || 0;
+
+      startY =
+        Number(position.y) || 0;
+
+      startMouseX =
+        event.clientX;
+
+      startMouseY =
+        event.clientY;
+
+      isDragging = true;
+      hasMoved = false;
+
+
+      if (
+        typeof onSelect ===
+        'function'
+      ) {
+        onSelect();
+      }
+
+      if (
+        typeof onDragStart ===
+        'function'
+      ) {
+        onDragStart();
+      }
+
+
+      element.classList.add(
+        'is-dragging'
+      );
+
+      hidePreviewCenterGuides();
+
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  );
+
+
+  document.addEventListener(
+    'mousemove',
+    event => {
+      if (!isDragging) {
+        return;
+      }
+
+
+      const mouseDeltaX =
+        event.clientX -
+        startMouseX;
+
+      const mouseDeltaY =
+        event.clientY -
+        startMouseY;
+
+
+      if (
+        Math.abs(mouseDeltaX) > 2 ||
+        Math.abs(mouseDeltaY) > 2
+      ) {
+        hasMoved = true;
+      }
+
+
+      /*
+       * 画面上の移動量を
+       * 仮想キャンバス座標へ変換。
+       */
+      const canvasDelta =
+        window.NorahViewport
+          .screenDeltaToCanvas(
+            canvas,
+            mouseDeltaX,
+            mouseDeltaY
+          );
+
+
+      const rawX =
+        startX +
+        canvasDelta.x;
+
+      const rawY =
+        startY +
+        canvasDelta.y;
+
+
+      let nextPosition = {
+        x: rawX,
+        y: rawY,
+        snappedX: false,
+        snappedY: false
+      };
+
+
+      if (snapToCenter) {
+        const canvasScale =
+          window.NorahViewport
+            .getElementScale(
+              canvas
+            );
+
+        const scaleX =
+          Number(canvasScale.x) || 1;
+
+        const scaleY =
+          Number(canvasScale.y) || 1;
+
+        /*
+         * 画面上で約12px以内に
+         * 入ったら中央へ吸着。
+         */
+        const thresholdX =
+          12 / scaleX;
+
+        const thresholdY =
+          12 / scaleY;
+
+
+        nextPosition =
+          window.NorahSnapManager
+            .snapPosition({
+              x: rawX,
+              y: rawY,
+
+              targetX: 0,
+              targetY: 0,
+
+              thresholdX,
+              thresholdY,
+
+              // Shift中はスナップ解除
+              disabled:
+                event.shiftKey
+            });
+      }
+
+
+      setPosition({
+        x: nextPosition.x,
+        y: nextPosition.y
+      });
+
+
+      updatePreviewCenterGuides({
+        showX:
+          Boolean(
+            nextPosition.snappedX
+          ),
+
+        showY:
+          Boolean(
+            nextPosition.snappedY
+          )
+      });
+
+
+      if (
+        typeof onDragMove ===
+        'function'
+      ) {
+        onDragMove(
+          nextPosition
+        );
+      }
+    }
+  );
+
+
+  document.addEventListener(
+    'mouseup',
+    finishDrag
+  );
+
+
+  window.addEventListener(
+    'blur',
+    finishDrag
+  );
+}
+
+
+/* ==================================================
+   Song Info Drag
+================================================== */
+
+function setupSongInfoDrag() {
+  const songInfo =
+    document.getElementById(
+      'editorPreviewSongInfo'
+    );
+
+  if (!songInfo) {
+    return;
+  }
+
+
+  setupPreviewObjectDrag({
+    element:
+      songInfo,
+
+
+    getPosition() {
+      return (
+        getCurrentSongInfoPosition()
+      );
+    },
+
+
+    setPosition(position) {
+      const ratio =
+        getCurrentEditorAspectRatio();
+
+
+      if (
+        !songInfoSettings
+          .positionByRatio
+      ) {
+        songInfoSettings
+          .positionByRatio = {};
+      }
+
+
+      songInfoSettings
+        .positionByRatio[
+          ratio
+        ] = {
+          x:
+            Math.round(
+              Number(position.x) || 0
+            ),
+
+          y:
+            Math.round(
+              Number(position.y) || 0
+            )
+        };
+
+
+      updateEditorSongInfoPreview();
+    },
+
+
+    onSelect() {
+      selectSongInfoEditorObject();
+    },
+
+
+    onDragEnd() {
+      saveSongInfoSettingsLocally();
+    },
+
+
+    snapToCenter:
+      true
+  });
+}
+
+
+
+function saveSongInfoSettingsLocally() {
+  localStorage.setItem(
+    SONG_INFO_STORAGE_KEY,
+    JSON.stringify(
+      songInfoSettings
+    )
+  );
+}
+
+
+function loadSongInfoSettingsLocally() {
+  try {
+    const saved =
+      localStorage.getItem(
+        SONG_INFO_STORAGE_KEY
+      );
+
+
+    if (!saved) {
+      return;
+    }
+
+
+    const parsed =
+      JSON.parse(saved);
+
+
+    if (
+      parsed &&
+      typeof parsed ===
+      'object'
+    ) {
+      songInfoSettings = {
+        ...songInfoSettings,
+        ...parsed,
+
+        positionByRatio: {
+          ...songInfoSettings
+            .positionByRatio,
+
+          ...parsed
+            .positionByRatio
+        }
+      };
+    }
+  } catch (error) {
+    console.warn(
+      '[Song Info] 設定の読み込みに失敗しました',
+      error
+    );
+  }
+}
+
+
+
 
 const EDITOR_STORAGE_KEY = 'norahStudioEditorData';
 
@@ -3583,6 +4446,14 @@ function restoreLyricsSelectionForSection(
 
 
 function loadLyricsBlockToInspector(block) {
+  selectedEditorObject =
+  'lyrics';
+
+showInspectorByType(
+  '歌詞'
+);
+
+updateEditorSongInfoPreview();
   const blockId = block.dataset.blockId;
   const blocks = sectionData[currentSectionName] || [];
   const blockData = blocks.find(item => item.id === blockId);
@@ -4529,29 +5400,67 @@ function showSection(
 
 
 function showInspectorByType(type) {
-  document.querySelectorAll('.inspectorContent').forEach(panel => {
-    panel.classList.remove('is-active');
-  });
+  document
+    .querySelectorAll(
+      '.inspectorContent'
+    )
+    .forEach(panel => {
+      panel.classList.remove(
+        'is-active'
+      );
+    });
 
-  let targetId = 'lyricsInspector';
 
-  if (type === '背景') {
-    targetId = 'backgroundInspector';
-  } else if (type === '画像') {
-    targetId = 'imageInspector';
-  } else if (type === '動画') {
-    targetId = 'videoInspector';
-  } else if (type === 'パーティクル') {
-    targetId = 'particleInspector';
-  } else if (type === '歌詞') {
-    targetId = 'lyricsInspector';
+  let targetId =
+    'lyricsInspector';
+
+
+  if (
+    type === 'Song Info' ||
+    type === 'songInfo'
+  ) {
+    targetId =
+      'songInfoInspector';
+
+  } else if (
+    type === '背景'
+  ) {
+    targetId =
+      'backgroundInspector';
+
+  } else if (
+    type === '画像'
+  ) {
+    targetId =
+      'imageInspector';
+
+  } else if (
+    type === '動画'
+  ) {
+    targetId =
+      'videoInspector';
+
+  } else if (
+    type === 'パーティクル'
+  ) {
+    targetId =
+      'particleInspector';
+
+  } else if (
+    type === '歌詞'
+  ) {
+    targetId =
+      'lyricsInspector';
   }
 
-  const target = document.getElementById(targetId);
 
-  if (target) {
-    target.classList.add('is-active');
-  }
+  document
+    .getElementById(
+      targetId
+    )
+    ?.classList.add(
+      'is-active'
+    );
 }
 
 function createLayerItem(type) {
@@ -7765,6 +8674,8 @@ function applyEditorAspectRatio(
       resizeEditorPreviewCanvas();
     }
 
+    updateEditorSongInfoPreview();
+
     window.dispatchEvent(
       new Event('resize')
     );
@@ -8226,7 +9137,11 @@ setupInlineLyricsTextEdit();
 setupLyricsWidthResize(); // 左右ハンドル
 setupLyricsRotationHandle(); // 右上回転ハンドル
 setupTimelineZoomControls();
-setupTimelineZoomByWheel();
 updateAnimationDescription();
 
+loadSongInfoSettingsLocally();
+updateSongInfoInspector();
 
+setupSongInfoLayerSelection();
+setupSongInfoDrag();
+updateEditorSongInfoPreview();

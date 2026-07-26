@@ -304,6 +304,7 @@
 
         </div>
 
+
       </div>
 
     </div>
@@ -346,9 +347,32 @@
 
   <div id="editorPreviewStage">
   <div id="editorPreviewCanvas">
-    <div id="editorPreviewLyricsLayer"></div>
-    <div id="editorPreviewLyrics"></div>
+
+  <div id="editorPreviewLyricsLayer"></div>
+
+  <div id="editorPreviewLyrics"></div>
+
+  <!-- Song Info 編集用プレビュー -->
+  <div
+    id="editorPreviewSongInfo"
+    aria-label="Song Info"
+  >
+    <div id="editorPreviewSongTitle">
+      Song Title
+    </div>
+
+    <div id="editorPreviewSongArtist">
+      Artist
+    </div>
+
+    <div id="editorPreviewSongTime">
+      00:00 / 00:00
+    </div>
+
+    <div class="songInfoSelectionBox"></div>
   </div>
+
+</div>
 </div>
 
 
@@ -1202,6 +1226,145 @@
 
   </div>
 
+</div>
+
+<!-- ==================================================
+     Song Info Inspector
+================================================== -->
+
+<div
+  id="songInfoInspector"
+  class="inspectorContent"
+>
+  <div class="songInfoInspectorHeader">
+    <div>
+      <div class="songInfoInspectorTitle">
+        Song Info
+      </div>
+
+      <div class="songInfoInspectorCaption">
+        曲情報の表示内容を編集します
+      </div>
+    </div>
+
+    <button
+      id="songInfoVisibilityToggle"
+      class="songInfoVisibilityToggle is-active"
+      type="button"
+      aria-pressed="true"
+    >
+      ON
+    </button>
+  </div>
+
+
+  <div class="editorSection">
+    <div class="editorSectionTitle">
+      表示内容
+    </div>
+
+
+    <label for="songInfoTitleInput">
+      曲名
+    </label>
+
+    <input
+      id="songInfoTitleInput"
+      type="text"
+      value=""
+      placeholder="Song Title"
+      autocomplete="off"
+    >
+
+
+    <label for="songInfoArtistInput">
+      アーティスト
+    </label>
+
+    <input
+      id="songInfoArtistInput"
+      type="text"
+      value=""
+      placeholder="Artist"
+      autocomplete="off"
+    >
+  </div>
+
+
+  <div class="editorSection">
+    <div class="editorSectionTitle">
+      表示項目
+    </div>
+
+
+    <label class="songInfoOptionRow">
+      <div>
+        <div class="songInfoOptionName">
+          曲名
+        </div>
+
+        <div class="songInfoOptionDescription">
+          Song Titleを表示します
+        </div>
+      </div>
+
+      <input
+        id="songInfoShowTitle"
+        type="checkbox"
+        checked
+      >
+    </label>
+
+
+    <label class="songInfoOptionRow">
+      <div>
+        <div class="songInfoOptionName">
+          アーティスト
+        </div>
+
+        <div class="songInfoOptionDescription">
+          Artistを表示します
+        </div>
+      </div>
+
+      <input
+        id="songInfoShowArtist"
+        type="checkbox"
+        checked
+      >
+    </label>
+
+
+    <label class="songInfoOptionRow">
+      <div>
+        <div class="songInfoOptionName">
+          再生時間
+        </div>
+
+        <div class="songInfoOptionDescription">
+          現在時間と総再生時間を表示します
+        </div>
+      </div>
+
+      <input
+        id="songInfoShowTime"
+        type="checkbox"
+        checked
+      >
+    </label>
+  </div>
+
+
+  <div class="editorSection">
+    <div class="editorSectionTitle">
+      キャンバス操作
+    </div>
+
+    <p class="inspectorHelpText">
+      プレビュー上でSong Infoをドラッグして移動できます。
+      左右中央へ近づけると自動的に吸着します。
+    </p>
+  </div>
 </div>
 
 <div id="backgroundInspector" class="inspectorContent">

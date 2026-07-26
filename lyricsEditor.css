@@ -6412,6 +6412,405 @@ body.font-library-open
 }
 
 
+
+
+/* ==================================================
+   Editor Song Info
+================================================== */
+
+#editorPreviewSongInfo {
+  position: absolute;
+
+  left: 50%;
+  bottom: 210px;
+
+  width: 86%;
+
+  z-index: 30;
+
+  transform:
+    translateX(-50%)
+    translate(
+      var(--song-info-x, 0px),
+      var(--song-info-y, 0px)
+    );
+
+  text-align: center;
+
+  color: #ffffff;
+
+  cursor: grab;
+  user-select: none;
+
+  pointer-events: auto;
+
+  box-sizing: border-box;
+}
+
+#editorPreviewSongInfo.is-dragging {
+  cursor: grabbing;
+}
+
+#editorPreviewSongTitle {
+  font-size: 56px;
+  line-height: 1.08;
+  font-weight: 800;
+
+  color: #ffffff;
+
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.28),
+    0 0 18px rgba(124, 251, 255, 0.22);
+}
+
+#editorPreviewSongArtist {
+  margin-top: 20px;
+
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+
+  color: #9f8cff;
+
+  text-shadow:
+    0 0 10px rgba(159, 140, 255, 0.62),
+    0 0 20px rgba(255, 79, 216, 0.22);
+}
+
+#editorPreviewSongTime {
+  margin-top: 20px;
+
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+
+  color: rgba(255, 255, 255, 0.76);
+}
+
+
+/* 選択枠 */
+
+.songInfoSelectionBox {
+  display: none;
+
+  position: absolute;
+
+  inset: -18px;
+
+  border:
+    2px solid
+    rgba(92, 200, 255, 0.95);
+
+  border-radius: 10px;
+
+  box-shadow:
+    0 0 18px
+    rgba(92, 200, 255, 0.38);
+
+  pointer-events: none;
+}
+
+#editorPreviewSongInfo.is-selected
+.songInfoSelectionBox {
+  display: block;
+}
+
+
+/* Song Info選択中のLayer表示 */
+
+#songInfoLayerItem.is-selected {
+  background: #202a36;
+
+  outline:
+    1px solid
+    rgba(92, 200, 255, 0.75);
+}
+
+#songInfoLayerItem.is-selected
+.layerAccent {
+  background: #5cc8ff;
+}
+
+/* ==================================================
+   Song Info Editor Preview
+================================================== */
+
+#editorPreviewSongInfo {
+  position: absolute;
+
+  left: 50%;
+  bottom: 210px;
+
+  z-index: 30;
+
+  width: 86%;
+
+  transform:
+    translateX(-50%)
+    translate(
+      var(--song-info-x, 0px),
+      var(--song-info-y, 0px)
+    );
+
+  box-sizing: border-box;
+
+  color: #ffffff;
+  text-align: center;
+
+  cursor: grab;
+  user-select: none;
+}
+
+#editorPreviewSongInfo.is-dragging {
+  cursor: grabbing;
+}
+
+#editorPreviewSongTitle {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1.1;
+
+  color: #ffffff;
+
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.25),
+    0 0 18px rgba(124, 251, 255, 0.2);
+}
+
+#editorPreviewSongArtist {
+  margin-top: 18px;
+
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+
+  color: #a58cff;
+}
+
+#editorPreviewSongTime {
+  margin-top: 16px;
+
+  font-size: 24px;
+  font-weight: 700;
+
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.songInfoSelectionBox {
+  display: none;
+
+  position: absolute;
+  inset: -18px;
+
+  border:
+    2px solid
+    rgba(92, 200, 255, 0.95);
+
+  border-radius: 10px;
+
+  box-shadow:
+    0 0 18px
+    rgba(92, 200, 255, 0.35);
+
+  pointer-events: none;
+}
+
+#editorPreviewSongInfo.is-selected
+.songInfoSelectionBox {
+  display: block;
+}
+
+#editorPreviewSongInfo {
+  touch-action: none;
+}
+
+
+
+/* ==================================================
+   Song Info Inspector
+================================================== */
+
+#songInfoInspector {
+  padding:
+    18px
+    18px
+    30px;
+}
+
+
+.songInfoInspectorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+
+  border-bottom:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+}
+
+
+.songInfoInspectorTitle {
+  color: #ffffff;
+
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+
+.songInfoInspectorCaption {
+  margin-top: 5px;
+
+  color: #8c95a8;
+
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+
+.songInfoVisibilityToggle {
+  min-width: 58px;
+  height: 32px;
+
+  padding: 0 14px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.12);
+
+  border-radius: 999px;
+
+  background: #242832;
+  color: #9aa4b7;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+
+.songInfoVisibilityToggle.is-active {
+  border-color:
+    rgba(92, 200, 255, 0.5);
+
+  background:
+    rgba(92, 200, 255, 0.16);
+
+  color: #8edcff;
+
+  box-shadow:
+    0 0 14px
+    rgba(92, 200, 255, 0.14);
+}
+
+
+#songInfoInspector input[type="text"] {
+  width: 100%;
+  height: 40px;
+
+  box-sizing: border-box;
+
+  margin-top: 8px;
+  padding: 0 12px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.12);
+
+  border-radius: 10px;
+
+  background: #151821;
+  color: #ffffff;
+
+  font-size: 13px;
+
+  outline: none;
+}
+
+
+#songInfoInspector input[type="text"]:focus {
+  border-color:
+    rgba(92, 200, 255, 0.85);
+
+  box-shadow:
+    0 0 0 2px
+    rgba(92, 200, 255, 0.12);
+}
+
+
+.songInfoOptionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  margin-top: 0;
+  padding: 13px 0;
+
+  border-bottom:
+    1px solid
+    rgba(255, 255, 255, 0.06);
+
+  cursor: pointer;
+}
+
+
+.songInfoOptionRow:last-child {
+  border-bottom: none;
+}
+
+
+.songInfoOptionName {
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+
+.songInfoOptionDescription {
+  margin-top: 3px;
+
+  color: #7f899b;
+
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+
+.songInfoOptionRow input[type="checkbox"] {
+  flex: 0 0 auto;
+
+  width: 18px;
+  height: 18px;
+
+  margin: 0;
+
+  accent-color: #5cc8ff;
+
+  cursor: pointer;
+}
+
+
+#editorPreviewSongInfo.is-hidden {
+  display: none;
+}
+
+
+#editorPreviewSongTitle.is-hidden,
+#editorPreviewSongArtist.is-hidden,
+#editorPreviewSongTime.is-hidden {
+  display: none;
+}
+
+
 /*
 #fontLibraryOverlay.is-font-dragging::after {
   content:

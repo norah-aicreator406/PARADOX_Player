@@ -3174,6 +3174,54 @@ body {
   box-shadow: none;
 }
 
+
+
+.screenRoutingGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.screenRoutingGroup + .screenRoutingGroup {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.screenRoutingTitle {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.screenRoutingOptions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.screenRoutingOptions label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.songInfoOutputOptions {
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+
+#screenPanel[aria-hidden="true"] {
+  display: none;
+}
+
+#screenPanel[aria-hidden="false"] {
+  display: block;
+}
+
 </style>
 </head>
 
@@ -3431,9 +3479,6 @@ body {
   <div class="buttonGroupTitle">出力</div>
 
   <div class="buttonRow">
-    <button class="nav" onclick="openVisualizer()">
-      🖥 Visualizer
-    </button>
 
     <button class="nav" onclick="openLyricsOutput()">
       📝 Lyrics
@@ -3952,156 +3997,248 @@ body {
 </div>
 
   <div class="bottomRightTools">
-  <button
-    onclick="copyCurrent()"
-    title="コピー"
-  >
-    コピー
-  </button>
 
   <button
-    onclick="openQueueModal()"
-    title="予約"
-  >
-    予約
-  </button>
+  onclick="openQueueModal()"
+  title="予約"
+>
+  予約
+</button>
 
-  <button
-    onclick="openVisualizer()"
-    title="Visualizer Outputを開く"
-  >
-    Visualizer
-  </button>
+<button
+  id="screenButton"
+  type="button"
+  title="スクリーン"
+  aria-expanded="false"
+>
+  スクリーン
+</button>
 
-  <button
-    onclick="openLyricsOutput()"
-    title="Lyrics Outputを開く"
-  >
-    Lyrics
-  </button>
+<button
+  id="outputRoutingButton"
+  type="button"
+  title="表示項目"
+  aria-expanded="false"
+>
+  表示項目
+</button>
 
-  <button
-    id="outputRoutingButton"
-    type="button"
-    title="表示先設定"
-    aria-expanded="false"
-  >
-    Output
-  </button>
-
-  <button
-    id="openBottomEditorButton"
-    title="Editor"
-  >
-    Editor
-  </button>
+<button
+  id="openBottomEditorButton"
+  title="Editor"
+>
+  Editor
+</button>
 </div>
-  
+
+<div
+  id="screenPanel"
+  class="outputRoutingPanel"
+  aria-hidden="true"
+>
+  <div class="outputRoutingHeader">
+    <div class="outputRoutingTitle">
+      スクリーン
+    </div>
+  </div>
+
+  <div class="outputRoutingContent">
+
+    <div class="screenRoutingGroup">
+      <div class="screenRoutingTitle">
+        Visualizer
+      </div>
+
+      <div class="screenRoutingOptions">
+        <label>
+          <input
+            type="radio"
+            name="visualizerScreen"
+            value="off"
+            checked
+          >
+          OFF
+        </label>
+
+        <label>
+          <input
+            type="radio"
+            name="visualizerScreen"
+            value="9:16"
+          >
+          9:16
+        </label>
+
+        <label>
+          <input
+            type="radio"
+            name="visualizerScreen"
+            value="16:9"
+          >
+          16:9
+        </label>
+      </div>
+    </div>
+
+    <div class="screenRoutingGroup">
+      <div class="screenRoutingTitle">
+        Lyrics Output
+      </div>
+
+      <div class="screenRoutingOptions">
+        <label>
+          <input
+            type="radio"
+            name="lyricsScreen"
+            value="off"
+            checked
+          >
+          OFF
+        </label>
+
+        <label>
+          <input
+            type="radio"
+            name="lyricsScreen"
+            value="9:16"
+          >
+          9:16
+        </label>
+
+        <label>
+          <input
+            type="radio"
+            name="lyricsScreen"
+            value="16:9"
+          >
+          16:9
+        </label>
+      </div>
+    </div>
+
+  </div>
+</div>
 <div
   id="outputRoutingPanel"
   class="outputRoutingPanel"
   aria-hidden="true"
 >
   <div class="outputRoutingHeader">
-    <div>
-      <div class="outputRoutingTitle">
-        Output Routing
-      </div>
-
-      <div class="outputRoutingDescription">
-        表示要素ごとに出力先を選択
-      </div>
+    <div class="outputRoutingTitle">
+      表示項目
     </div>
-
-    <button
-      id="closeOutputRoutingButton"
-      class="outputRoutingCloseButton"
-      type="button"
-      aria-label="閉じる"
-    >
-      ×
-    </button>
   </div>
 
   <div class="outputRoutingContent">
 
-    <section class="outputRoutingSection">
-      <div class="outputRoutingLabel">
-        <span>Lyrics</span>
+    <!-- 歌詞 -->
+    <div class="outputItemGroup">
+  <div class="screenRoutingTitle">
+    Lyrics
+  </div>
 
-        <small>
-          同期歌詞
-        </small>
-      </div>
+  <div class="screenRoutingOptions">
 
-      <div
-        class="outputRoutingOptions"
-        data-routing-component="lyrics"
+    <label>
+      <input
+        type="radio"
+        name="lyricsDestination"
+        value="off"
       >
-        <button
-          type="button"
-          class="outputRoutingOption"
-          data-routing-value="visualizer"
-        >
-          Visualizer
-        </button>
+      OFF
+    </label>
 
-        <button
-          type="button"
-          class="outputRoutingOption"
-          data-routing-value="lyrics"
-        >
-          Lyrics
-        </button>
-
-        <button
-          type="button"
-          class="outputRoutingOption"
-          data-routing-value="off"
-        >
-          OFF
-        </button>
-      </div>
-    </section>
-
-    <section class="outputRoutingSection">
-      <div class="outputRoutingLabel">
-        <span>Song Info</span>
-
-        <small>
-          曲名・アーティスト・時間
-        </small>
-      </div>
-
-      <div
-        class="outputRoutingOptions"
-        data-routing-component="songInfo"
+    <label>
+      <input
+        type="radio"
+        name="lyricsDestination"
+        value="visualizer"
+        checked
       >
-        <button
-          type="button"
-          class="outputRoutingOption"
-          data-routing-value="visualizer"
-        >
-          Visualizer
-        </button>
+      Visualizer
+    </label>
 
-        <button
-          type="button"
-          class="outputRoutingOption"
-          data-routing-value="lyrics"
-        >
-          Lyrics
-        </button>
+    <label>
+      <input
+        type="radio"
+        name="lyricsDestination"
+        value="lyrics"
+      >
+      Lyrics Output
+    </label>
 
-        <button
-          type="button"
-          class="outputRoutingOption"
-          data-routing-value="off"
-        >
-          OFF
-        </button>
+  </div>
+</div>
+
+
+    <!-- 曲情報 -->
+    <div class="outputItemGroup">
+      <div class="screenRoutingTitle">
+        Song Info
       </div>
-    </section>
+
+      <label>
+        <input
+          type="checkbox"
+          id="outputSongInfo"
+          checked
+        >
+        Song Infoを表示
+      </label>
+
+      <div class="screenRoutingOptions">
+
+        <label>
+          <input
+            type="checkbox"
+            id="outputVisualizer"
+            checked
+          >
+          Visualizer
+        </label>
+
+        <label>
+          <input
+            type="checkbox"
+            id="outputLyrics"
+            checked
+          >
+          Lyrics Output
+        </label>
+
+      </div>
+
+      <div class="songInfoOutputOptions">
+
+        <label>
+          <input
+            type="checkbox"
+            id="outputTitle"
+            checked
+          >
+          Title
+        </label>
+
+        <label>
+          <input
+            type="checkbox"
+            id="outputArtist"
+            checked
+          >
+          Artist
+        </label>
+
+        <label>
+          <input
+            type="checkbox"
+            id="outputTime"
+            checked
+          >
+          Time
+        </label>
+
+      </div>
+    </div>
 
   </div>
 </div>

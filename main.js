@@ -262,41 +262,27 @@ function openVisualizerWindow() {
   }
 
   visualizerWindow =
-  new BrowserWindow({
-    width: 540,
-    height: 960,
-    useContentSize: true,
-    title: 'PARADOX Visualizer',
-    backgroundColor: '#000000',
-    alwaysOnTop: true,
+    new BrowserWindow({
+      width: 540,
+      height: 960,
+      useContentSize: true,
+      title: 'PARADOX Visualizer',
+      backgroundColor: '#000000',
+      alwaysOnTop: true,
 
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
-    }
-  });
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false
+      }
+    });
 
-visualizerWindow.setAspectRatio(
-  9 / 16
-);
+  attachPerformanceShortcuts(
+    visualizerWindow
+  );
 
-visualizerWindow.setContentSize(
-  540,
-  960
-);
-
-visualizerWindow.on(
-  'resize',
-  enforceVisualizerContentRatio
-);
-
-attachPerformanceShortcuts(
-  visualizerWindow
-);
-
-visualizerWindow.loadFile(
-  'visualizer.html'
-);
+  visualizerWindow.loadFile(
+    'visualizer.html'
+  );
 
   visualizerWindow
     .webContents
@@ -650,6 +636,53 @@ lyricsOutputWindow
 }
 
 
+ipcMain.handle(
+  'set-lyrics-output-screen',
+  async (event, mode) => {
+    if (mode === 'off') {
+      if (
+        lyricsOutputWindow &&
+        !lyricsOutputWindow.isDestroyed()
+      ) {
+        lyricsOutputWindow.close();
+      }
+
+      return true;
+    }
+
+    currentLyricsOutputAspectRatio = mode;
+
+    openLyricsOutputWindow();
+
+    if (
+      !lyricsOutputWindow ||
+      lyricsOutputWindow.isDestroyed()
+    ) {
+      return false;
+    }
+
+    if (mode === '9:16') {
+      lyricsOutputWindow.setAspectRatio(9 / 16);
+      lyricsOutputWindow.setContentSize(540, 960);
+    }
+
+    if (mode === '16:9') {
+      lyricsOutputWindow.setAspectRatio(16 / 9);
+      lyricsOutputWindow.setContentSize(1280, 720);
+    }
+
+    lyricsOutputWindow.center();
+
+    lyricsOutputWindow.webContents.send(
+      'lyrics-output-aspect-ratio',
+      mode
+    );
+
+    return true;
+  }
+);
+
+
 
 function sendSongToVisualizer(song) {
   if (!visualizerWindow || visualizerWindow.isDestroyed()) return;
@@ -720,6 +753,11 @@ ipcMain.handle('get-songs', async () => {
 
   return result;
 });
+
+
+
+
+
 
 ipcMain.handle('get-backgrounds', async () => {
   const backgroundsDir = getBackgroundsDir();
@@ -1189,6 +1227,48 @@ ipcMain.handle('open-lyrics-output-window', async () => {
   openLyricsOutputWindow();
   return true;
 });
+
+ipcMain.handle(
+  'set-visualizer-screen',
+  async (event, mode) => {
+    if (mode === 'off') {
+      if (
+        visualizerWindow &&
+        !visualizerWindow.isDestroyed()
+      ) {
+        visualizerWindow.close();
+      }
+
+      return true;
+    }
+
+    openVisualizerWindow();
+
+    if (
+      !visualizerWindow ||
+      visualizerWindow.isDestroyed()
+    ) {
+      return false;
+    }
+
+    if (mode === '9:16') {
+      visualizerWindow.setAspectRatio(9 / 16);
+      visualizerWindow.setContentSize(540, 960);
+      visualizerWindow.center();
+      return true;
+    }
+
+    if (mode === '16:9') {
+      visualizerWindow.setAspectRatio(16 / 9);
+      visualizerWindow.setContentSize(1280, 720);
+      visualizerWindow.center();
+      return true;
+    }
+
+    return false;
+  }
+);
+
 
 
 ipcMain.handle(
