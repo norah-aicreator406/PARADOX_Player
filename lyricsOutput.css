@@ -584,6 +584,7 @@ body {
 
 /* ========================================
    Song Info
+   Visualizerと同一表示
 ======================================== */
 
 #lyricsOutputSongInfo {
@@ -591,7 +592,7 @@ body {
 
   position: absolute;
   left: 50%;
-  bottom: 105px;
+  bottom: 210px;
 
   width: 86%;
 
@@ -609,78 +610,84 @@ body {
 
 #lyricsOutputTitle {
   font-size: 56px;
-  line-height: 1.08;
-  font-weight: 800;
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 
   color: #ffffff;
 
   text-shadow:
-    0 0 8px rgba(255, 255, 255, .28),
-    0 0 18px rgba(124, 251, 255, .22);
+    0 0 12px rgba(255, 255, 255, 0.28),
+    0 0 28px rgba(124, 251, 255, 0.22);
 }
 
 #lyricsOutputArtist {
-  margin-top: 20px;
+  margin-top: 28px;
 
   font-size: 32px;
   font-weight: 900;
-  letter-spacing: .22em;
+  letter-spacing: 0.32em;
 
   color: #9f8cff;
-
-  /*
-   * 登録された表記を維持する。
-   */
   text-transform: none;
 
   text-shadow:
-    0 0 10px rgba(159, 140, 255, .62),
-    0 0 20px rgba(255, 79, 216, .22);
+    0 0 20px rgba(159, 140, 255, 0.62),
+    0 0 40px rgba(255, 79, 216, 0.22);
 }
 
 #lyricsOutputTime {
-  margin-top: 20px;
+  margin-top: 28px;
 
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: .08em;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
 
   color:
-    rgba(255, 255, 255, .86);
+    rgba(255, 255, 255, 0.82);
+
+  text-shadow:
+    0 0 20px
+    rgba(124, 251, 255, 0.15);
 }
 
 .lyricsOutputTimeDivider {
-  opacity: .45;
+  opacity: 0.45;
 }
 
 .lyricsOutputSongLine {
   width: 720px;
   max-width: 70%;
-  height: 1px;
+  height: 2px;
 
   margin:
-    0 auto 34px;
+    0 auto 48px;
 
   background:
     linear-gradient(
       90deg,
       transparent,
-      rgba(124, 251, 255, .9),
-      rgba(255, 79, 216, .65),
+      rgba(124, 251, 255, 0.9),
+      rgba(255, 79, 216, 0.65),
       transparent
     );
 
   box-shadow:
-    0 0 14px
-    rgba(124, 251, 255, .45);
+    0 0 28px
+    rgba(124, 251, 255, 0.45);
 }
 
 .lyricsOutputBottomLine {
   margin:
-    34px auto 0;
+    48px auto 0;
 
-  opacity: .75;
+  opacity: 0.75;
 }
+
+/* ========================================
+   Song Info
+   Visualizerと同一表示ここまで
+======================================== */
 
 
 .lyricsOutputBlock .lyricsLine,
