@@ -1774,13 +1774,7 @@ ipcRenderer.on('visualizer-enabled', (event, enabled) => {
   setVisualizerEnabled(enabled);
 });
 
-ipcRenderer.on('visualizer-brand-name', (event, brandName) => {
-  const brand = document.getElementById('brand');
 
-  const safeBrandName = String(brandName || '').trim() || 'PARADOX VISUALIZER';
-
-  brand.textContent = safeBrandName;
-});
 
 
 const TEMPLATE_CLASS_NAMES = [

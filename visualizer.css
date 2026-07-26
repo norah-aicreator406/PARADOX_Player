@@ -118,22 +118,6 @@ html, body {
     0 0 20px rgba(255,79,216,0.22);
 }
 
-#brand {
-  position: absolute;
-  top: 42px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 3;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.30em;
-  color: rgba(255,255,255,0.88);
-  text-shadow:
-    0 0 10px rgba(0,255,204,0.30),
-    0 0 22px rgba(0,255,204,0.18);
-  white-space: nowrap;
-}
-
 
 
 #bgImage {
@@ -1283,4 +1267,59 @@ body {
   mix-blend-mode: screen;
 
   will-change: opacity;
+}
+
+
+
+/* ========================================
+   Future Watermark Layer
+======================================== */
+
+#watermarkLayer {
+  display: none;
+
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  pointer-events: none;
+
+  /*
+   * 歌詞・Song Infoより上へ出せる
+   * 独立レイヤーとして予約する。
+   */
+  z-index: 200;
+}
+
+#watermarkLayer.is-visible {
+  display: block;
+}
+
+#watermarkItem {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+
+  transform:
+    translate(-50%, -50%)
+    translate(
+      var(--watermark-x, 0px),
+      var(--watermark-y, 0px)
+    )
+    rotate(
+      var(--watermark-rotation, 0deg)
+    )
+    scale(
+      var(--watermark-scale, 1)
+    );
+
+  transform-origin:
+    center center;
+
+  opacity:
+    var(--watermark-opacity, 0.15);
+
+  pointer-events: none;
 }
