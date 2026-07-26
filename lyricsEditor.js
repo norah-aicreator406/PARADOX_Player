@@ -1361,21 +1361,17 @@ function setupPreviewLyricsDrag() {
       }
 
 
-      const rect =
-        canvas.getBoundingClientRect();
+     const canvasScale =
+  window.NorahViewport
+    .getElementScale(
+      canvas
+    );
 
+const scaleX =
+  canvasScale.x;
 
-      /*
-       * Canvasの論理サイズに対する
-       * 現在の画面表示倍率。
-       */
-      const scaleX =
-        rect.width /
-        canvas.offsetWidth;
-
-      const scaleY =
-        rect.height /
-        canvas.offsetHeight;
+const scaleY =
+  canvasScale.y;
 
 
       if (
@@ -1405,17 +1401,19 @@ function setupPreviewLyricsDrag() {
       }
 
 
-      /*
-       * 画面上の移動量を、
-       * Canvas内部座標へ変換。
-       */
-      const deltaX =
-        mouseDeltaX /
-        scaleX;
+      const canvasDelta =
+  window.NorahViewport
+    .screenDeltaToCanvas(
+      canvas,
+      mouseDeltaX,
+      mouseDeltaY
+    );
 
-      const deltaY =
-        mouseDeltaY /
-        scaleY;
+const deltaX =
+  canvasDelta.x;
+
+const deltaY =
+  canvasDelta.y;
 
 
       const rawX =
@@ -4873,34 +4871,27 @@ function resizeEditorPreviewCanvas() {
       'editorPreviewCanvas'
     );
 
-  if (!stage || !canvas) return;
+  if (!stage || !canvas) {
+    return;
+  }
 
   const isWide =
     stage.classList.contains(
       'ratio-16-9'
     );
 
-  const baseWidth =
-    isWide ? 1920 : 1080;
+  const ratio =
+    isWide
+      ? '16:9'
+      : '9:16';
 
-  const baseHeight =
-    isWide ? 1080 : 1920;
-
-  canvas.style.width =
-    `${baseWidth}px`;
-
-  canvas.style.height =
-    `${baseHeight}px`;
-
-  const scale = Math.min(
-    stage.clientWidth / baseWidth,
-    stage.clientHeight / baseHeight
-  );
-
-  canvas.style.setProperty(
-    '--editor-preview-canvas-scale',
-    String(scale)
-  );
+  window.NorahViewport.fitCanvas({
+    container: stage,
+    canvas,
+    ratio,
+    cssVariable:
+      '--editor-preview-canvas-scale'
+  });
 }
 
 window.addEventListener(
