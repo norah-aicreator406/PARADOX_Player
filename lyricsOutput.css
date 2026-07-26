@@ -591,17 +591,29 @@ body {
   display: none;
 
   position: absolute;
+
   left: 50%;
-  bottom: 210px;
+  top: 50%;
 
-  width: 86%;
-
-  transform: translateX(-50%);
+  bottom: auto;
+  right: auto;
 
   text-align: center;
-  color: #ffffff;
+  width: max-content;
+  max-width: 90%;
 
-  pointer-events: none;
+  transform:
+    translate(-50%, -50%)
+    translate(
+      var(--song-info-x, 0px),
+      var(--song-info-y, 0px)
+    )
+    scale(var(--song-info-size-scale, 1));
+}
+
+:root {
+  --lyrics-output-scale: 0.5;
+  --song-info-size-scale: 1.25;
 }
 
 #lyricsOutputSongInfo.is-visible {

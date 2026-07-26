@@ -589,6 +589,7 @@ ipcRenderer.on(
       currentAspectRatio;
 
     resizeLyricsOutputCanvas();
+    applyLyricsOutputSongInfoPosition();
   }
 );
 
@@ -601,6 +602,65 @@ const songInfoElement =
   document.getElementById(
     'lyricsOutputSongInfo'
   );
+
+let currentSongInfoEditorSettings =
+  null;
+
+
+function applyLyricsOutputSongInfoPosition() {
+  if (
+    !currentSongInfoEditorSettings ||
+    !songInfoElement
+  ) {
+
+       console.warn(
+      '[Lyrics Output] Song Info position skipped',
+      {
+        settings:
+          currentSongInfoEditorSettings,
+        element:
+          songInfoElement
+      }
+    );
+
+
+    return;
+  }
+
+  const ratio =
+    currentAspectRatio === '16:9'
+      ? '16:9'
+      : '9:16';
+
+  const position =
+    currentSongInfoEditorSettings
+      ?.positionByRatio
+      ?.[ratio] || {
+        x: 0,
+        y: 0
+      };
+
+  const positionScale =
+    0.43;
+
+  const x =
+    (Number(position.x) || 0) *
+    positionScale;
+
+  const y =
+    (Number(position.y) || 0) *
+    positionScale;
+
+  songInfoElement.style.setProperty(
+    '--song-info-x',
+    `${x}px`
+  );
+
+  songInfoElement.style.setProperty(
+    '--song-info-y',
+    `${y}px`
+  );
+}
 
 const titleElement =
   document.getElementById(
@@ -621,6 +681,39 @@ const durationElement =
   document.getElementById(
     'lyricsOutputDuration'
   );
+
+
+function applyLyricsOutputSongInfoPosition() {
+  if (
+    !currentSongInfoEditorSettings ||
+    !songInfoElement
+  ) {
+    return;
+  }
+
+  const ratio = currentAspectRatio;
+
+  const position =
+    currentSongInfoEditorSettings
+      ?.positionByRatio?.[ratio] || {
+      x: 0,
+      y: 0
+    };
+
+  const scale = 1;
+
+  songInfoElement.style.setProperty(
+    '--song-info-x',
+    `${position.x * scale}px`
+  );
+
+  songInfoElement.style.setProperty(
+    '--song-info-y',
+    `${position.y * scale}px`
+  );
+}
+
+
 
 
 function updateSongInfo(
@@ -767,6 +860,32 @@ ipcRenderer.on(
     );
   }
 );
+
+
+
+
+
+ipcRenderer.on(
+  'lyrics-output-song-info-editor-settings',
+  (
+    event,
+    settings
+  ) => {
+
+
+     console.log(
+      '[Lyrics Output] Song Info settings received:',
+      settings
+    );
+
+
+    currentSongInfoEditorSettings =
+      settings || null;
+
+    applyLyricsOutputSongInfoPosition();
+  }
+);
+
 
 
 ipcRenderer.on(

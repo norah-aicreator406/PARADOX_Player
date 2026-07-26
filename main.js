@@ -167,6 +167,22 @@ const ARTIST_ORDER = [
 
 
 function sendSongInfoEditorSettings() {
+  const settings = {
+    ...currentSongInfoEditorSettings,
+
+    positionByRatio: {
+      '16:9': {
+        ...currentSongInfoEditorSettings
+          .positionByRatio?.['16:9']
+      },
+
+      '9:16': {
+        ...currentSongInfoEditorSettings
+          .positionByRatio?.['9:16']
+      }
+    }
+  };
+
   if (
     visualizerWindow &&
     !visualizerWindow.isDestroyed()
@@ -175,7 +191,7 @@ function sendSongInfoEditorSettings() {
       .webContents
       .send(
         'visualizer-song-info-editor-settings',
-        currentSongInfoEditorSettings
+        settings
       );
   }
 
@@ -187,7 +203,7 @@ function sendSongInfoEditorSettings() {
       .webContents
       .send(
         'lyrics-output-song-info-editor-settings',
-        currentSongInfoEditorSettings
+        settings
       );
   }
 }
