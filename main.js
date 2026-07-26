@@ -207,12 +207,12 @@ function loadSongInfoEditorSettings() {
         'utf8'
       );
 
-    const savedSettings =
+    const savedData =
       JSON.parse(fileText);
 
     if (
-      !savedSettings ||
-      typeof savedSettings !== 'object'
+      !savedData ||
+      typeof savedData !== 'object'
     ) {
       console.warn(
         '[Song Info] 保存データが不正なため初期値を使用します。'
@@ -220,6 +220,38 @@ function loadSongInfoEditorSettings() {
 
       return;
     }
+
+    /*
+      旧保存形式との互換性を残す。
+
+      旧形式:
+        Song Info設定そのもの
+
+      新形式:
+        {
+          editorSettings: {...},
+          items: {...}
+        }
+    */
+    const savedSettings =
+      savedData.editorSettings &&
+      typeof savedData.editorSettings ===
+        'object'
+        ? savedData.editorSettings
+        : savedData;
+
+    const savedItems =
+      savedData.items &&
+      typeof savedData.items === 'object'
+        ? savedData.items
+        : null;
+
+
+      const savedOutputRouting =
+  savedData.outputRouting &&
+  typeof savedData.outputRouting === 'object'
+    ? savedData.outputRouting
+    : null;
 
     currentSongInfoEditorSettings = {
       ...DEFAULT_SONG_INFO_EDITOR_SETTINGS,
@@ -244,9 +276,61 @@ function loadSongInfoEditorSettings() {
       }
     };
 
+    if (savedItems) {
+      currentSongInfoItems = {
+        title:
+          typeof savedItems.title ===
+          'boolean'
+            ? savedItems.title
+            : currentSongInfoItems.title,
+
+        artist:
+          typeof savedItems.artist ===
+          'boolean'
+            ? savedItems.artist
+            : currentSongInfoItems.artist,
+
+        time:
+          typeof savedItems.time ===
+          'boolean'
+            ? savedItems.time
+            : currentSongInfoItems.time
+      };
+    }
+
+    if (savedOutputRouting) {
+  const validDestinations = [
+    'off',
+    'visualizer',
+    'lyricsOutput'
+  ];
+
+  currentOutputRouting = {
+    lyrics:
+      validDestinations.includes(
+        savedOutputRouting.lyrics
+      )
+        ? savedOutputRouting.lyrics
+        : currentOutputRouting.lyrics,
+
+    songInfo:
+      validDestinations.includes(
+        savedOutputRouting.songInfo
+      )
+        ? savedOutputRouting.songInfo
+        : currentOutputRouting.songInfo
+  };
+}
+
     console.log(
       '[Song Info] 設定を読み込みました:',
-      currentSongInfoEditorSettings
+      {
+        editorSettings:
+          currentSongInfoEditorSettings,
+
+        items:
+          currentSongInfoItems
+      }
     );
   } catch (error) {
     console.error(
@@ -272,10 +356,36 @@ function saveSongInfoEditorSettings() {
       }
     );
 
+    const saveData = {
+  editorSettings: {
+    ...currentSongInfoEditorSettings,
+
+    positionByRatio: {
+      '16:9': {
+        ...currentSongInfoEditorSettings
+          .positionByRatio['16:9']
+      },
+
+      '9:16': {
+        ...currentSongInfoEditorSettings
+          .positionByRatio['9:16']
+      }
+    }
+  },
+
+  items: {
+    ...currentSongInfoItems
+  },
+
+  outputRouting: {
+    ...currentOutputRouting
+  }
+};
+
     fs.writeFileSync(
       filePath,
       JSON.stringify(
-        currentSongInfoEditorSettings,
+        saveData,
         null,
         2
       ),
@@ -1205,13 +1315,41 @@ ipcMain.handle(
           : currentSongInfoItems.time
     };
 
-    sendOutputVisibilityState();
+    /*
+  Title / Artist / Timeの表示状態も保存
+*/
+saveSongInfoEditorSettings();
 
+/*
+  VisualizerとLyrics Outputへ反映
+*/
+sendOutputVisibilityState();
+
+return {
+  ...currentSongInfoItems
+};
+  }
+);
+
+
+ipcMain.handle(
+  'get-song-info-items',
+  async () => {
     return {
       ...currentSongInfoItems
     };
   }
 );
+
+
+ipcMain.handle(
+  'get-visualizer-screen',
+  async () => {
+    return currentVisualizerScreen;
+  }
+);
+
+
 
 ipcMain.handle(
   'send-lyrics-to-visualizer',
@@ -1875,6 +2013,8 @@ ipcMain.handle(
       lyrics: nextLyrics,
       songInfo: nextSongInfo
     };
+
+    saveSongInfoEditorSettings();
 
     sendOutputVisibilityState();
 

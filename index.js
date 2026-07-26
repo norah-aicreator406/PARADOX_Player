@@ -695,27 +695,76 @@ function initializeScreenPanel() {
   );
 
   const visualizerScreenOptions =
-    document.querySelectorAll(
-      'input[name="visualizerScreen"]'
+  document.querySelectorAll(
+    'input[name="visualizerScreen"]'
+  );
+
+
+async function restoreVisualizerScreen() {
+  try {
+    const savedValue =
+      await ipcRenderer.invoke(
+        'get-visualizer-screen'
+      );
+
+    const targetRadio =
+      document.querySelector(
+        `input[name="visualizerScreen"][value="${savedValue}"]`
+      );
+
+    if (targetRadio) {
+      targetRadio.checked = true;
+    }
+
+    console.log(
+      '[Visualizer Screen] restore:',
+      savedValue
     );
+  } catch (error) {
+    console.error(
+      '[Visualizer Screen] 復元失敗:',
+      error
+    );
+  }
+}
 
-  visualizerScreenOptions.forEach(
-    (radio) => {
-      radio.addEventListener(
-        'change',
-        async () => {
-          if (!radio.checked) {
-            return;
-          }
 
-          await ipcRenderer.invoke(
-            'set-visualizer-screen',
-            radio.value
+visualizerScreenOptions.forEach(
+  (radio) => {
+    radio.addEventListener(
+      'change',
+      async () => {
+        if (!radio.checked) {
+          return;
+        }
+
+        try {
+          const result =
+            await ipcRenderer.invoke(
+              'set-visualizer-screen',
+              radio.value
+            );
+
+          console.log(
+            '[Visualizer Screen] saved:',
+            result
+          );
+        } catch (error) {
+          console.error(
+            '[Visualizer Screen] 保存失敗:',
+            error
           );
         }
-      );
-    }
-  );
+      }
+    );
+  }
+);
+
+
+/*
+  起動時に前回値を復元
+*/
+restoreVisualizerScreen();
 
   const lyricsScreenOptions =
     document.querySelectorAll(
@@ -748,27 +797,16 @@ const lyricsDestinationOptions =
   );
 
 lyricsDestinationOptions.forEach(
-  (radio) => {
+  radio => {
     radio.addEventListener(
       'change',
       async () => {
-        if (!radio.checked) {
-          return;
-        }
+        if (!radio.checked) return;
 
-        try {
-          await ipcRenderer.invoke(
-            'set-output-routing',
-            {
-              lyrics: radio.value
-            }
-          );
-        } catch (error) {
-          console.error(
-            '歌詞の表示先を変更できませんでした:',
-            error
-          );
-        }
+        await changeOutputRouting(
+          'lyrics',
+          radio.value
+        );
       }
     );
   }
@@ -781,34 +819,23 @@ const songInfoDestinationOptions =
   );
 
 songInfoDestinationOptions.forEach(
-  (radio) => {
+  radio => {
     radio.addEventListener(
       'change',
       async () => {
-        if (!radio.checked) {
-          return;
-        }
+        if (!radio.checked) return;
 
-        try {
-          await ipcRenderer.invoke(
-            'set-output-routing',
-            {
-              songInfo: radio.value
-            }
-          );
-        } catch (error) {
-          console.error(
-            'Song Infoの表示先を変更できませんでした:',
-            error
-          );
-        }
+        await changeOutputRouting(
+          'songInfo',
+          radio.value
+        );
       }
     );
   }
 );
 
 
-function initializeSongInfoItemControls() {
+async function initializeSongInfoItemControls() {
   const outputTitle =
     document.getElementById('outputTitle');
 
@@ -844,67 +871,158 @@ function initializeSongInfoItemControls() {
     return;
   }
 
-  async function updateSongInfoItems() {
-    const items = {
-      title: outputTitle.checked,
-      artist: outputArtist.checked,
-      time: outputTime.checked
-    };
+  async function restoreSongInfoItems() {
+  try {
+    const items =
+      await ipcRenderer.invoke(
+        'get-song-info-items'
+      );
 
     console.log(
-      '[Song Info Controls] send:',
+      '[Song Info Controls] restore:',
       items
     );
 
-    try {
-      const result =
-        await ipcRenderer.invoke(
-          'set-song-info-items',
-          items
-        );
-
-      console.log(
-        '[Song Info Controls] result:',
-        result
-      );
-    } catch (error) {
-      console.error(
-        '[Song Info Controls] IPC送信失敗:',
-        error
-      );
+    if (
+      !items ||
+      typeof items !== 'object'
+    ) {
+      return;
     }
+
+    if (
+      typeof items.title === 'boolean'
+    ) {
+      outputTitle.checked =
+        items.title;
+    }
+
+    if (
+      typeof items.artist === 'boolean'
+    ) {
+      outputArtist.checked =
+        items.artist;
+    }
+
+    if (
+      typeof items.time === 'boolean'
+    ) {
+      outputTime.checked =
+        items.time;
+    }
+  } catch (error) {
+    console.error(
+      '[Song Info Controls] 復元失敗:',
+      error
+    );
   }
-
-  outputTitle.addEventListener(
-    'change',
-    updateSongInfoItems
-  );
-
-  outputArtist.addEventListener(
-    'change',
-    updateSongInfoItems
-  );
-
-  outputTime.addEventListener(
-    'change',
-    updateSongInfoItems
-  );
-
-  console.log(
-    '[Song Info Controls] 初期化完了'
-  );
 }
 
-if (
-  document.readyState ===
-  'loading'
-) {
-  document.addEventListener(
-    'DOMContentLoaded',
-    initializeSongInfoItemControls
+async function restoreOutputRouting() {
+  try {
+    const routing =
+      await ipcRenderer.invoke(
+        'get-output-routing'
+      );
+
+    console.log(
+      '[Output Routing] restore:',
+      routing
+    );
+
+    if (
+      !routing ||
+      typeof routing !== 'object'
+    ) {
+      return;
+    }
+
+
+    const lyricsRadio =
+  document.querySelector(
+    `input[name="lyricsDestination"][value="${routing.lyrics}"]`
   );
-} else {
-  initializeSongInfoItemControls();
+
+if (lyricsRadio) {
+  lyricsRadio.checked = true;
+}
+
+    const songInfoRadio =
+      document.querySelector(
+        `input[name="songInfoDestination"][value="${routing.songInfo}"]`
+      );
+
+    if (songInfoRadio) {
+      songInfoRadio.checked = true;
+    }
+  } catch (error) {
+    console.error(
+      '[Output Routing] 復元失敗:',
+      error
+    );
+  }
+}
+
+
+async function updateSongInfoItems() {
+  const items = {
+    title: outputTitle.checked,
+    artist: outputArtist.checked,
+    time: outputTime.checked
+  };
+
+  console.log(
+    '[Song Info Controls] send:',
+    items
+  );
+
+  try {
+    const result =
+      await ipcRenderer.invoke(
+        'set-song-info-items',
+        items
+      );
+
+    console.log(
+      '[Song Info Controls] result:',
+      result
+    );
+  } catch (error) {
+    console.error(
+      '[Song Info Controls] IPC送信失敗:',
+      error
+    );
+  }
+}
+
+
+/*
+  保存済みのチェック状態を先に復元
+*/
+await restoreSongInfoItems();
+
+
+outputTitle.addEventListener(
+  'change',
+  updateSongInfoItems
+);
+
+outputArtist.addEventListener(
+  'change',
+  updateSongInfoItems
+);
+
+outputTime.addEventListener(
+  'change',
+  updateSongInfoItems
+);
+
+
+await restoreOutputRouting();
+
+console.log(
+  '[Song Info Controls] 初期化完了'
+);
 }
 
 
@@ -1072,6 +1190,7 @@ setLibrarySidebarCollapsed(
 
 
 initializeOutputRouting();
+initializeSongInfoItemControls();
 
 
 });
@@ -3007,11 +3126,15 @@ function toggleRandomPanel() {
 
 function renderRandomPanel() {
   const list = document.getElementById('randomArtistList');
+  console.log('renderRandomPanel list:', list);
+  console.log('renderRandomPanel data:', data);
+
   if (!list) return;
 
   list.innerHTML = '';
 
   const excludedArtists = getExcludedArtists();
+  console.log('excludedArtists:', excludedArtists);
 
   data.forEach(artistData => {
     const label = document.createElement('label');
@@ -3022,21 +3145,45 @@ function renderRandomPanel() {
     checkbox.checked = excludedArtists.includes(artistData.artist);
 
     checkbox.onchange = () => {
+      console.log(
+        'checkbox changed:',
+        artistData.artist,
+        checkbox.checked
+      );
+
       const currentExcluded = getExcludedArtists();
 
       let nextExcluded;
 
       if (checkbox.checked) {
-        nextExcluded = [...new Set([...currentExcluded, artistData.artist])];
+        nextExcluded = [
+          ...new Set([
+            ...currentExcluded,
+            artistData.artist
+          ])
+        ];
       } else {
-        nextExcluded = currentExcluded.filter(artist => artist !== artistData.artist);
+        nextExcluded =
+          currentExcluded.filter(
+            artist =>
+              artist !== artistData.artist
+          );
       }
 
-      localStorage.setItem('paradoxRandomExcludedArtists', JSON.stringify(nextExcluded));
+      console.log(
+        'saving excluded artists:',
+        nextExcluded
+      );
+
+      localStorage.setItem(
+        'paradoxRandomExcludedArtists',
+        JSON.stringify(nextExcluded)
+      );
     };
 
     const name = document.createElement('span');
-    name.textContent = `${artistData.artist} (${artistData.songs.length})`;
+    name.textContent =
+      `${artistData.artist} (${artistData.songs.length})`;
 
     label.appendChild(checkbox);
     label.appendChild(name);
