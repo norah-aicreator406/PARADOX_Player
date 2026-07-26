@@ -119,7 +119,9 @@ function applyVisualizerSongInfoPosition() {
   }
 
   const songInfo =
-    document.getElementById('songInfo');
+    document.getElementById(
+      'songInfo'
+    );
 
   if (!songInfo) {
     return;
@@ -136,14 +138,29 @@ function applyVisualizerSongInfoPosition() {
         y: 0
       };
 
+  /*
+   * EditorとVisualizerの
+   * Song Info移動距離を合わせる補正。
+   */
+  const positionScale =
+    0.43;
+
+  const x =
+    (Number(position.x) || 0) *
+    positionScale;
+
+  const y =
+    (Number(position.y) || 0) *
+    positionScale;
+
   songInfo.style.setProperty(
     '--song-info-x',
-    `${Number(position.x) || 0}px`
+    `${x}px`
   );
 
   songInfo.style.setProperty(
     '--song-info-y',
-    `${Number(position.y) || 0}px`
+    `${y}px`
   );
 }
 

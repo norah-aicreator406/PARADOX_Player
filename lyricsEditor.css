@@ -6811,6 +6811,57 @@ body.font-library-open
 }
 
 
+
+/* ==================================================
+   Song Info position coordinate fix
+   Editor / Visualizer 共通の中央基準
+================================================== */
+
+#editorPreviewSongInfo {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+  right: auto;
+  bottom: auto;
+
+  width: 86%;
+
+  transform:
+    translate(-50%, -50%)
+    translate(
+      var(--song-info-x, 0px),
+      var(--song-info-y, 0px)
+    );
+
+  transform-origin: center center;
+
+  z-index: 30;
+  box-sizing: border-box;
+
+  color: #ffffff;
+  text-align: center;
+
+  cursor: grab;
+  user-select: none;
+  pointer-events: auto;
+}
+
+
+#editorPreviewSongInfo {
+  left: 50%;
+  top: 50%;
+  bottom: auto;
+
+  transform:
+    translate(-50%, -50%)
+    translate(
+      var(--song-info-x, 0px),
+      var(--song-info-y, 0px)
+    );
+}
+
+
 /*
 #fontLibraryOverlay.is-font-dragging::after {
   content:

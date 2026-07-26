@@ -2834,26 +2834,21 @@ function setupPreviewObjectDrag({
       }
 
 
-      /*
-       * 画面上の移動量を
-       * 仮想キャンバス座標へ変換。
-       */
       const canvasDelta =
-        window.NorahViewport
-          .screenDeltaToCanvas(
-            canvas,
-            mouseDeltaX,
-            mouseDeltaY
-          );
+  window.NorahViewport
+    .screenDeltaToCanvas(
+      canvas,
+      mouseDeltaX,
+      mouseDeltaY
+    );
 
+const rawX =
+  startX +
+  canvasDelta.x;
 
-      const rawX =
-        startX +
-        canvasDelta.x;
-
-      const rawY =
-        startY +
-        canvasDelta.y;
+const rawY =
+  startY +
+  canvasDelta.y;
 
 
       let nextPosition = {
@@ -3022,8 +3017,6 @@ function setupSongInfoDrag() {
 
   sendSongInfoSettingsToOutputs();
 },
-
-
     snapToCenter:
       true
   });
