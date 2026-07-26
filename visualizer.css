@@ -85,16 +85,24 @@ html, body {
 
 #songInfo {
   position: absolute;
+
   left: 50%;
-  top: auto;
-  bottom: 105px;
-  transform: translateX(-50%);
-  z-index: 30;
+  top: 50%;
+  bottom: auto;
+
+  transform:
+    translate(-50%, -50%)
+    translate(
+      var(--song-info-x, 0px),
+      var(--song-info-y, 0px)
+    );
+
   width: 86%;
   text-align: center;
   pointer-events: none;
-  overflow: hidden;
+  z-index: 30;
 }
+
 
 #title {
   font-size: 28px;
@@ -402,7 +410,17 @@ html, body {
 
 #songInfo.is-changing {
   opacity: 0;
-  transform: translateX(-50%) translateY(18px);
+
+  transform:
+    translate(-50%, -50%)
+    translate(
+      var(--song-info-x, 0px),
+      calc(
+        var(--song-info-y, 0px) +
+        18px
+      )
+    );
+
   filter: blur(6px);
 }
 
@@ -1322,4 +1340,8 @@ body {
     var(--watermark-opacity, 0.15);
 
   pointer-events: none;
+}
+
+.output-routing-hidden {
+  display: none !important;
 }

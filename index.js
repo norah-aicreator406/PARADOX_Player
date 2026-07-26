@@ -774,6 +774,141 @@ lyricsDestinationOptions.forEach(
   }
 );
 
+
+const songInfoDestinationOptions =
+  document.querySelectorAll(
+    'input[name="songInfoDestination"]'
+  );
+
+songInfoDestinationOptions.forEach(
+  (radio) => {
+    radio.addEventListener(
+      'change',
+      async () => {
+        if (!radio.checked) {
+          return;
+        }
+
+        try {
+          await ipcRenderer.invoke(
+            'set-output-routing',
+            {
+              songInfo: radio.value
+            }
+          );
+        } catch (error) {
+          console.error(
+            'Song Infoの表示先を変更できませんでした:',
+            error
+          );
+        }
+      }
+    );
+  }
+);
+
+
+function initializeSongInfoItemControls() {
+  const outputTitle =
+    document.getElementById('outputTitle');
+
+  const outputArtist =
+    document.getElementById('outputArtist');
+
+  const outputTime =
+    document.getElementById('outputTime');
+
+  console.log(
+    '[Song Info Controls] elements:',
+    {
+      outputTitle,
+      outputArtist,
+      outputTime
+    }
+  );
+
+  if (
+    !outputTitle ||
+    !outputArtist ||
+    !outputTime
+  ) {
+    console.error(
+      '[Song Info Controls] チェックボックスが見つかりません',
+      {
+        outputTitle: Boolean(outputTitle),
+        outputArtist: Boolean(outputArtist),
+        outputTime: Boolean(outputTime)
+      }
+    );
+
+    return;
+  }
+
+  async function updateSongInfoItems() {
+    const items = {
+      title: outputTitle.checked,
+      artist: outputArtist.checked,
+      time: outputTime.checked
+    };
+
+    console.log(
+      '[Song Info Controls] send:',
+      items
+    );
+
+    try {
+      const result =
+        await ipcRenderer.invoke(
+          'set-song-info-items',
+          items
+        );
+
+      console.log(
+        '[Song Info Controls] result:',
+        result
+      );
+    } catch (error) {
+      console.error(
+        '[Song Info Controls] IPC送信失敗:',
+        error
+      );
+    }
+  }
+
+  outputTitle.addEventListener(
+    'change',
+    updateSongInfoItems
+  );
+
+  outputArtist.addEventListener(
+    'change',
+    updateSongInfoItems
+  );
+
+  outputTime.addEventListener(
+    'change',
+    updateSongInfoItems
+  );
+
+  console.log(
+    '[Song Info Controls] 初期化完了'
+  );
+}
+
+if (
+  document.readyState ===
+  'loading'
+) {
+  document.addEventListener(
+    'DOMContentLoaded',
+    initializeSongInfoItemControls
+  );
+} else {
+  initializeSongInfoItemControls();
+}
+
+
+
 if (
   document.readyState === 'loading'
 ) {

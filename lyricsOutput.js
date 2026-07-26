@@ -781,6 +781,68 @@ ipcRenderer.on(
   }
 );
 
+ipcRenderer.on(
+  'lyrics-output-song-info-items',
+  (
+    event,
+    items
+  ) => {
+    const title =
+      document.getElementById(
+        'lyricsOutputTitle'
+      );
+
+    const artist =
+      document.getElementById(
+        'lyricsOutputArtist'
+      );
+
+    const time =
+      document.getElementById(
+        'lyricsOutputTime'
+      );
+
+    console.log(
+      '[Lyrics Output Routing] Song Info Items:',
+      items
+    );
+
+    if (
+      !title ||
+      !artist ||
+      !time
+    ) {
+      console.warn(
+        '[Lyrics Output Routing] Song Info内の要素が見つかりません',
+        {
+          title: Boolean(title),
+          artist: Boolean(artist),
+          time: Boolean(time)
+        }
+      );
+
+      return;
+    }
+
+    title.classList.toggle(
+      'output-routing-hidden',
+      !Boolean(items?.title)
+    );
+
+    artist.classList.toggle(
+      'output-routing-hidden',
+      !Boolean(items?.artist)
+    );
+
+    time.classList.toggle(
+      'output-routing-hidden',
+      !Boolean(items?.time)
+    );
+  }
+);
+
+
+
 
 ipcRenderer.on(
   'lyrics-output-lyrics-visible',

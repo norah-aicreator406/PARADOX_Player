@@ -100,6 +100,81 @@ createVisualizerBars();
 
 const { ipcRenderer } = require('electron');
 
+
+let currentSongInfoEditorSettings =
+  null;
+
+
+function getVisualizerAspectRatio() {
+  return window.innerWidth >
+    window.innerHeight
+      ? '16:9'
+      : '9:16';
+}
+
+
+function applyVisualizerSongInfoPosition() {
+  if (!currentSongInfoEditorSettings) {
+    return;
+  }
+
+  const songInfo =
+    document.getElementById('songInfo');
+
+  if (!songInfo) {
+    return;
+  }
+
+  const ratio =
+    getVisualizerAspectRatio();
+
+  const position =
+    currentSongInfoEditorSettings
+      ?.positionByRatio
+      ?.[ratio] || {
+        x: 0,
+        y: 0
+      };
+
+  songInfo.style.setProperty(
+    '--song-info-x',
+    `${Number(position.x) || 0}px`
+  );
+
+  songInfo.style.setProperty(
+    '--song-info-y',
+    `${Number(position.y) || 0}px`
+  );
+}
+
+
+ipcRenderer.on(
+  'visualizer-song-info-editor-settings',
+  (
+    event,
+    settings
+  ) => {
+    currentSongInfoEditorSettings =
+      settings;
+
+    console.log(
+      '[Visualizer Song Info] settings received:',
+      settings
+    );
+
+    applyVisualizerSongInfoPosition();
+  }
+);
+
+
+window.addEventListener(
+  'resize',
+  () => {
+    applyVisualizerSongInfoPosition();
+  }
+);
+
+
 ipcRenderer.on(
   'font:updated',
   async () => {
@@ -2155,6 +2230,26 @@ function setVisualizerLyricsVisible(
 }
 
 
+
+ipcRenderer.on(
+  'visualizer-song-info-editor-settings',
+  (
+    event,
+    settings
+  ) => {
+    currentSongInfoEditorSettings =
+      settings;
+
+    console.log(
+      '[Visualizer Song Info] settings received:',
+      settings
+    );
+
+    applyVisualizerSongInfoPosition();
+  }
+);
+
+
 ipcRenderer.on(
   'visualizer-song-info-visible',
   (
@@ -2185,6 +2280,78 @@ ipcRenderer.on(
     );
   }
 );
+
+
+ipcRenderer.on(
+  'visualizer-song-info-items',
+  (
+    event,
+    items
+  ) => {
+    const title =
+      document.getElementById(
+        'title'
+      );
+
+    const artist =
+      document.getElementById(
+        'artist'
+      );
+
+    const timeInfo =
+      document.getElementById(
+        'timeInfo'
+      );
+
+    if (
+      !title ||
+      !artist ||
+      !timeInfo
+    ) {
+      console.warn(
+        '[Visualizer Routing] Song Info内の要素が見つかりません',
+        {
+          title: Boolean(title),
+          artist: Boolean(artist),
+          timeInfo: Boolean(timeInfo)
+        }
+      );
+
+      return;
+    }
+
+    title.classList.toggle(
+      'output-routing-hidden',
+      !Boolean(items?.title)
+    );
+
+    artist.classList.toggle(
+      'output-routing-hidden',
+      !Boolean(items?.artist)
+    );
+
+    timeInfo.classList.toggle(
+      'output-routing-hidden',
+      !Boolean(items?.time)
+    );
+
+    console.log(
+      '[Visualizer Routing] Song Info Items:',
+      {
+        title: Boolean(
+          items?.title
+        ),
+        artist: Boolean(
+          items?.artist
+        ),
+        time: Boolean(
+          items?.time
+        )
+      }
+    );
+  }
+);
+
 
 
 ipcRenderer.on(

@@ -4173,40 +4173,41 @@ body {
 
     <!-- 曲情報 -->
     <div class="outputItemGroup">
-      <div class="screenRoutingTitle">
-        Song Info
-      </div>
+  <div class="screenRoutingTitle">
+    Song Info
+  </div>
 
-      <label>
-        <input
-          type="checkbox"
-          id="outputSongInfo"
-          checked
-        >
-        Song Infoを表示
-      </label>
+  <div class="screenRoutingOptions">
 
-      <div class="screenRoutingOptions">
+    <label>
+      <input
+        type="radio"
+        name="songInfoDestination"
+        value="off"
+      >
+      OFF
+    </label>
 
-        <label>
-          <input
-            type="checkbox"
-            id="outputVisualizer"
-            checked
-          >
-          Visualizer
-        </label>
+    <label>
+      <input
+        type="radio"
+        name="songInfoDestination"
+        value="visualizer"
+        checked
+      >
+      Visualizer
+    </label>
 
-        <label>
-          <input
-            type="checkbox"
-            id="outputLyrics"
-            checked
-          >
-          Lyrics Output
-        </label>
+    <label>
+      <input
+        type="radio"
+        name="songInfoDestination"
+        value="lyrics"
+      >
+      Lyrics Output
+    </label>
 
-      </div>
+  </div>
 
       <div class="songInfoOutputOptions">
 

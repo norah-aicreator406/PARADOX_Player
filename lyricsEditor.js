@@ -2394,12 +2394,25 @@ function updateSongInfoInspector() {
 }
 
 
-function applySongInfoInspectorChange() {
+async function applySongInfoInspectorChange() {
   updateEditorSongInfoPreview();
 
   saveSongInfoSettingsLocally();
-}
 
+  try {
+    await ipcRenderer.invoke(
+      'set-song-info-editor-settings',
+      {
+        ...songInfoSettings
+      }
+    );
+  } catch (error) {
+    console.error(
+      '[Song Info Editor] 設定送信に失敗しました:',
+      error
+    );
+  }
+}
 
 songInfoVisibilityToggle
   ?.addEventListener(
@@ -3005,8 +3018,10 @@ function setupSongInfoDrag() {
 
 
     onDragEnd() {
-      saveSongInfoSettingsLocally();
-    },
+  saveSongInfoSettingsLocally();
+
+  sendSongInfoSettingsToOutputs();
+},
 
 
     snapToCenter:
@@ -9121,6 +9136,45 @@ if (addCustomFontButton) {
       }
     }
   );
+}
+
+
+
+async function sendSongInfoSettingsToOutputs() {
+  try {
+    const result =
+      await ipcRenderer.invoke(
+        'set-song-info-editor-settings',
+        {
+          ...songInfoSettings,
+
+          positionByRatio: {
+            '16:9': {
+              ...songInfoSettings
+                .positionByRatio
+                ['16:9']
+            },
+
+            '9:16': {
+              ...songInfoSettings
+                .positionByRatio
+                ['9:16']
+            }
+          }
+        }
+      );
+
+    console.log(
+      '[Editor] Song Info settings sent:',
+      songInfoSettings,
+      result
+    );
+  } catch (error) {
+    console.error(
+      '[Editor] Song Info settings send failed:',
+      error
+    );
+  }
 }
 
 

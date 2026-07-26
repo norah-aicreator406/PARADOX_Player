@@ -123,6 +123,39 @@ let currentOutputRouting = {
   songInfo: 'visualizer'
 };
 
+let currentSongInfoItems = {
+  title: true,
+  artist: true,
+  time: true
+};
+
+
+let currentSongInfoEditorSettings = {
+  visible: true,
+
+  title: '',
+
+  artist: '',
+
+  showTitle: true,
+
+  showArtist: true,
+
+  showTime: true,
+
+  positionByRatio: {
+    '16:9': {
+      x: 0,
+      y: 0
+    },
+
+    '9:16': {
+      x: 0,
+      y: 0
+    }
+  }
+};
+
 const ARTIST_ORDER = [
   'norah',
   'PELL',
@@ -131,6 +164,35 @@ const ARTIST_ORDER = [
   '柚季',
   'PARADOX'
 ];
+
+
+function sendSongInfoEditorSettings() {
+  if (
+    visualizerWindow &&
+    !visualizerWindow.isDestroyed()
+  ) {
+    visualizerWindow
+      .webContents
+      .send(
+        'visualizer-song-info-editor-settings',
+        currentSongInfoEditorSettings
+      );
+  }
+
+  if (
+    lyricsOutputWindow &&
+    !lyricsOutputWindow.isDestroyed()
+  ) {
+    lyricsOutputWindow
+      .webContents
+      .send(
+        'lyrics-output-song-info-editor-settings',
+        currentSongInfoEditorSettings
+      );
+  }
+}
+
+
 
 function getMusicDir() {
   let baseDir;
@@ -289,6 +351,8 @@ function openVisualizerWindow() {
     .once(
       'did-finish-load',
       () => {
+
+         
         /*
          * テーマを復元
          */
@@ -337,6 +401,7 @@ function openVisualizerWindow() {
               .songInfo ===
               'visualizer'
           );
+          sendSongInfoEditorSettings();
       }
     );
 
@@ -425,29 +490,54 @@ function enforceLyricsOutputContentRatio() {
 
 
 function sendOutputVisibilityState() {
+  const showSongInfoOnVisualizer =
+    currentOutputRouting.songInfo ===
+    'visualizer';
+
+  const showSongInfoOnLyricsOutput =
+    isLyricsOutputDestination(
+      'songInfo'
+    );
+
   if (
-  visualizerWindow &&
-  !visualizerWindow.isDestroyed()
-) {
-  visualizerWindow
-    .webContents
-    .send(
-      'visualizer-lyrics-visible',
-      currentOutputRouting
-        .lyrics ===
-        'visualizer'
-    );
+    visualizerWindow &&
+    !visualizerWindow.isDestroyed()
+  ) {
+    visualizerWindow
+      .webContents
+      .send(
+        'visualizer-lyrics-visible',
+        currentOutputRouting
+          .lyrics ===
+          'visualizer'
+      );
 
-  visualizerWindow
-    .webContents
-    .send(
-      'visualizer-song-info-visible',
-      currentOutputRouting
-        .songInfo ===
-        'visualizer'
-    );
-}
+    visualizerWindow
+      .webContents
+      .send(
+        'visualizer-song-info-visible',
+        showSongInfoOnVisualizer
+      );
 
+    visualizerWindow
+      .webContents
+      .send(
+        'visualizer-song-info-items',
+        {
+          title:
+            showSongInfoOnVisualizer &&
+            currentSongInfoItems.title,
+
+          artist:
+            showSongInfoOnVisualizer &&
+            currentSongInfoItems.artist,
+
+          time:
+            showSongInfoOnVisualizer &&
+            currentSongInfoItems.time
+        }
+      );
+  }
 
   if (
     lyricsOutputWindow &&
@@ -466,9 +556,26 @@ function sendOutputVisibilityState() {
       .webContents
       .send(
         'lyrics-output-song-info-visible',
-        isLyricsOutputDestination(
-          'songInfo'
-        )
+        showSongInfoOnLyricsOutput
+      );
+
+    lyricsOutputWindow
+      .webContents
+      .send(
+        'lyrics-output-song-info-items',
+        {
+          title:
+            showSongInfoOnLyricsOutput &&
+            currentSongInfoItems.title,
+
+          artist:
+            showSongInfoOnLyricsOutput &&
+            currentSongInfoItems.artist,
+
+          time:
+            showSongInfoOnLyricsOutput &&
+            currentSongInfoItems.time
+        }
       );
   }
 }
@@ -620,6 +727,8 @@ lyricsOutputWindow
       'songInfo'
     )
   );
+
+   sendSongInfoEditorSettings();
       }
     );
 
@@ -812,6 +921,96 @@ ipcMain.handle('send-background-to-visualizer', async (event, background) => {
   visualizerWindow.webContents.send('visualizer-background', background);
   return true;
 });
+
+
+
+
+
+ipcMain.handle(
+  'set-song-info-editor-settings',
+  async (
+    event,
+    settings
+  ) => {
+    if (
+      !settings ||
+      typeof settings !== 'object'
+    ) {
+      return {
+        ...currentSongInfoEditorSettings
+      };
+    }
+
+    currentSongInfoEditorSettings = {
+      ...currentSongInfoEditorSettings,
+      ...settings,
+
+      positionByRatio: {
+        ...currentSongInfoEditorSettings
+          .positionByRatio,
+
+        ...settings.positionByRatio,
+
+        '16:9': {
+          ...currentSongInfoEditorSettings
+            .positionByRatio['16:9'],
+
+          ...settings
+            .positionByRatio?.['16:9']
+        },
+
+        '9:16': {
+          ...currentSongInfoEditorSettings
+            .positionByRatio['9:16'],
+
+          ...settings
+            .positionByRatio?.['9:16']
+        }
+      }
+    };
+
+    sendSongInfoEditorSettings();
+
+    return {
+      ...currentSongInfoEditorSettings
+    };
+  }
+);
+
+
+ipcMain.handle(
+  'set-song-info-items',
+  async (
+    event,
+    items
+  ) => {
+    currentSongInfoItems = {
+      title:
+        typeof items?.title ===
+        'boolean'
+          ? items.title
+          : currentSongInfoItems.title,
+
+      artist:
+        typeof items?.artist ===
+        'boolean'
+          ? items.artist
+          : currentSongInfoItems.artist,
+
+      time:
+        typeof items?.time ===
+        'boolean'
+          ? items.time
+          : currentSongInfoItems.time
+    };
+
+    sendOutputVisibilityState();
+
+    return {
+      ...currentSongInfoItems
+    };
+  }
+);
 
 ipcMain.handle(
   'send-lyrics-to-visualizer',
