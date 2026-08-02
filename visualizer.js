@@ -308,16 +308,13 @@ if (coverImage && coverFrame) {
   if (coverUrl) {
     console.log('cover set:', coverUrl);
 
-    coverImage.onload = () => {
+   coverImage.onload = () => {
   console.log(
     'cover loaded:',
     coverUrl
   );
 
-  coverFrame.style.display =
-    effectSettings.cover > 0
-      ? 'block'
-      : 'none';
+  applyCoverVisibility();
 };
 
     coverImage.onerror = (error) => {
@@ -1947,6 +1944,45 @@ ipcRenderer.on('visualizer-template', (event, templateName) => {
   setVisualizerTemplate(templateName);
 });
 
+
+
+function applyCoverVisibility() {
+  const coverFrame =
+    document.getElementById(
+      'coverFrame'
+    );
+
+  const coverImage =
+    document.getElementById(
+      'coverImage'
+    );
+
+  if (!coverFrame) {
+    return;
+  }
+
+  const hasCoverImage =
+    Boolean(
+      coverImage?.getAttribute(
+        'src'
+      )
+    );
+
+  const coverEnabled =
+    Number(
+      effectSettings.cover
+    ) > 0;
+
+  coverFrame.style.display =
+    coverEnabled &&
+    hasCoverImage
+      ? 'block'
+      : 'none';
+}
+
+
+
+
 ipcRenderer.on(
   'visualizer-effect-settings',
   (
@@ -1966,56 +2002,35 @@ ipcRenderer.on(
     }
 
     effectSettings = {
-      spectrum:
-        Number(
-          settings.spectrum ?? 1
-        ),
+  ...effectSettings,
 
-      particles:
-        Number(
-          settings.particles ?? 1
-        ),
+  spectrum:
+    settings.spectrum !== undefined
+      ? Number(settings.spectrum)
+      : effectSettings.spectrum,
 
-      aurora:
-        Number(
-          settings.aurora ?? 1
-        ),
+  particles:
+    settings.particles !== undefined
+      ? Number(settings.particles)
+      : effectSettings.particles,
 
-      glow:
-        Number(
-          settings.glow ?? 1
-        ),
+  aurora:
+    settings.aurora !== undefined
+      ? Number(settings.aurora)
+      : effectSettings.aurora,
 
-      cover:
-        Number(
-          settings.cover ?? 1
-        )
-    };
+  glow:
+    settings.glow !== undefined
+      ? Number(settings.glow)
+      : effectSettings.glow,
 
-    const coverFrame =
-      document.getElementById(
-        'coverFrame'
-      );
+  cover:
+    settings.cover !== undefined
+      ? Number(settings.cover)
+      : effectSettings.cover
+};
 
-    const coverImage =
-      document.getElementById(
-        'coverImage'
-      );
-
-    if (coverFrame) {
-      const hasCoverImage =
-        Boolean(
-          coverImage?.getAttribute(
-            'src'
-          )
-        );
-
-      coverFrame.style.display =
-        effectSettings.cover > 0 &&
-        hasCoverImage
-          ? 'block'
-          : 'none';
-    }
+    applyCoverVisibility();
 
     console.log(
       '[Visualizer] effectSettings applied:',

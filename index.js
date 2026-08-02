@@ -1192,6 +1192,7 @@ setLibrarySidebarCollapsed(
 
 initializeOutputRouting();
 initializeSongInfoItemControls();
+loadEffectSettingsFromStorage();
 
 
 });
@@ -3914,6 +3915,42 @@ function applyEffectSettingsToInspector(
   sendEffectSettingsToVisualizer();
 }
 
+function loadEffectSettingsFromStorage() {
+  try {
+    const saved =
+      localStorage.getItem(
+        'paradoxEffectSettings'
+      );
+
+    if (!saved) {
+      applyEffectSettingsToInspector();
+      return;
+    }
+
+    const settings =
+      JSON.parse(saved);
+
+    applyEffectSettingsToInspector(
+      settings
+    );
+
+    console.log(
+      '[Effect Settings] restored:',
+      settings
+    );
+  } catch (error) {
+    console.warn(
+      '[Effect Settings] restore failed:',
+      error
+    );
+
+    applyEffectSettingsToInspector();
+  }
+}
+
+
+
+
 function setEffectControl(enabledId, strengthId, value) {
   const enabled = document.getElementById(enabledId);
   const strength = document.getElementById(strengthId);
@@ -3926,10 +3963,13 @@ function setEffectControl(enabledId, strengthId, value) {
 
 
 function loadEffectSettingsFromProject(song) {
-  if (!song?.projectPath || !fs.existsSync(song.projectPath)) {
-    applyEffectSettingsToInspector();
-    return;
-  }
+  if (
+  !song?.projectPath ||
+  !fs.existsSync(song.projectPath)
+) {
+  loadEffectSettingsFromStorage();
+  return;
+}
 
   try {
     const project = JSON.parse(fs.readFileSync(song.projectPath, 'utf-8'));
@@ -3938,7 +3978,7 @@ function loadEffectSettingsFromProject(song) {
     applyEffectSettingsToInspector(settings || {});
   } catch (error) {
     console.warn('Effect settings load failed:', error);
-    applyEffectSettingsToInspector();
+    loadEffectSettingsFromStorage();
   }
 }
 

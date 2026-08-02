@@ -93,6 +93,14 @@ let currentLyricsEditorData = null;
 let currentVisualTheme = null;
 let currentVisualizerScreen = 'off';
 
+let currentVisualizerEffectSettings = {
+  cover: 1,
+  spectrum: 1,
+  particles: 1,
+  aurora: 1,
+  glow: 1
+};
+
 
 /*
   Lyrics Outputを後から開いた場合でも、
@@ -620,6 +628,13 @@ function openVisualizerWindow() {
     .once(
       'did-finish-load',
       () => {
+
+        visualizerWindow
+  .webContents
+  .send(
+    'visualizer-effect-settings',
+    currentVisualizerEffectSettings
+  );
 
          
         /*
@@ -2216,12 +2231,66 @@ ipcMain.handle(
   }
 );
 
-ipcMain.handle('send-visualizer-effect-settings', async (event, settings) => {
-  if (!visualizerWindow || visualizerWindow.isDestroyed()) return false;
+ipcMain.handle(
+  'send-visualizer-effect-settings',
+  async (
+    event,
+    settings
+  ) => {
+    if (
+      settings &&
+      typeof settings === 'object'
+    ) {
+      currentVisualizerEffectSettings = {
+        ...currentVisualizerEffectSettings,
+        ...settings
+      };
+    }
 
-  visualizerWindow.webContents.send('visualizer-effect-settings', settings);
-  return true;
-});
+    if (
+      !visualizerWindow ||
+      visualizerWindow.isDestroyed()
+    ) {
+      return true;
+    }
+
+    if (
+      visualizerWindow
+        .webContents
+        .isLoading()
+    ) {
+      visualizerWindow
+        .webContents
+        .once(
+          'did-finish-load',
+          () => {
+            if (
+              visualizerWindow &&
+              !visualizerWindow.isDestroyed()
+            ) {
+              visualizerWindow
+                .webContents
+                .send(
+                  'visualizer-effect-settings',
+                  currentVisualizerEffectSettings
+                );
+            }
+          }
+        );
+
+      return true;
+    }
+
+    visualizerWindow
+      .webContents
+      .send(
+        'visualizer-effect-settings',
+        currentVisualizerEffectSettings
+      );
+
+    return true;
+  }
+);
 
 let currentVisualizerAspectRatio =
   '9:16';
