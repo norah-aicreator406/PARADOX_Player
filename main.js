@@ -91,6 +91,7 @@ let lyricsEditorWindow = null;
 
 let currentLyricsEditorData = null;
 let currentVisualTheme = null;
+let currentVisualizerScreen = 'off';
 
 
 /*
@@ -1769,6 +1770,9 @@ ipcMain.handle('open-lyrics-output-window', async () => {
 ipcMain.handle(
   'set-visualizer-screen',
   async (event, mode) => {
+    currentVisualizerScreen =
+      mode;
+
     if (mode === 'off') {
       if (
         visualizerWindow &&

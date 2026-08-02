@@ -100,7 +100,33 @@ window.ThemeManager = {
   opacity: 1
 }
 
+},
+
+
+neonGeometry: {
+  id: 'neonGeometry',
+  name: 'Neon Geometry',
+  description: '幾何学ネオン・オーディオリアクティブ',
+
+  glsl: {
+    enabled: true,
+    shader: 'neonGeometry'
+  },
+
+  particles: {
+    preset: 'default',
+    enabled: false
+  },
+
+  godRay: {
+    enabled: false
+  },
+
+  spectrum: {
+    color: 'default'
+  }
 }
+
 
   },
 

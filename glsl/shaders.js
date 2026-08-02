@@ -354,8 +354,734 @@ if (uv.y < frontMountain) {
 
       gl_FragColor = vec4(color, 1.0);
     }
+   `
+},
+
+neonGeometry: {
+  // 下記のコード
+  name: "Neon Geometry Core",
+
+  vertex: `
+    varying vec2 vUv;
+
+    void main() {
+      vUv = uv;
+
+      gl_Position =
+        projectionMatrix *
+        modelViewMatrix *
+        vec4(position, 1.0);
+    }
+  `,
+
+  fragment: `
+    precision highp float;
+
+    varying vec2 vUv;
+
+    uniform float uTime;
+    uniform vec2 uResolution;
+
+    uniform float uBass;
+    uniform float uMid;
+    uniform float uHigh;
+    uniform float uLevel;
+    uniform float uBeat;
+
+
+    const float PI =
+      3.14159265359;
+
+    const float TAU =
+      6.28318530718;
+
+
+    mat2 rotate2D(
+      float angle
+    ) {
+      float c =
+        cos(angle);
+
+      float s =
+        sin(angle);
+
+      return mat2(
+        c, -s,
+        s,  c
+      );
+    }
+
+
+    /*
+     * 指定半径に沿った発光リング。
+     */
+    float ring(
+      vec2 p,
+      float radius,
+      float width
+    ) {
+      float distanceFromRing =
+        abs(
+          length(p) -
+          radius
+        );
+
+      return width /
+        max(
+          distanceFromRing,
+          0.0008
+        );
+    }
+
+
+    /*
+     * 極座標上の多角形距離。
+     *
+     * sidesを6にすると六角形。
+     */
+    float polygonDistance(
+      vec2 p,
+      float sides,
+      float radius
+    ) {
+      float angle =
+        atan(
+          p.y,
+          p.x
+        );
+
+      float sector =
+        TAU /
+        sides;
+
+      float polygonRadius =
+        cos(
+          floor(
+            0.5 +
+            angle /
+            sector
+          ) *
+          sector -
+          angle
+        ) *
+        length(p);
+
+      return abs(
+        polygonRadius -
+        radius
+      );
+    }
+
+
+    /*
+     * 放射状の細い光線。
+     */
+    float radialLines(
+      vec2 p,
+      float count,
+      float sharpness
+    ) {
+      float angle =
+        atan(
+          p.y,
+          p.x
+        );
+
+      float lines =
+        abs(
+          sin(
+            angle *
+            count *
+            0.5
+          )
+        );
+
+      return pow(
+        max(
+          0.0,
+          1.0 -
+          lines
+        ),
+        sharpness
+      );
+    }
+
+
+    /*
+     * 中心付近の発光。
+     */
+    float centerGlow(
+      vec2 p,
+      float size
+    ) {
+      return size /
+        max(
+          dot(p, p),
+          0.001
+        );
+    }
+
+
+    /*
+     * 簡易ノイズ。
+     */
+    float hash(
+      vec2 p
+    ) {
+      return fract(
+        sin(
+          dot(
+            p,
+            vec2(
+              127.1,
+              311.7
+            )
+          )
+        ) *
+        43758.5453123
+      );
+    }
+
+
+    void main() {
+      vec2 uv =
+        vUv;
+
+      vec2 p =
+        uv -
+        0.5;
+
+      /*
+       * 縦長・横長の画面でも
+       * 図形が楕円にならないよう補正。
+       */
+      p.x *=
+        uResolution.x /
+        max(
+          uResolution.y,
+          1.0
+        );
+
+
+      /*
+       * 音声値を少し安全な範囲へ。
+       */
+      float bass =
+        clamp(
+          uBass,
+          0.0,
+          1.0
+        );
+
+      float mid =
+        clamp(
+          uMid,
+          0.0,
+          1.0
+        );
+
+      float high =
+        clamp(
+          uHigh,
+          0.0,
+          1.0
+        );
+
+      float level =
+        clamp(
+          uLevel,
+          0.0,
+          1.0
+        );
+
+      float beat =
+        clamp(
+          uBeat,
+          0.0,
+          1.0
+        );
+
+
+      /*
+       * BeatとBassで
+       * 図形全体を膨張させる。
+       */
+      float pulse =
+        bass * 0.11 +
+        beat * 0.16;
+
+      p *=
+        1.0 -
+        pulse;
+
+
+      /*
+       * 全体回転。
+       */
+      float rotation =
+        uTime * 0.12 +
+        mid * 0.45;
+
+      p =
+        rotate2D(
+          rotation
+        ) *
+        p;
+
+
+      float radius =
+        length(p);
+
+      float angle =
+        atan(
+          p.y,
+          p.x
+        );
+
+
+      /*
+       * 音に反応する輪郭の歪み。
+       */
+      float deformation =
+        sin(
+          angle * 6.0 +
+          uTime * 1.25
+        ) *
+        (
+          0.008 +
+          mid * 0.028
+        );
+
+      deformation +=
+        sin(
+          angle * 12.0 -
+          uTime * 1.8
+        ) *
+        (
+          0.003 +
+          high * 0.012
+        );
+
+
+      vec2 distortedP =
+        p *
+        (
+          1.0 +
+          deformation
+        );
+
+
+      /*
+       * 六角形のメイン輪郭。
+       */
+      float mainPolygonDistance =
+        polygonDistance(
+          distortedP,
+          6.0,
+          0.255 +
+          bass * 0.035
+        );
+
+      float mainPolygon =
+        0.0035 /
+        max(
+          mainPolygonDistance,
+          0.001
+        );
+
+
+      /*
+       * 内側の回転した六角形。
+       */
+      vec2 innerP =
+        rotate2D(
+          -uTime * 0.21
+        ) *
+        distortedP;
+
+      float innerPolygonDistance =
+        polygonDistance(
+          innerP,
+          6.0,
+          0.155 +
+          mid * 0.025
+        );
+
+      float innerPolygon =
+        0.0025 /
+        max(
+          innerPolygonDistance,
+          0.001
+        );
+
+
+      /*
+       * 外周リング。
+       */
+      float outerRing =
+        ring(
+          distortedP,
+          0.345 +
+          bass * 0.035,
+          0.0014 +
+          level * 0.0015
+        );
+
+
+      /*
+       * 内周リング。
+       */
+      float innerRing =
+        ring(
+          distortedP,
+          0.105 +
+          mid * 0.018,
+          0.0012 +
+          high * 0.001
+        );
+
+
+      /*
+       * 放射状ライン。
+       */
+      float rays =
+        radialLines(
+          distortedP,
+          18.0,
+          16.0
+        );
+
+      rays *=
+        smoothstep(
+          0.39,
+          0.12,
+          radius
+        );
+
+      rays *=
+        smoothstep(
+          0.055,
+          0.17,
+          radius
+        );
+
+      rays *=
+        0.16 +
+        high * 0.75;
+
+
+      /*
+       * 回転方向が逆の追加ライン。
+       */
+      vec2 reverseP =
+        rotate2D(
+          -uTime * 0.28
+        ) *
+        p;
+
+      float secondaryRays =
+        radialLines(
+          reverseP,
+          12.0,
+          22.0
+        );
+
+      secondaryRays *=
+        smoothstep(
+          0.31,
+          0.08,
+          length(reverseP)
+        );
+
+      secondaryRays *=
+        0.08 +
+        mid * 0.42;
+
+
+      /*
+       * 中央コア。
+       */
+      float core =
+        centerGlow(
+          p,
+          0.0018 +
+          beat * 0.0035
+        );
+
+
+      /*
+       * 周囲の淡い波紋。
+       */
+      float waveRadius =
+        fract(
+          uTime * 0.18
+        );
+
+      float wave =
+        0.0007 /
+        max(
+          abs(
+            radius -
+            (
+              0.08 +
+              waveRadius * 0.34
+            )
+          ),
+          0.002
+        );
+
+      wave *=
+        1.0 -
+        waveRadius;
+
+      wave *=
+        0.12 +
+        bass * 0.38;
+
+
+      /*
+       * 色設計。
+       */
+      vec3 cyan =
+        vec3(
+          0.02,
+          0.92,
+          1.0
+        );
+
+      vec3 violet =
+        vec3(
+          0.55,
+          0.08,
+          1.0
+        );
+
+      vec3 magenta =
+        vec3(
+          1.0,
+          0.04,
+          0.62
+        );
+
+      vec3 blue =
+        vec3(
+          0.03,
+          0.16,
+          1.0
+        );
+
+
+      float colorPosition =
+        0.5 +
+        0.5 *
+        sin(
+          angle * 3.0 +
+          uTime * 0.55
+        );
+
+      vec3 mainColor =
+        mix(
+          cyan,
+          violet,
+          colorPosition
+        );
+
+      vec3 secondaryColor =
+        mix(
+          magenta,
+          blue,
+          0.5 +
+          0.5 *
+          sin(
+            angle * 2.0 -
+            uTime * 0.7
+          )
+        );
+
+
+      /*
+       * 背景。
+       */
+      vec3 color =
+        vec3(
+          0.0015,
+          0.002,
+          0.012
+        );
+
+
+      /*
+       * 各レイヤーを合成。
+       */
+      color +=
+        mainColor *
+        mainPolygon *
+        (
+          0.45 +
+          level * 0.85
+        );
+
+      color +=
+        secondaryColor *
+        innerPolygon *
+        (
+          0.28 +
+          mid * 0.72
+        );
+
+      color +=
+        cyan *
+        outerRing *
+        (
+          0.28 +
+          bass * 0.70
+        );
+
+      color +=
+        magenta *
+        innerRing *
+        (
+          0.22 +
+          high * 0.65
+        );
+
+      color +=
+        mainColor *
+        rays;
+
+      color +=
+        secondaryColor *
+        secondaryRays;
+
+      color +=
+        mix(
+          violet,
+          cyan,
+          high
+        ) *
+        core *
+        (
+          0.18 +
+          beat * 0.85
+        );
+
+      color +=
+        cyan *
+        wave;
+
+
+      /*
+       * 外周に細かなデジタル粒子。
+       */
+      vec2 particleGrid =
+        floor(
+          uv *
+          uResolution.xy *
+          0.16
+        );
+
+      float particleNoise =
+        hash(
+          particleGrid
+        );
+
+      float particleMask =
+        step(
+          0.994 -
+          high * 0.012,
+          particleNoise
+        );
+
+      float particleArea =
+        smoothstep(
+          0.48,
+          0.12,
+          radius
+        );
+
+      color +=
+        mix(
+          cyan,
+          magenta,
+          particleNoise
+        ) *
+        particleMask *
+        particleArea *
+        (
+          0.2 +
+          high * 1.25
+        );
+
+
+      /*
+       * Beat時に白いハイライト。
+       */
+      color +=
+        vec3(1.0) *
+        beat *
+        (
+          mainPolygon +
+          outerRing
+        ) *
+        0.18;
+
+
+      /*
+       * 中央から少しだけ明るくする。
+       */
+      float radialLight =
+        smoothstep(
+          0.48,
+          0.0,
+          radius
+        );
+
+      color +=
+        mainColor *
+        radialLight *
+        (
+          0.018 +
+          level * 0.055
+        );
+
+
+      /*
+       * 画面端を暗くする。
+       */
+      float vignette =
+        smoothstep(
+          0.92,
+          0.16,
+          distance(
+            uv,
+            vec2(0.5)
+          )
+        );
+
+      color *=
+        vignette;
+
+
+      /*
+       * 明るすぎる部分を自然に圧縮。
+       */
+      color =
+        1.0 -
+        exp(
+          -color *
+          1.35
+        );
+
+
+      gl_FragColor =
+        vec4(
+          color,
+          1.0
+        );
+    }
   `
 }
+
 
 
 };

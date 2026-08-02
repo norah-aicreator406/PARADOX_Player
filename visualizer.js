@@ -688,7 +688,19 @@ ipcRenderer.on('visualizer-level', (event, visualizerData) => {
 
 updateCoverMotion(level, level);
 
-    return;
+window.NORAH_GLSL_ENGINE
+  ?.setAudioData({
+    bass: level,
+    mid: level,
+    high: level,
+    level,
+    beat:
+      level > 0.72
+        ? level
+        : 0
+  });
+
+return;
   }
 
   const bass = clampLevel(visualizerData?.bass);
@@ -715,6 +727,18 @@ latestVisualizerData = {
   bars: barValues
 };
 updateCoverMotion(bass, master);
+
+window.NORAH_GLSL_ENGINE
+  ?.setAudioData({
+    bass,
+    mid,
+    high,
+    level: master,
+    beat:
+      bass > 0.72
+        ? bass
+        : 0
+  });
 
 
 });
