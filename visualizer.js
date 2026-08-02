@@ -46,6 +46,7 @@ let effectSettings = {
   particles: 1,
   aurora: 1,
   glow: 1,
+  cover: 1,
   glsl: 0
 };
 
@@ -308,9 +309,16 @@ if (coverImage && coverFrame) {
     console.log('cover set:', coverUrl);
 
     coverImage.onload = () => {
-      console.log('cover loaded:', coverUrl);
-      coverFrame.style.display = 'block';
-    };
+  console.log(
+    'cover loaded:',
+    coverUrl
+  );
+
+  coverFrame.style.display =
+    effectSettings.cover > 0
+      ? 'block'
+      : 'none';
+};
 
     coverImage.onerror = (error) => {
       console.error(
@@ -924,6 +932,14 @@ function updateCoverMotion(bass, master) {
   const coverFrame = document.getElementById('coverFrame');
   if (!coverFrame) return;
 
+  if (effectSettings.cover <= 0) {
+    coverFrame.style.transform =
+      'translate(-50%, -50%)';
+
+    coverFrame.style.filter = 'none';
+    return;
+  }
+
   const scale = 1 + bass * 0.055 + master * 0.018;
   const brightness = 1 + master * 0.18;
 
@@ -1041,6 +1057,10 @@ if (glowPower <= 0) return;
 
 
 function drawCoverNeonRing(width, height) {
+
+  if (effectSettings.cover <= 0) {
+    return;
+  }
   const bass = latestVisualizerData.bass || 0;
   const mid = latestVisualizerData.mid || 0;
   const high = latestVisualizerData.high || 0;
@@ -1927,20 +1947,82 @@ ipcRenderer.on('visualizer-template', (event, templateName) => {
   setVisualizerTemplate(templateName);
 });
 
-ipcRenderer.on('visualizer-effect-settings', (event, settings) => {
-  console.log('[Visualizer] effect settings received:', settings);
+ipcRenderer.on(
+  'visualizer-effect-settings',
+  (
+    event,
+    settings
+  ) => {
+    console.log(
+      '[Visualizer] effect settings received:',
+      settings
+    );
 
-  if (!settings || typeof settings !== 'object') return;
+    if (
+      !settings ||
+      typeof settings !== 'object'
+    ) {
+      return;
+    }
 
-  effectSettings = {
-    spectrum: Number(settings.spectrum ?? 1),
-    particles: Number(settings.particles ?? 1),
-    aurora: Number(settings.aurora ?? 1),
-    glow: Number(settings.glow ?? 1)
-  };
+    effectSettings = {
+      spectrum:
+        Number(
+          settings.spectrum ?? 1
+        ),
 
-  console.log('[Visualizer] effectSettings applied:', effectSettings);
-});
+      particles:
+        Number(
+          settings.particles ?? 1
+        ),
+
+      aurora:
+        Number(
+          settings.aurora ?? 1
+        ),
+
+      glow:
+        Number(
+          settings.glow ?? 1
+        ),
+
+      cover:
+        Number(
+          settings.cover ?? 1
+        )
+    };
+
+    const coverFrame =
+      document.getElementById(
+        'coverFrame'
+      );
+
+    const coverImage =
+      document.getElementById(
+        'coverImage'
+      );
+
+    if (coverFrame) {
+      const hasCoverImage =
+        Boolean(
+          coverImage?.getAttribute(
+            'src'
+          )
+        );
+
+      coverFrame.style.display =
+        effectSettings.cover > 0 &&
+        hasCoverImage
+          ? 'block'
+          : 'none';
+    }
+
+    console.log(
+      '[Visualizer] effectSettings applied:',
+      effectSettings
+    );
+  }
+);
 
 
 let lyricsEditorControlsVisualizer = false;

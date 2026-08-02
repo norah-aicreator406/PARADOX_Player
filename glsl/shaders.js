@@ -740,6 +740,96 @@ neonGeometry: {
           high * 0.001
         );
 
+      /*
+ * 回転方向へ遅れて追従する残像。
+ * 奥へ行くほど薄く、大きくなる。
+ */
+vec2 trailP1 =
+  rotate2D(
+    -0.045 -
+    mid * 0.025
+  ) *
+  distortedP *
+  1.025;
+
+vec2 trailP2 =
+  rotate2D(
+    -0.095 -
+    mid * 0.040
+  ) *
+  distortedP *
+  1.055;
+
+vec2 trailP3 =
+  rotate2D(
+    -0.155 -
+    mid * 0.060
+  ) *
+  distortedP *
+  1.095;
+
+
+float trailPolygon1 =
+  0.0022 /
+  max(
+    polygonDistance(
+      trailP1,
+      6.0,
+      0.255 +
+      bass * 0.035
+    ),
+    0.001
+  );
+
+float trailPolygon2 =
+  0.0017 /
+  max(
+    polygonDistance(
+      trailP2,
+      6.0,
+      0.255 +
+      bass * 0.035
+    ),
+    0.001
+  );
+
+float trailPolygon3 =
+  0.0012 /
+  max(
+    polygonDistance(
+      trailP3,
+      6.0,
+      0.255 +
+      bass * 0.035
+    ),
+    0.001
+  );
+
+
+float trailRing1 =
+  ring(
+    trailP1,
+    0.345 +
+    bass * 0.035,
+    0.0009
+  );
+
+float trailRing2 =
+  ring(
+    trailP2,
+    0.345 +
+    bass * 0.035,
+    0.00065
+  );
+
+float trailRing3 =
+  ring(
+    trailP3,
+    0.345 +
+    bass * 0.035,
+    0.00045
+  );
+
 
       /*
        * 放射状ライン。
@@ -968,6 +1058,61 @@ neonGeometry: {
       color +=
         cyan *
         wave;
+
+
+      /*
+ * Trail合成。
+ * 音量と中音域で残像を少し強くする。
+ */
+float trailPower =
+  0.22 +
+  level * 0.22 +
+  mid * 0.18;
+
+color +=
+  mix(
+    violet,
+    cyan,
+    0.30
+  ) *
+  trailPolygon1 *
+  trailPower *
+  0.55;
+
+color +=
+  mix(
+    magenta,
+    violet,
+    0.45
+  ) *
+  trailPolygon2 *
+  trailPower *
+  0.34;
+
+color +=
+  blue *
+  trailPolygon3 *
+  trailPower *
+  0.20;
+
+
+color +=
+  cyan *
+  trailRing1 *
+  trailPower *
+  0.32;
+
+color +=
+  violet *
+  trailRing2 *
+  trailPower *
+  0.20;
+
+color +=
+  magenta *
+  trailRing3 *
+  trailPower *
+  0.12;
 
 
       /*

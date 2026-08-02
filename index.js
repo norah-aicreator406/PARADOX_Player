@@ -554,6 +554,7 @@ document.addEventListener('drop', (event) => {
 });
 
 [
+  'inspectorCoverEnabled',
   'inspectorSpectrumEnabled',
   'inspectorSpectrumStrength',
   'inspectorParticlesEnabled',
@@ -3344,6 +3345,14 @@ function getEffectValue(enabledId, strengthId) {
 
 function collectEffectSettings() {
   return {
+
+    cover:
+      document.getElementById(
+        'inspectorCoverEnabled'
+      )?.checked
+        ? 1
+        : 0,
+
     spectrum: getEffectValue(
       'inspectorSpectrumEnabled',
       'inspectorSpectrumStrength'
@@ -3848,18 +3857,59 @@ function saveCurrentEffectSettingsToProject(song = selectedLibrarySong) {
 }
 
 
-function applyEffectSettingsToInspector(settings = {}) {
+function applyEffectSettingsToInspector(
+  settings = {}
+) {
   const values = {
-    spectrum: settings.spectrum ?? 1,
-    particles: settings.particles ?? 1,
-    aurora: settings.aurora ?? 1,
-    glow: settings.glow ?? 1
+    cover:
+      settings.cover ?? 1,
+
+    spectrum:
+      settings.spectrum ?? 1,
+
+    particles:
+      settings.particles ?? 1,
+
+    aurora:
+      settings.aurora ?? 1,
+
+    glow:
+      settings.glow ?? 1
   };
 
-  setEffectControl('inspectorSpectrumEnabled', 'inspectorSpectrumStrength', values.spectrum);
-  setEffectControl('inspectorParticlesEnabled', 'inspectorParticlesStrength', values.particles);
-  setEffectControl('inspectorAuroraEnabled', 'inspectorAuroraStrength', values.aurora);
-  setEffectControl('inspectorGlowEnabled', 'inspectorGlowStrength', values.glow);
+  const coverEnabled =
+    document.getElementById(
+      'inspectorCoverEnabled'
+    );
+
+  if (coverEnabled) {
+    coverEnabled.checked =
+      Number(values.cover) > 0;
+  }
+
+  setEffectControl(
+    'inspectorSpectrumEnabled',
+    'inspectorSpectrumStrength',
+    values.spectrum
+  );
+
+  setEffectControl(
+    'inspectorParticlesEnabled',
+    'inspectorParticlesStrength',
+    values.particles
+  );
+
+  setEffectControl(
+    'inspectorAuroraEnabled',
+    'inspectorAuroraStrength',
+    values.aurora
+  );
+
+  setEffectControl(
+    'inspectorGlowEnabled',
+    'inspectorGlowStrength',
+    values.glow
+  );
 
   sendEffectSettingsToVisualizer();
 }
