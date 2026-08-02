@@ -413,6 +413,50 @@ neonGeometry: {
 
 
     /*
+ * 座標を扇形に折り畳み、
+ * 万華鏡のような左右対称を作る。
+ */
+vec2 kaleidoscope(
+  vec2 p,
+  float segments,
+  float rotation
+) {
+  float radius =
+    length(p);
+
+  float angle =
+    atan(
+      p.y,
+      p.x
+    ) +
+    rotation;
+
+  float sector =
+    TAU /
+    max(
+      segments,
+      1.0
+    );
+
+  angle =
+    mod(
+      angle +
+      sector * 0.5,
+      sector
+    ) -
+    sector * 0.5;
+
+  angle =
+    abs(angle);
+
+  return vec2(
+    cos(angle),
+    sin(angle)
+  ) * radius;
+}
+
+
+    /*
      * 指定半径に沿った発光リング。
      */
     float ring(
@@ -629,14 +673,28 @@ neonGeometry: {
         p;
 
 
-      float radius =
-        length(p);
+      /*
+ * 12方向の万華鏡座標。
+ *
+ * Midで少し回転量が増え、
+ * 時間経過でもゆっくり回転する。
+ */
+vec2 kaleidoP =
+  kaleidoscope(
+    p,
+    12.0,
+    uTime * 0.055 +
+    mid * 0.20
+  );
 
-      float angle =
-        atan(
-          p.y,
-          p.x
-        );
+float radius =
+  length(kaleidoP);
+
+float angle =
+  atan(
+    kaleidoP.y,
+    kaleidoP.x
+  );
 
 
       /*
@@ -664,11 +722,11 @@ neonGeometry: {
 
 
       vec2 distortedP =
-        p *
-        (
-          1.0 +
-          deformation
-        );
+  kaleidoP *
+  (
+    1.0 +
+    deformation
+  );
 
 
       /*
@@ -1226,6 +1284,8 @@ color +=
     }
   `
 }
+
+
 
 
 
