@@ -478,6 +478,33 @@ vec2 kaleidoscope(
     }
 
 
+    float glowLine(
+  float distanceValue,
+  float coreWidth,
+  float glowWidth,
+  float glowStrength
+) {
+  float core =
+    coreWidth /
+    max(
+      distanceValue,
+      0.0008
+    );
+
+  float softGlow =
+    glowWidth /
+    max(
+      distanceValue,
+      0.004
+    );
+
+  return
+    core +
+    softGlow *
+    glowStrength;
+}
+
+
     /*
      * 極座標上の多角形距離。
      *
@@ -681,13 +708,38 @@ float orbitSegments(
         );
 
 
+        /*
+ * 常時ゆっくり動く呼吸。
+ * 0.0〜1.0の範囲を往復する。
+ */
+float breathing =
+  0.5 +
+  0.5 *
+  sin(
+    uTime * 1.15
+  );
+
+/*
+ * 呼吸を少し滑らかな形にする。
+ */
+breathing =
+  breathing *
+  breathing *
+  (
+    3.0 -
+    2.0 *
+    breathing
+  );
+
+
       /*
        * BeatとBassで
        * 図形全体を膨張させる。
        */
       float pulse =
-        bass * 0.11 +
-        beat * 0.16;
+  bass * 0.11 +
+  beat * 0.16 +
+  breathing * 0.025;
 
       p *=
         1.0 -
@@ -731,6 +783,73 @@ float angle =
     kaleidoP.x
   );
 
+  /*
+ * 微細なノイズ揺らぎ。
+ * 線を少しだけ不均一にする。
+ */
+float microNoise =
+  hash(
+    floor(
+      (
+        kaleidoP +
+        vec2(
+          uTime * 0.018,
+          -uTime * 0.014
+        )
+      ) *
+      180.0
+    )
+  );
+
+microNoise =
+  (
+    microNoise -
+    0.5
+  ) *
+  2.0;
+
+  /*
+ * リングの円周上を流れるエネルギー。
+ *
+ * outerFlow:
+ * 外周を時計回りに流れる。
+ *
+ * innerFlow:
+ * 内周を逆方向に流れる。
+ */
+float outerFlow =
+  0.5 +
+  0.5 *
+  sin(
+    angle * 5.0 -
+    uTime * 1.45
+  );
+
+float innerFlow =
+  0.5 +
+  0.5 *
+  sin(
+    angle * 7.0 +
+    uTime * 1.85
+  );
+
+/*
+ * 明るい区間と暗い区間の差を強くする。
+ */
+outerFlow =
+  smoothstep(
+    0.20,
+    0.88,
+    outerFlow
+  );
+
+innerFlow =
+  smoothstep(
+    0.24,
+    0.90,
+    innerFlow
+  );
+
 
       /*
        * 音に反応する輪郭の歪み。
@@ -754,6 +873,14 @@ float angle =
           0.003 +
           high * 0.012
         );
+
+        deformation +=
+  microNoise *
+  (
+    0.0015 +
+    high * 0.0045 +
+    level * 0.0015
+  );
 
 
       vec2 distortedP =
@@ -788,6 +915,30 @@ vec2 trailOrbitP =
   ) *
   distortedP;
 
+  /*
+ * 奥行き用レイヤー。
+ *
+ * backDepthP:
+ * 少し大きく、遅く動く奥側の光。
+ *
+ * frontDepthP:
+ * 少し小さく、速く動く手前側の光。
+ */
+vec2 backDepthP =
+  rotate2D(
+    uTime * 0.045
+  ) *
+  distortedP *
+  0.86;
+
+vec2 frontDepthP =
+  rotate2D(
+    -uTime * 0.14 -
+    high * 0.08
+  ) *
+  innerOrbitP *
+  1.12;
+
 
 
       /*
@@ -798,15 +949,21 @@ vec2 trailOrbitP =
           distortedP,
           6.0,
           0.255 +
-          bass * 0.035
+          bass * 0.035 +
+          microNoise * 0.002
         );
 
       float mainPolygon =
-        0.0035 /
-        max(
-          mainPolygonDistance,
-          0.001
-        );
+  glowLine(
+    mainPolygonDistance,
+    0.0024,
+    0.0014,
+    0.42 +
+    level * 0.55 +
+    beat * 0.35 +
+    breathing * 0.16 +
+    microNoise * 0.08
+  );
 
 
       /*
@@ -820,27 +977,80 @@ vec2 trailOrbitP =
           innerP,
           6.0,
           0.155 +
-          mid * 0.025
+          mid * 0.025 +
+          microNoise * 0.0025
         );
 
       float innerPolygon =
-        0.0025 /
-        max(
-          innerPolygonDistance,
-          0.001
-        );
+  glowLine(
+    innerPolygonDistance,
+    0.0018,
+    0.0011,
+    0.34 +
+    mid * 0.46 +
+    high * 0.24 +
+    breathing * 0.10 +
+    microNoise * 0.05
+  );
+
+
+  /*
+ * 奥側レイヤー。
+ * 太くぼかして、暗く見せる。
+ */
+float backDepthDistance =
+  polygonDistance(
+    backDepthP,
+    6.0,
+    0.255 +
+    bass * 0.028
+  );
+
+float backDepthPolygon =
+  glowLine(
+    backDepthDistance,
+    0.00045,
+    0.0032,
+    0.62 +
+    breathing * 0.12
+  );
+
+
+/*
+ * 手前側レイヤー。
+ * 小さく、細く、明るい輪郭にする。
+ */
+float frontDepthDistance =
+  polygonDistance(
+    frontDepthP,
+    6.0,
+    0.155 +
+    mid * 0.020
+  );
+
+float frontDepthPolygon =
+  glowLine(
+    frontDepthDistance,
+    0.0010,
+    0.0013,
+    0.38 +
+    high * 0.32 +
+    beat * 0.18
+  );
 
 
       /*
        * 外周リング。
        */
-      float outerRing =
+     float outerRing =
   ring(
     distortedP,
     0.345 +
-    bass * 0.035,
-    0.0014 +
-    level * 0.0015
+    bass * 0.035 +
+    breathing * 0.012,
+    0.0010 +
+    level * 0.0012 +
+    outerFlow * 0.0010
   );
 
 float outerOrbitMask =
@@ -853,8 +1063,16 @@ float outerOrbitMask =
   );
 
 outerRing *=
-  0.28 +
-  outerOrbitMask * 0.95;
+  (
+    0.12 +
+    outerOrbitMask * 0.62 +
+    outerFlow * 0.78
+  );
+
+  outerRing *=
+  0.82 +
+  bass * 0.28 +
+  level * 0.16;
 
 
       /*
@@ -865,8 +1083,9 @@ outerRing *=
     innerOrbitP,
     0.105 +
     mid * 0.018,
-    0.0012 +
-    high * 0.001
+    0.00085 +
+    high * 0.0008 +
+    innerFlow * 0.00075
   );
 
 float innerOrbitMask =
@@ -879,8 +1098,16 @@ float innerOrbitMask =
   );
 
 innerRing *=
-  0.20 +
-  innerOrbitMask;
+  (
+    0.10 +
+    innerOrbitMask * 0.58 +
+    innerFlow * 0.84
+  );
+
+innerRing *=
+  0.78 +
+  mid * 0.24 +
+  high * 0.34;
 
       /*
  * 回転方向へ遅れて追従する残像。
@@ -911,16 +1138,20 @@ vec2 trailP3 =
   1.095;
 
 
+float trailDistance1 =
+  polygonDistance(
+    trailP1,
+    6.0,
+    0.255 +
+    bass * 0.035
+  );
+
 float trailPolygon1 =
-  0.0022 /
-  max(
-    polygonDistance(
-      trailP1,
-      6.0,
-      0.255 +
-      bass * 0.035
-    ),
-    0.001
+  glowLine(
+    trailDistance1,
+    0.0012,
+    0.0015,
+    0.30
   );
 
 float trailPolygon2 =
@@ -952,7 +1183,8 @@ float trailRing1 =
   ring(
     trailP1,
     0.345 +
-    bass * 0.035,
+    bass * 0.035 +
+    breathing * 0.012,
     0.0009
   );
 
@@ -960,7 +1192,8 @@ float trailRing2 =
   ring(
     trailP2,
     0.345 +
-    bass * 0.035,
+    bass * 0.035 +
+    breathing * 0.012,
     0.00065
   );
 
@@ -968,7 +1201,8 @@ float trailRing3 =
   ring(
     trailP3,
     0.345 +
-    bass * 0.035,
+    bass * 0.035 +
+    breathing * 0.012,
     0.00045
   );
 
@@ -1034,11 +1268,12 @@ float trailRing3 =
        * 中央コア。
        */
       float core =
-        centerGlow(
-          p,
-          0.0018 +
-          beat * 0.0035
-        );
+  centerGlow(
+    p,
+    0.0018 +
+    beat * 0.0035 +
+    breathing * 0.0012
+  );
 
 
       /*
@@ -1141,10 +1376,93 @@ float trailRing3 =
           0.012
         );
 
+      
+        float ambientGlow =
+  smoothstep(
+    0.52,
+    0.02,
+    radius
+  );
+
+ambientGlow *=
+  0.025 +
+  level * 0.075 +
+  beat * 0.045;
+
+color +=
+  mix(
+    violet,
+    cyan,
+    0.46
+  ) *
+  ambientGlow;
+
 
       /*
        * 各レイヤーを合成。
        */
+     
+      /*
+ * 奥側の光。
+ *
+ * 彩度と明るさを抑え、
+ * 少しぼやけた遠景として合成する。
+ */
+color +=
+  mix(
+    blue,
+    violet,
+    0.46
+  ) *
+  backDepthPolygon *
+  (
+    0.055 +
+    level * 0.070
+  );
+
+
+/*
+ * 奥側に薄い光の霧を追加。
+ */
+float depthHaze =
+  smoothstep(
+    0.48,
+    0.08,
+    length(backDepthP)
+  );
+
+color +=
+  mix(
+    violet,
+    cyan,
+    0.28
+  ) *
+  depthHaze *
+  (
+    0.010 +
+    level * 0.026
+  );
+
+
+/*
+ * 手前側の細い光。
+ *
+ * HighとBeatで鋭く反応させる。
+ */
+color +=
+  mix(
+    magenta,
+    cyan,
+    high
+  ) *
+  frontDepthPolygon *
+  (
+    0.10 +
+    high * 0.16 +
+    beat * 0.10
+  );
+
+
       color +=
         mainColor *
         mainPolygon *
