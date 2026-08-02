@@ -552,6 +552,41 @@ vec2 kaleidoscope(
 
 
     /*
+ * 円形リングを光の断片へ分割する。
+ * speedの正負で回転方向を変更できる。
+ */
+float orbitSegments(
+  vec2 p,
+  float count,
+  float speed,
+  float width
+) {
+  float angle =
+    atan(
+      p.y,
+      p.x
+    ) +
+    uTime * speed;
+
+  float pattern =
+    abs(
+      sin(
+        angle *
+        count *
+        0.5
+      )
+    );
+
+  return 1.0 -
+    smoothstep(
+      0.0,
+      width,
+      pattern
+    );
+}
+
+
+    /*
      * 中心付近の発光。
      */
     float centerGlow(
@@ -729,6 +764,32 @@ float angle =
   );
 
 
+  /*
+ * 各レイヤーを別々の速度・方向で回転させる。
+ */
+vec2 innerOrbitP =
+  rotate2D(
+    -uTime * 0.24 -
+    mid * 0.12
+  ) *
+  distortedP;
+
+vec2 rayOrbitP =
+  rotate2D(
+    uTime * 0.38 +
+    high * 0.16
+  ) *
+  distortedP;
+
+vec2 trailOrbitP =
+  rotate2D(
+    -uTime * 0.08 -
+    mid * 0.04
+  ) *
+  distortedP;
+
+
+
       /*
        * 六角形のメイン輪郭。
        */
@@ -752,10 +813,7 @@ float angle =
        * 内側の回転した六角形。
        */
       vec2 innerP =
-        rotate2D(
-          -uTime * 0.21
-        ) *
-        distortedP;
+  innerOrbitP;
 
       float innerPolygonDistance =
         polygonDistance(
@@ -777,26 +835,52 @@ float angle =
        * 外周リング。
        */
       float outerRing =
-        ring(
-          distortedP,
-          0.345 +
-          bass * 0.035,
-          0.0014 +
-          level * 0.0015
-        );
+  ring(
+    distortedP,
+    0.345 +
+    bass * 0.035,
+    0.0014 +
+    level * 0.0015
+  );
+
+float outerOrbitMask =
+  orbitSegments(
+    distortedP,
+    12.0,
+    0.75 +
+    mid * 0.35,
+    0.30
+  );
+
+outerRing *=
+  0.28 +
+  outerOrbitMask * 0.95;
 
 
       /*
        * 内周リング。
        */
       float innerRing =
-        ring(
-          distortedP,
-          0.105 +
-          mid * 0.018,
-          0.0012 +
-          high * 0.001
-        );
+  ring(
+    innerOrbitP,
+    0.105 +
+    mid * 0.018,
+    0.0012 +
+    high * 0.001
+  );
+
+float innerOrbitMask =
+  orbitSegments(
+    innerOrbitP,
+    8.0,
+    -1.15 -
+    high * 0.35,
+    0.34
+  );
+
+innerRing *=
+  0.20 +
+  innerOrbitMask;
 
       /*
  * 回転方向へ遅れて追従する残像。
@@ -807,7 +891,7 @@ vec2 trailP1 =
     -0.045 -
     mid * 0.025
   ) *
-  distortedP *
+  trailOrbitP *
   1.025;
 
 vec2 trailP2 =
@@ -815,7 +899,7 @@ vec2 trailP2 =
     -0.095 -
     mid * 0.040
   ) *
-  distortedP *
+  trailOrbitP *
   1.055;
 
 vec2 trailP3 =
@@ -823,7 +907,7 @@ vec2 trailP3 =
     -0.155 -
     mid * 0.060
   ) *
-  distortedP *
+  trailOrbitP *
   1.095;
 
 
@@ -893,11 +977,11 @@ float trailRing3 =
        * 放射状ライン。
        */
       float rays =
-        radialLines(
-          distortedP,
-          18.0,
-          16.0
-        );
+  radialLines(
+    rayOrbitP,
+    18.0,
+    16.0
+  );
 
       rays *=
         smoothstep(
