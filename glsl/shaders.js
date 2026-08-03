@@ -785,6 +785,53 @@ float angle =
     kaleidoP.x
   );
 
+/*
+ * Geometry Morph用の変形量。
+ */
+float petalMorph =
+  sin(
+    angle * 6.0 +
+    uTime * 0.65
+  ) *
+  (
+    0.012 +
+    bass * 0.022 +
+    beat * 0.018
+  );
+
+float crystalMorph =
+  sin(
+    angle * 12.0 -
+    uTime * 0.85
+  ) *
+  (
+    0.004 +
+    mid * 0.010
+  );
+
+float fineMorph =
+  sin(
+    angle * 24.0 +
+    uTime * 2.4
+  ) *
+  high *
+  0.003;
+
+/*
+ * 元のkaleidoPは壊さず、
+ * Morph用の座標だけを作る。
+ */
+vec2 morphedKaleidoP =
+  kaleidoP *
+  (
+    1.0 +
+    petalMorph +
+    crystalMorph +
+    fineMorph
+  );
+
+
+
   /*
  * 微細なノイズ揺らぎ。
  * 線を少しだけ不均一にする。
@@ -885,8 +932,8 @@ innerFlow =
   );
 
 
-      vec2 distortedP =
-  kaleidoP *
+    vec2 distortedP =
+  morphedKaleidoP *
   (
     1.0 +
     deformation
@@ -969,6 +1016,37 @@ vec2 frontDepthP =
     microNoise * 0.08
   );
 
+/*
+ * メイン六角形の輪郭上を流れる光。
+ */
+float mainEnergyFlow =
+  0.5 +
+  0.5 *
+  sin(
+    angle * 8.0 -
+    uTime * 2.2
+  );
+
+mainEnergyFlow =
+  smoothstep(
+    0.34,
+    0.94,
+    mainEnergyFlow
+  );
+
+float mainEnergyStream =
+  mainPolygon *
+  mainEnergyFlow *
+  (
+    0.22 +
+    mid * 0.28 +
+    high * 0.32 +
+    beat * 0.18
+  );
+
+
+
+
 
       /*
        * 内側の回転した六角形。
@@ -995,6 +1073,35 @@ vec2 frontDepthP =
     high * 0.24 +
     breathing * 0.10 +
     microNoise * 0.05
+  );
+
+
+
+  /*
+ * 内側は逆方向・少し高速。
+ */
+float innerEnergyFlow =
+  0.5 +
+  0.5 *
+  sin(
+    angle * 11.0 +
+    uTime * 2.8
+  );
+
+innerEnergyFlow =
+  smoothstep(
+    0.38,
+    0.95,
+    innerEnergyFlow
+  );
+
+float innerEnergyStream =
+  innerPolygon *
+  innerEnergyFlow *
+  (
+    0.18 +
+    high * 0.38 +
+    beat * 0.16
   );
 
 
@@ -1475,6 +1582,20 @@ mainPolygon *
 level * 0.90
 );
 
+/*
+ * メイン輪郭を走るシアン寄りの電流。
+ */
+color +=
+  mix(
+    cyan,
+    magenta,
+    mainEnergyFlow
+  ) *
+  mainEnergyStream *
+  0.95;
+
+
+
       color +=
         secondaryColor *
         innerPolygon *
@@ -1482,6 +1603,19 @@ level * 0.90
           0.28 +
           mid * 0.72
         );
+
+       /*
+ * 内側を逆方向へ走る細い電流。
+ */
+color +=
+  mix(
+    magenta,
+    cyan,
+    innerEnergyFlow
+  ) *
+  innerEnergyStream *
+  0.82;
+
 
         vec3 ringColor =
   mix(
