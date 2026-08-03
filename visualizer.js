@@ -1053,6 +1053,10 @@ if (glowPower <= 0) return;
 }
 
 
+let ringRotation = 0;
+let ringRotationSpeed = 0;
+
+
 function drawCoverNeonRing(width, height) {
 
   if (effectSettings.cover <= 0) {
@@ -1069,8 +1073,15 @@ function drawCoverNeonRing(width, height) {
   const isWide = width > height;
   const radius = isWide ? 112 : 104;
 
-  const time = Date.now() * 0.001;
-  const rotation = time * 0.35;
+  ringRotationSpeed +=
+  bass * 0.0015 +
+  mid * 0.0010 +
+  high * 0.0008;
+
+ringRotationSpeed *= 0.985;
+
+ringRotation +=
+  ringRotationSpeed;
 
   spectrumCtx.save();
   spectrumCtx.globalCompositeOperation = 'screen';
@@ -1098,7 +1109,22 @@ spectrumCtx.fillRect(0, 0, width, height);
 const lineWidth = 2.8 - i * 0.28 + master * 2.6;
 const alpha = 0.42 - i * 0.07 + master * 0.30;
 
-    const gradient = spectrumCtx.createConicGradient(rotation + i * 0.9, centerX, centerY);
+    const direction =
+  i % 2 === 0
+    ? 1
+    : -1;
+
+const currentRotation =
+    ringRotation *
+    direction +
+    i * 0.9;
+
+const gradient =
+  spectrumCtx.createConicGradient(
+    currentRotation,
+    centerX,
+    centerY
+  );
 
     gradient.addColorStop(0.00, `rgba(124,251,255,${alpha})`);
     gradient.addColorStop(0.28, `rgba(47,123,255,${alpha * 0.72})`);
