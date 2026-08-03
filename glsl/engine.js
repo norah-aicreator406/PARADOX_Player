@@ -1,5 +1,29 @@
 const THREE = require('three');
 
+const {
+  EffectComposer
+} = require(
+  'three/examples/jsm/postprocessing/EffectComposer.js'
+);
+
+const {
+  RenderPass
+} = require(
+  'three/examples/jsm/postprocessing/RenderPass.js'
+);
+
+const {
+  UnrealBloomPass
+} = require(
+  'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+);
+
+const {
+  OutputPass
+} = require(
+  'three/examples/jsm/postprocessing/OutputPass.js'
+);
+
 window.NORAH_GLSL_ENGINE = {
   initialized: false,
   enabled: false,
@@ -9,6 +33,8 @@ window.NORAH_GLSL_ENGINE = {
   clock: null,
   animationId: null,
   mesh: null,
+
+  composer: null,
 
   audioData: {
   bass: 0,
@@ -32,7 +58,16 @@ window.NORAH_GLSL_ENGINE = {
       antialias: true
     });
 
+    console.log("Renderer OK");
+
     this.renderer.setPixelRatio(window.devicePixelRatio || 1);
+
+console.log(
+  "Three revision:",
+  THREE.REVISION
+);
+
+
     this.renderer.setSize(window.innerWidth, window.innerHeight);
 
     this.scene = new THREE.Scene();
@@ -49,6 +84,16 @@ window.NORAH_GLSL_ENGINE = {
     this.clock = new THREE.Clock();
 
     this.createScene();
+   
+    this.renderer.outputColorSpace =
+    THREE.SRGBColorSpace;
+
+    this.renderer.toneMapping =
+    THREE.ACESFilmicToneMapping;
+
+    this.renderer.toneMappingExposure =
+    1.15;
+
 
     this.initialized = true;
     this.setEnabled(false);
@@ -344,46 +389,38 @@ if (uniforms.uRotationBoost) {
 },
 
 animate() {
+
   this.animationId =
     requestAnimationFrame(
       () => this.animate()
     );
 
-  const now =
-    performance.now();
+  if (!this.enabled) return;
 
-  /*
-   * 前フレームから経過した秒数。
-   * ウィンドウ停止後などの急激な値は0.05秒に制限する。
-   */
   const deltaSeconds =
-    Math.min(
-      Math.max(
-        (
-          now -
-          this.lastFrameTime
-        ) /
-        1000,
-        0
-      ),
-      0.05
-    );
-
-  this.lastFrameTime =
-    now;
-
-  if (!this.enabled) {
-    return;
-  }
+    this.clock.getDelta();
 
   this.update(
     deltaSeconds
   );
 
+  this.renderPipeline();
+},
+
+renderPipeline() {
+
+  this.renderScene();
+
+},
+
+
+renderScene() {
+
   this.renderer.render(
     this.scene,
     this.camera
   );
+
 },
 
 };

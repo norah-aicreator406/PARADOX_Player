@@ -460,23 +460,46 @@ vec2 kaleidoscope(
     /*
      * 指定半径に沿った発光リング。
      */
-    float ring(
-      vec2 p,
-      float radius,
-      float width
-    ) {
-      float distanceFromRing =
-        abs(
-          length(p) -
-          radius
+   float ring(
+    vec2 p,
+    float radius,
+    float width
+){
+    float distanceFromRing =
+        abs(length(p) - radius);
+
+    float aa =
+        max(
+            fwidth(distanceFromRing),
+            0.00035
         );
 
-      return width /
-        max(
-          distanceFromRing,
-          0.0008
+    float core =
+        1.0 -
+        smoothstep(
+            width,
+            width + aa,
+            distanceFromRing
         );
-    }
+
+    float glow =
+        1.0 -
+        smoothstep(
+            width * 3.0,
+            width * 3.0 + aa * 3.0,
+            distanceFromRing
+        );
+
+    float halo =
+        exp(
+            -distanceFromRing * 260.0
+        );
+
+    return
+        core * 1.45 +
+        glow * 0.40 +
+        halo * 0.10;
+}
 
 
     float glowLine(
@@ -1050,20 +1073,34 @@ vec2 frontDepthP =
 /*
  * メイン六角形の輪郭上を流れる光。
  */
-float mainEnergyFlow =
-  0.5 +
-  0.5 *
-  sin(
-    angle * 8.0 -
-    uTime * 2.2
-  );
+float mainFlowSpeed =
+    2.2 +
+    bass * 0.8 +
+    beat * 2.0;
 
+float mainEnergyFlow =
+    0.5 +
+    0.5 *
+    sin(
+        angle * 8.0 -
+        uTime * mainFlowSpeed
+    );
 mainEnergyFlow =
   smoothstep(
     0.34,
     0.94,
     mainEnergyFlow
   );
+
+
+  float mainTrail =
+    pow(
+        max(
+            0.0,
+            mainEnergyFlow - 0.25
+        ),
+        3.5
+    );
 
 float mainEnergyStream =
   mainPolygon *
@@ -1134,13 +1171,18 @@ float mainHotspot =
   /*
  * 内側は逆方向・少し高速。
  */
+float innerFlowSpeed =
+    2.8 +
+    high * 1.2 +
+    beat * 2.5;
+
 float innerEnergyFlow =
-  0.5 +
-  0.5 *
-  sin(
-    angle * 11.0 +
-    uTime * 2.8
-  );
+    0.5 +
+    0.5 *
+    sin(
+        angle * 11.0 +
+        uTime * innerFlowSpeed
+    );
 
 innerEnergyFlow =
   smoothstep(
@@ -1389,28 +1431,36 @@ float trailPolygon1 =
     0.30
   );
 
+float trailDistance2 =
+  polygonDistance(
+    trailP2,
+    6.0,
+    0.255 +
+    bass * 0.035
+  );
+
 float trailPolygon2 =
-  0.0017 /
-  max(
-    polygonDistance(
-      trailP2,
-      6.0,
-      0.255 +
-      bass * 0.035
-    ),
-    0.001
+  glowLine(
+    trailDistance2,
+    0.0009,
+    0.0012,
+    0.26
+  );
+
+float trailDistance3 =
+  polygonDistance(
+    trailP3,
+    6.0,
+    0.255 +
+    bass * 0.035
   );
 
 float trailPolygon3 =
-  0.0012 /
-  max(
-    polygonDistance(
-      trailP3,
-      6.0,
-      0.255 +
-      bass * 0.035
-    ),
-    0.001
+  glowLine(
+    trailDistance3,
+    0.0007,
+    0.0010,
+    0.22
   );
 
 
@@ -1723,17 +1773,20 @@ color +=
  * 白に少しシアンを混ぜた高温の光。
  */
 color +=
-  mix(
+mix(
     vec3(1.0),
     cyan,
     0.18
-  ) *
-  mainHotspot *
-  (
+) *
+(
+    mainHotspot +
+    mainTrail * 0.35
+) *
+(
     0.62 +
     high * 0.38 +
     beat * 0.36
-  );
+);
 
 
 
@@ -2078,6 +2131,16 @@ color =
     color,
     vec3(1.18)
   );
+
+  color = mix(
+    color,
+    smoothstep(
+        vec3(0.0),
+        vec3(1.0),
+        color
+    ),
+    0.28
+);
 
 
       gl_FragColor =
