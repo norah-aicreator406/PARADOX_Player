@@ -480,29 +480,60 @@ vec2 kaleidoscope(
 
 
     float glowLine(
-  float distanceValue,
-  float coreWidth,
-  float glowWidth,
-  float glowStrength
-) {
-  float core =
-    coreWidth /
-    max(
-      distanceValue,
-      0.0008
-    );
+    float distanceValue,
+    float coreWidth,
+    float glowWidth,
+    float glowStrength
+){
+    /*
+     * GPUが現在のピクセルサイズを取得。
+     * 解像度に依存しない滑らかな線になる。
+     */
+    float aa =
+        max(
+            fwidth(distanceValue),
+            0.00035
+        );
 
-  float softGlow =
-    glowWidth /
-    max(
-      distanceValue,
-      0.004
-    );
+    /*
+     * 白い芯
+     */
+    float core =
+        1.0 -
+        smoothstep(
+            coreWidth,
+            coreWidth + aa,
+            distanceValue
+        );
 
-  return
-    core +
-    softGlow *
-    glowStrength;
+    /*
+     * ネオン層
+     */
+    float glow =
+        1.0 -
+        smoothstep(
+            glowWidth,
+            glowWidth + aa * 3.0,
+            distanceValue
+        );
+
+    /*
+     * 外側のHalo
+     */
+    float halo =
+        exp(
+            -distanceValue *
+            420.0
+        );
+
+    return
+        core * 1.55 +
+        glow *
+        glowStrength *
+        0.55 +
+        halo *
+        glowStrength *
+        0.12;
 }
 
 
@@ -1211,6 +1242,28 @@ float frontDepthPolygon =
     outerFlow * 0.0010
   );
 
+  /*
+ * 外周リングを3層構造にする。
+ */
+
+float outerRingGlow =
+ring(
+    distortedP,
+    0.345 +
+    bass * 0.035 +
+    breathing * 0.012,
+    0.0035
+);
+
+float outerRingHalo =
+ring(
+    distortedP,
+    0.345 +
+    bass * 0.035 +
+    breathing * 0.012,
+    0.0075
+);
+
 float outerOrbitMask =
   orbitSegments(
     distortedP,
@@ -1231,6 +1284,30 @@ outerRing *=
   0.82 +
   bass * 0.28 +
   level * 0.16;
+
+  /*
+ * Glow層も同じマスクを使う。
+ */
+
+outerRingGlow *=
+(
+    0.12 +
+    outerOrbitMask * 0.62 +
+    outerFlow * 0.78
+);
+
+outerRingHalo *=
+(
+    0.12 +
+    outerOrbitMask * 0.62 +
+    outerFlow * 0.78
+);
+
+outerRingGlow *=
+0.45;
+
+outerRingHalo *=
+0.16;
 
 
       /*
@@ -1703,12 +1780,28 @@ color +=
     outerFlow
   );
 
-      color +=
-    ringColor *
-    outerRing *
+     color +=
+ringColor *
+outerRingHalo *
 (
-    0.28 +
-    bass * 0.70
+0.030 +
+level * 0.05
+);
+
+color +=
+ringColor *
+outerRingGlow *
+(
+0.11 +
+level * 0.12
+);
+
+color +=
+ringColor *
+outerRing *
+(
+0.32 +
+bass * 0.75
 );
 
       color +=
