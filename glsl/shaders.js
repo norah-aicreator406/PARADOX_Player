@@ -1007,8 +1007,8 @@ vec2 frontDepthP =
       float mainPolygon =
   glowLine(
     mainPolygonDistance,
-    0.0024,
-    0.0014,
+    0.0015,
+    0.0007,
     0.42 +
     level * 0.55 +
     beat * 0.35 +
@@ -1089,8 +1089,8 @@ float mainHotspot =
       float innerPolygon =
   glowLine(
     innerPolygonDistance,
-    0.0018,
-    0.0011,
+    0.0012,
+    0.0006,
     0.34 +
     mid * 0.46 +
     high * 0.24 +
@@ -1543,9 +1543,9 @@ float trailRing3 =
   );
 
 ambientGlow *=
-  0.025 +
-  level * 0.075 +
-  beat * 0.045;
+0.008 +
+level * 0.02 +
+beat * 0.015;
 
 color +=
   mix(
@@ -1704,12 +1704,12 @@ color +=
   );
 
       color +=
-        cyan *
-        outerRing *
-        (
-          0.28 +
-          bass * 0.70
-        );
+    ringColor *
+    outerRing *
+(
+    0.28 +
+    bass * 0.70
+);
 
       color +=
         magenta *
@@ -1904,37 +1904,53 @@ color +=
  * 静かな部分は落ち着かせ、
  * サビや高音・Beatで一気に発色を持ち上げる。
  */
-float hdrExposure =
-  1.35 +
-  level * 0.55 +
-  high * 0.20 +
-  beat * 0.45;
-
 /*
- * 明るい箇所だけ少し強く押し上げる。
- * Energy StreamとHotspotが際立つ。
+ * 現在の最大輝度を取得。
  */
-float highlightBoost =
-  smoothstep(
-    0.22,
-    1.10,
+float luminancePeak =
+  max(
+    color.r,
     max(
-      color.r,
-      max(
-        color.g,
-        color.b
-      )
+      color.g,
+      color.b
     )
   );
 
-color *=
-  1.0 +
-  highlightBoost *
-  (
-    0.18 +
-    high * 0.18 +
-    beat * 0.24
+/*
+ * 明るい線だけを抽出する。
+ *
+ * 0.55未満の暗い部分には、
+ * ほとんど影響を与えない。
+ */
+float highlightBoost =
+  smoothstep(
+    0.55,
+    1.20,
+    luminancePeak
   );
+
+/*
+ * 暗部全体ではなく、
+ * ハイライト成分だけを加算する。
+ */
+color +=
+color *
+highlightBoost *
+(
+    0.07 +
+    high * 0.10 +
+    beat * 0.15
+);
+
+/*
+ * 音に応じた露出。
+ * 前より少し控えめ。
+ */
+float hdrExposure =
+  1.20 +
+  level * 0.30 +
+  high * 0.10 +
+  beat * 0.22;
 
 /*
  * HDRトーンマッピング。
@@ -1947,13 +1963,27 @@ color =
   );
 
 /*
- * 中間色を少し持ち上げて、
- * シアン・紫・マゼンタを鮮やかにする。
+ * 黒レベルを締める。
+ *
+ * 画面全体の白っぽい霧を削る。
+ */
+color =
+  max(
+    color -
+    vec3(0.050),
+    vec3(0.0)
+  );
+
+/*
+ * コントラストを少し戻す。
+ *
+ * 1.0より大きい値で、
+ * 中間色を暗くして輪郭を立てる。
  */
 color =
   pow(
     color,
-    vec3(0.92)
+    vec3(1.18)
   );
 
 
