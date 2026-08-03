@@ -1045,6 +1045,29 @@ float mainEnergyStream =
   );
 
 
+  /*
+ * Energy Streamの先端だけを細く抽出する。
+ * powの値が大きいほど、白い光が短く鋭くなる。
+ */
+float mainHotspotMask =
+  pow(
+    mainEnergyFlow,
+    7.0
+  );
+
+float mainHotspotLine =
+  glowLine(
+    mainPolygonDistance,
+    0.00055,
+    0.00045,
+    0.24 +
+    high * 0.30 +
+    beat * 0.28
+  );
+
+float mainHotspot =
+  mainHotspotLine *
+  mainHotspotMask;
 
 
 
@@ -1103,6 +1126,30 @@ float innerEnergyStream =
     high * 0.38 +
     beat * 0.16
   );
+
+
+  /*
+ * 内側Energy Streamの白い先端。
+ */
+float innerHotspotMask =
+  pow(
+    innerEnergyFlow,
+    8.0
+  );
+
+float innerHotspotLine =
+  glowLine(
+    innerPolygonDistance,
+    0.00042,
+    0.00035,
+    0.20 +
+    high * 0.34 +
+    beat * 0.22
+  );
+
+float innerHotspot =
+  innerHotspotLine *
+  innerHotspotMask;
 
 
   /*
@@ -1595,6 +1642,23 @@ color +=
   0.95;
 
 
+  /*
+ * 白に少しシアンを混ぜた高温の光。
+ */
+color +=
+  mix(
+    vec3(1.0),
+    cyan,
+    0.18
+  ) *
+  mainHotspot *
+  (
+    0.62 +
+    high * 0.38 +
+    beat * 0.36
+  );
+
+
 
       color +=
         secondaryColor *
@@ -1615,6 +1679,21 @@ color +=
   ) *
   innerEnergyStream *
   0.82;
+
+  color +=
+  mix(
+    vec3(1.0),
+    magenta,
+    0.16
+  ) *
+  innerHotspot *
+  (
+    0.48 +
+    high * 0.42 +
+    beat * 0.28
+  );
+
+
 
 
         vec3 ringColor =
@@ -1819,12 +1898,63 @@ color +=
       /*
        * 明るすぎる部分を自然に圧縮。
        */
-      color =
-        1.0 -
-        exp(
-          -color *
-          1.35
-        );
+      /*
+ * 音の強さに応じて露出を変えるHDR Lighting。
+ *
+ * 静かな部分は落ち着かせ、
+ * サビや高音・Beatで一気に発色を持ち上げる。
+ */
+float hdrExposure =
+  1.35 +
+  level * 0.55 +
+  high * 0.20 +
+  beat * 0.45;
+
+/*
+ * 明るい箇所だけ少し強く押し上げる。
+ * Energy StreamとHotspotが際立つ。
+ */
+float highlightBoost =
+  smoothstep(
+    0.22,
+    1.10,
+    max(
+      color.r,
+      max(
+        color.g,
+        color.b
+      )
+    )
+  );
+
+color *=
+  1.0 +
+  highlightBoost *
+  (
+    0.18 +
+    high * 0.18 +
+    beat * 0.24
+  );
+
+/*
+ * HDRトーンマッピング。
+ */
+color =
+  1.0 -
+  exp(
+    -color *
+    hdrExposure
+  );
+
+/*
+ * 中間色を少し持ち上げて、
+ * シアン・紫・マゼンタを鮮やかにする。
+ */
+color =
+  pow(
+    color,
+    vec3(0.92)
+  );
 
 
       gl_FragColor =
