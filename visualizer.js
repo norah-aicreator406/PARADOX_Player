@@ -1055,6 +1055,7 @@ if (glowPower <= 0) return;
 
 let ringRotation = 0;
 let ringRotationSpeed = 0;
+let ringLastFrameTime = performance.now();
 
 
 function drawCoverNeonRing(width, height) {
@@ -1073,15 +1074,62 @@ function drawCoverNeonRing(width, height) {
   const isWide = width > height;
   const radius = isWide ? 112 : 104;
 
-  ringRotationSpeed +=
-  bass * 0.0015 +
-  mid * 0.0010 +
-  high * 0.0008;
+ const now =
+  performance.now();
 
-ringRotationSpeed *= 0.985;
+const deltaSeconds =
+  Math.min(
+    Math.max(
+      (now - ringLastFrameTime) / 1000,
+      0
+    ),
+    0.05
+  );
 
+ringLastFrameTime =
+  now;
+
+/*
+ * 60fpsを基準にした時間倍率。
+ */
+const frameScale =
+  deltaSeconds * 60;
+
+/*
+ * 音による加速。
+ */
+ringRotationSpeed +=
+  (
+    bass * 0.0015 +
+    mid * 0.0010 +
+    high * 0.0008
+  ) *
+  frameScale;
+
+/*
+ * FPSに依存しない減速。
+ */
+ringRotationSpeed *=
+  Math.pow(
+    0.985,
+    frameScale
+  );
+
+/*
+ * 暴走防止。
+ */
+ringRotationSpeed =
+  Math.min(
+    ringRotationSpeed,
+    0.025
+  );
+
+/*
+ * FPSに依存しない角度更新。
+ */
 ringRotation +=
-  ringRotationSpeed;
+  ringRotationSpeed *
+  frameScale;
 
   spectrumCtx.save();
   spectrumCtx.globalCompositeOperation = 'screen';
