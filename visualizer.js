@@ -2027,6 +2027,14 @@ ipcRenderer.on(
       return;
     }
 
+
+    console.log(
+  'particles raw:',
+  settings.particles,
+  'converted:',
+  Number(settings.particles)
+);
+
     effectSettings = {
   ...effectSettings,
 

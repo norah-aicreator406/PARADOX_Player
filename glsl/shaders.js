@@ -387,6 +387,7 @@ neonGeometry: {
     uniform float uHigh;
     uniform float uLevel;
     uniform float uBeat;
+    uniform float uRotationBoost;
 
 
     const float PI =
@@ -750,8 +751,9 @@ breathing =
        * 全体回転。
        */
       float rotation =
-        uTime * 0.12 +
-        mid * 0.45;
+      uTime * 0.10 +
+      uRotationBoost +
+      mid * 0.16;
 
       p =
         rotate2D(
@@ -897,6 +899,7 @@ innerFlow =
 vec2 innerOrbitP =
   rotate2D(
     -uTime * 0.24 -
+    uRotationBoost * 0.65 -
     mid * 0.12
   ) *
   distortedP;
@@ -904,6 +907,7 @@ vec2 innerOrbitP =
 vec2 rayOrbitP =
   rotate2D(
     uTime * 0.38 +
+    uRotationBoost * 1.35 +
     high * 0.16
   ) *
   distortedP;

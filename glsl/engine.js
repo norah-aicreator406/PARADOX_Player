@@ -53,6 +53,10 @@ window.NORAH_GLSL_ENGINE = {
     this.initialized = true;
     this.setEnabled(false);
 
+    this.lastFrameTime =
+    performance.now();
+
+
     this.animate();
 
     console.log("NORAH GLSL Renderer ready");
@@ -140,7 +144,12 @@ window.NORAH_GLSL_ENGINE = {
 
       uBeat: {
         value: 0
+      },
+
+      uRotationBoost: {
+      value: 0
       }
+
     },
 
     vertexShader:
@@ -157,6 +166,12 @@ window.NORAH_GLSL_ENGINE = {
 
   console.log('Shader switched:', shaderName);
 },
+
+
+geometryRotation: 0,
+geometryRotationSpeed: 0,
+lastFrameTime: 0,
+
 
 
 setAudioData(
@@ -211,7 +226,7 @@ setAudioData(
   }
 },
 
-  update() {
+  update(deltaSeconds = 1 / 60) {
   if (!this.mesh) return;
   if (!this.mesh.material) return;
   if (!this.mesh.material.uniforms) return;
@@ -280,16 +295,90 @@ setAudioData(
    * Beatは一瞬だけ反応させるため、
    * 毎フレーム少しずつ減衰させる。
    */
+  /*
+ * 音で加速し、慣性でゆっくり減速する。
+ */
+/*
+ * 60fpsを基準にした時間倍率。
+ * FPSが変化しても、実時間あたりの速度を一定にする。
+ */
+const frameScale =
+  deltaSeconds * 60;
+
+if (this.audioData.beat > 0.25) {
+  this.geometryRotationSpeed +=
+    0.0012 * frameScale;
+}
+
+/*
+ * FPSに依存しない減速。
+ */
+this.geometryRotationSpeed *=
+  Math.pow(
+    0.982,
+    frameScale
+  );
+
+this.geometryRotationSpeed =
+  THREE.MathUtils.clamp(
+    this.geometryRotationSpeed,
+    0,
+    0.004
+  );
+
+/*
+ * FPSに依存しない回転。
+ */
+this.geometryRotation +=
+  this.geometryRotationSpeed *
+  frameScale;
+
+if (uniforms.uRotationBoost) {
+  uniforms.uRotationBoost.value =
+    this.geometryRotation;
+}
+
+
   this.audioData.beat *=
     0.86;
 },
 
 animate() {
-  this.animationId = requestAnimationFrame(() => this.animate());
+  this.animationId =
+    requestAnimationFrame(
+      () => this.animate()
+    );
 
-  if (!this.enabled) return;
+  const now =
+    performance.now();
 
-  this.update();
+  /*
+   * 前フレームから経過した秒数。
+   * ウィンドウ停止後などの急激な値は0.05秒に制限する。
+   */
+  const deltaSeconds =
+    Math.min(
+      Math.max(
+        (
+          now -
+          this.lastFrameTime
+        ) /
+        1000,
+        0
+      ),
+      0.05
+    );
+
+  this.lastFrameTime =
+    now;
+
+  if (!this.enabled) {
+    return;
+  }
+
+  this.update(
+    deltaSeconds
+  );
 
   this.renderer.render(
     this.scene,
