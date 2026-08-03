@@ -1025,7 +1025,7 @@ if (glowPower <= 0) return;
   if (power <= 0.01) return;
 
   const centerX = width / 2;
-  const centerY = height * 0.39;
+  const centerY = height * 0.5;
 
   spectrumCtx.save();
   spectrumCtx.globalCompositeOperation = 'screen';
@@ -1064,7 +1064,7 @@ function drawCoverNeonRing(width, height) {
   const master = latestVisualizerData.master || 0;
 
   const centerX = width / 2;
-  const centerY = height * 0.39;
+  const centerY = height * 0.5;
 
   const isWide = width > height;
   const radius = isWide ? 112 : 104;
@@ -1203,7 +1203,7 @@ if (particlePower <= 0) return;
   const master = latestVisualizerData.master || 0;
 
   const centerX = width / 2;
-  const centerY = height * 0.39;
+  const centerY = height * 0.5;
   const isWide = width > height;
 
   const maxRadius = isWide ? 460 : 330;
@@ -1703,7 +1703,7 @@ function drawCircleSpectrum() {
   const master = latestVisualizerData.master || 0;
 
   const centerX = width / 2;
-  const centerY = height * 0.39;
+  const centerY = height * 0.5;
 
   const isWide = width > height;
   const baseRadius = isWide ? 150 : 125;

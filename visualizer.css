@@ -332,7 +332,7 @@ html, body {
 #coverFrame {
   position: absolute;
   left: 50%;
-  top: 39%;
+  top: 50%;
   transform: translate(-50%, -50%);
   width: 210px;
   height: 210px;
@@ -1344,4 +1344,19 @@ body {
 
 .output-routing-hidden {
   display: none !important;
+}
+
+
+#coverFrame {
+  position: absolute;
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+
+  width: 210px;
+  height: 210px;
+  border-radius: 50%;
+  overflow: hidden;
+  z-index: 20;
 }

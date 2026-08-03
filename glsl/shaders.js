@@ -1464,12 +1464,12 @@ color +=
 
 
       color +=
-        mainColor *
-        mainPolygon *
-        (
-          0.45 +
-          level * 0.85
-        );
+mainColor *
+mainPolygon *
+(
+0.55 +
+level * 0.90
+);
 
       color +=
         secondaryColor *
@@ -1478,6 +1478,13 @@ color +=
           0.28 +
           mid * 0.72
         );
+
+        vec3 ringColor =
+  mix(
+    cyan,
+    magenta,
+    outerFlow
+  );
 
       color +=
         cyan *
@@ -1504,16 +1511,20 @@ color +=
         secondaryRays;
 
       color +=
-        mix(
-          violet,
-          cyan,
-          high
-        ) *
-        core *
-        (
-          0.18 +
-          beat * 0.85
-        );
+  mix(
+    cyan,
+    violet,
+    clamp(
+      high * 1.35,
+      0.0,
+      1.0
+    )
+  ) *
+  core *
+  (
+    0.10 +
+    beat * 0.55
+  );
 
       color +=
         cyan *
@@ -1628,7 +1639,7 @@ color +=
           mainPolygon +
           outerRing
         ) *
-        0.18;
+        0.10;
 
 
       /*
