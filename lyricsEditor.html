@@ -519,6 +519,47 @@
       data-inspector-pane="style"
     >
 
+    <!-- スタイル適用先 -->
+<div class="animationScopePanel">
+
+  <div class="animationScopeTitle">
+    適用先
+  </div>
+
+  <div class="animationScopeOptions">
+
+    <label class="animationScopeOption">
+      <input
+        type="radio"
+        name="styleApplyScope"
+        value="selected"
+        checked
+      >
+      <span>選択中</span>
+    </label>
+
+    <label class="animationScopeOption">
+      <input
+        type="radio"
+        name="styleApplyScope"
+        value="section"
+      >
+      <span>このセクション</span>
+    </label>
+
+    <label class="animationScopeOption">
+      <input
+        type="radio"
+        name="styleApplyScope"
+        value="song"
+      >
+      <span>曲全体</span>
+    </label>
+
+  </div>
+
+</div>
+
       <div class="editorSection">
 
         <div class="editorSectionTitle">
@@ -677,6 +718,18 @@
 
       </div>
 
+      <div class="animationFinalApply">
+
+  <button
+    id="applyStyleScopeButton"
+    class="animationApplyButton"
+    type="button"
+  >
+    このスタイル設定を適用
+  </button>
+
+</div>
+
     </div>
 
 
@@ -687,6 +740,47 @@
       class="lyricsInspectorPane"
       data-inspector-pane="layout"
     >
+
+    <!-- 文字配置の適用先 -->
+<div class="animationScopePanel">
+
+  <div class="animationScopeTitle">
+    適用先
+  </div>
+
+  <div class="animationScopeOptions">
+
+    <label class="animationScopeOption">
+      <input
+        type="radio"
+        name="layoutApplyScope"
+        value="selected"
+        checked
+      >
+      <span>選択中</span>
+    </label>
+
+    <label class="animationScopeOption">
+      <input
+        type="radio"
+        name="layoutApplyScope"
+        value="section"
+      >
+      <span>このセクション</span>
+    </label>
+
+    <label class="animationScopeOption">
+      <input
+        type="radio"
+        name="layoutApplyScope"
+        value="song"
+      >
+      <span>曲全体</span>
+    </label>
+
+  </div>
+
+</div>
 
       <div class="editorSection">
 
@@ -779,6 +873,18 @@
         </div>
 
       </div>
+
+      <div class="animationFinalApply">
+
+  <button
+    id="applyLayoutScopeButton"
+    class="animationApplyButton"
+    type="button"
+  >
+    この文字配置を適用
+  </button>
+
+</div>
 
 
       <div class="editorSection">
@@ -1093,6 +1199,46 @@
       class="lyricsInspectorPane"
       data-inspector-pane="effects"
     >
+    <!-- 文字配置の適用先 -->
+<div class="animationScopePanel">
+
+  <div class="animationScopeTitle">
+    適用先
+  </div>
+
+  <div class="animationScopeOptions">
+
+    <label class="animationScopeOption">
+      <input
+        type="radio"
+        name="effectApplyScope"
+        value="selected"
+        checked
+      >
+      <span>選択中</span>
+    </label>
+
+    <label class="animationScopeOption">
+      <input
+        type="radio"
+        name="effectApplyScope"
+        value="section"
+      >
+      <span>このセクション</span>
+    </label>
+
+    <label class="animationScopeOption">
+      <input
+        type="radio"
+        name="effectApplyScope"
+        value="song"
+      >
+      <span>曲全体</span>
+    </label>
+
+  </div>
+
+</div>
 
       <div class="editorSection">
 
@@ -1210,6 +1356,18 @@
         </div>
 
       </div>
+
+      <div class="animationFinalApply">
+
+  <button
+    id="applyEffectScopeButton"
+    class="animationApplyButton"
+    type="button"
+  >
+    この効果を適用
+  </button>
+
+</div>
 
     </div>
 

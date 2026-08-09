@@ -571,6 +571,11 @@ const outlineColorInput = document.getElementById('lyricsOutlineColor');
 const outlineWidthInput = document.getElementById('lyricsOutlineWidth');
 const writingModeInput = document.getElementById('lyricsWritingMode');
 const alignInput = document.getElementById('lyricsAlign');
+
+const applyStyleScopeButton = document.getElementById('applyStyleScopeButton');
+const applyLayoutScopeButton = document.getElementById('applyLayoutScopeButton');
+const applyEffectScopeButton = document.getElementById('applyEffectScopeButton');
+
 const shadowColorInput = document.getElementById('lyricsShadowColor');
 const shadowBlurInput = document.getElementById('lyricsShadowBlur');
 const shadowXInput = document.getElementById('lyricsShadowX');
@@ -5635,6 +5640,390 @@ function getCurrentInspectorStyle() {
     lineHeight: Number(lineHeightInput.value) || 1.2
   };
 }
+
+
+/*
+ * 配置タブの「文字配置」で扱う値だけ取得。
+ *
+ * position / width / rotation / size は含めない。
+ */
+function getCurrentLayoutTabValues() {
+  return {
+    writingMode:
+      writingModeInput?.value ||
+      'horizontal',
+
+    align:
+      alignInput?.value ||
+      'center',
+
+    letterSpacing:
+      Number(
+        letterSpacingInput?.value
+      ) || 0,
+
+    lineHeight:
+      Number(
+        lineHeightInput?.value
+      ) || 1.2
+  };
+}
+
+
+function getLayoutApplyScope() {
+  return (
+    document.querySelector(
+      'input[name="layoutApplyScope"]:checked'
+    )?.value ||
+    'selected'
+  );
+}
+
+
+function applyCurrentLayoutToScope() {
+
+  const scope =
+    getLayoutApplyScope();
+
+  const targetBlocks =
+    getLyricsBlocksByApplyScope(
+      scope
+    );
+
+  if (!targetBlocks.length) {
+    alert(
+      scope === 'selected'
+        ? '歌詞ブロックを選択してください。'
+        : '適用できる歌詞ブロックがありません。'
+    );
+
+    return;
+  }
+
+  const beforeState =
+    captureEditorState();
+
+  const layoutValues =
+    getCurrentLayoutTabValues();
+
+
+  targetBlocks.forEach(
+    block => {
+
+      /*
+       * 現在のstyleを保持しつつ、
+       * 文字配置項目だけ上書き。
+       */
+      block.style = {
+        ...(block.style || {}),
+        ...layoutValues
+      };
+    }
+  );
+
+
+  renderSectionBlocks();
+
+  applyLyricsBlockSelectionClasses();
+
+
+  const selectedData =
+    getSelectedLyricsBlockData();
+
+  if (selectedData) {
+
+    const element =
+      document.querySelector(
+        `.lyricsBlock[data-block-id="${selectedData.id}"]`
+      );
+
+    if (element) {
+      loadLyricsBlockToInspector(
+        element
+      );
+    }
+
+    updateEditorPreview(
+      selectedData,
+      {
+        animate: false
+      }
+    );
+
+    sendLyricsBlockToVisualizer(
+      selectedData
+    );
+  }
+
+
+  commitEditorHistory(
+    beforeState
+  );
+}
+
+applyLayoutScopeButton
+  ?.addEventListener(
+    'click',
+    applyCurrentLayoutToScope
+  );
+
+
+function getCurrentEffectTabValues() {
+  return {
+    shadowColor:
+      shadowColorInput?.value ||
+      '#000000',
+
+    shadowBlur:
+      Number(
+        shadowBlurInput?.value
+      ) || 0,
+
+    shadowX:
+      Number(
+        shadowXInput?.value
+      ) || 0,
+
+    shadowY:
+      Number(
+        shadowYInput?.value
+      ) || 0
+  };
+}
+
+function getEffectApplyScope() {
+  return (
+    document.querySelector(
+      'input[name="effectApplyScope"]:checked'
+    )?.value ||
+    'selected'
+  );
+}
+
+function applyCurrentEffectToScope() {
+
+  const scope =
+    getEffectApplyScope();
+
+  const targetBlocks =
+    getLyricsBlocksByApplyScope(
+      scope
+    );
+
+  if (!targetBlocks.length) {
+    alert(
+      scope === 'selected'
+        ? '歌詞ブロックを選択してください。'
+        : '適用できる歌詞ブロックがありません。'
+    );
+
+    return;
+  }
+
+  const beforeState =
+    captureEditorState();
+
+  const effectValues =
+    getCurrentEffectTabValues();
+
+
+  targetBlocks.forEach(
+    block => {
+
+      block.style = {
+        ...(block.style || {}),
+        ...effectValues
+      };
+    }
+  );
+
+
+  renderSectionBlocks();
+
+  applyLyricsBlockSelectionClasses();
+
+
+  const selectedData =
+    getSelectedLyricsBlockData();
+
+  if (selectedData) {
+
+    const element =
+      document.querySelector(
+        `.lyricsBlock[data-block-id="${selectedData.id}"]`
+      );
+
+    if (element) {
+      loadLyricsBlockToInspector(
+        element
+      );
+    }
+
+    updateEditorPreview(
+      selectedData,
+      {
+        animate: false
+      }
+    );
+
+    sendLyricsBlockToVisualizer(
+      selectedData
+    );
+  }
+
+
+  commitEditorHistory(
+    beforeState
+  );
+}
+
+applyEffectScopeButton
+  ?.addEventListener(
+    'click',
+    applyCurrentEffectToScope
+  );
+
+
+
+
+
+/*
+ * スタイルタブで扱う項目だけ取得。
+ *
+ * 配置・影・アニメーション等は含めない。
+ */
+function getCurrentStyleTabValues() {
+  return {
+    font:
+      fontInput.value ||
+      'Arial',
+
+    size:
+      Number(
+        sizeInput.value
+      ) || 72,
+
+    opacity:
+      Number(
+        opacityInput.value
+      ),
+
+    color:
+      colorInput.value ||
+      '#ffffff',
+
+    outlineColor:
+      outlineColorInput.value ||
+      '#000000',
+
+    outlineWidth:
+      Number(
+        outlineWidthInput.value
+      ) || 0
+  };
+}
+
+
+
+function getStyleApplyScope() {
+  return (
+    document.querySelector(
+      'input[name="styleApplyScope"]:checked'
+    )?.value ||
+    'selected'
+  );
+}
+
+
+function applyCurrentStyleToScope() {
+
+  const scope =
+    getStyleApplyScope();
+
+  const targetBlocks =
+    getLyricsBlocksByApplyScope(
+      scope
+    );
+
+  if (!targetBlocks.length) {
+    alert(
+      scope === 'selected'
+        ? '歌詞ブロックを選択してください。'
+        : '適用できる歌詞ブロックがありません。'
+    );
+
+    return;
+  }
+
+  const beforeState =
+    captureEditorState();
+
+  const styleValues =
+    getCurrentStyleTabValues();
+
+
+  targetBlocks.forEach(
+    block => {
+
+      /*
+       * 既存Styleを残しながら、
+       * スタイルタブの項目だけ上書き。
+       */
+      block.style = {
+        ...(block.style || {}),
+        ...styleValues
+      };
+    }
+  );
+
+
+  renderSectionBlocks();
+
+  applyLyricsBlockSelectionClasses();
+
+
+  const selectedData =
+    getSelectedLyricsBlockData();
+
+  if (selectedData) {
+
+    const element =
+      document.querySelector(
+        `.lyricsBlock[data-block-id="${selectedData.id}"]`
+      );
+
+    if (element) {
+      loadLyricsBlockToInspector(
+        element
+      );
+    }
+
+    updateEditorPreview(
+      selectedData,
+      {
+        animate: false
+      }
+    );
+
+    sendLyricsBlockToVisualizer(
+      selectedData
+    );
+  }
+
+
+  commitEditorHistory(
+    beforeState
+  );
+}
+
+
+applyStyleScopeButton
+  ?.addEventListener(
+    'click',
+    applyCurrentStyleToScope
+  );
+
+
 
 
 
