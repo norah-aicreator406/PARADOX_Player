@@ -724,13 +724,43 @@ function updateEditorPreview(
   const blockData = targetBlockData || getSelectedLyricsBlockData();
   const style = blockData?.style || getCurrentInspectorStyle();
 
+  const ratioLayout =
+  blockData
+    ? getLyricsLayoutForCurrentRatio(
+        blockData
+      )
+    : null;
+
   const payload = {
     id: blockData?.id || null,
     text: blockData?.text ?? textInput.value ?? '',
     lines: String(blockData?.text ?? textInput.value ?? '').split('\n'),
-    style,
-    position: blockData?.position || { x: 0, y: 0, z: 0 },
-    layout: blockData?.layout || { width: 900, rotation: 0 },
+    style: {
+  ...style,
+
+  size:
+    ratioLayout?.size ??
+    style?.size ??
+    72
+},
+
+position:
+  ratioLayout?.position ||
+  blockData?.position ||
+  {
+    x: 0,
+    y: 0,
+    z: 0
+  },
+
+layout:
+  ratioLayout?.layout ||
+  blockData?.layout ||
+  {
+    width: 900,
+    rotation: 0
+  },
+
     animation: {
   ...getNormalizedLyricsAnimation(
     blockData || {
@@ -1283,6 +1313,15 @@ function setupPreviewLyricsDrag() {
         return;
       }
 
+      const ratioLayout =
+  getLyricsLayoutForCurrentRatio(
+    targetBlock
+  );
+
+if (!ratioLayout) {
+  return;
+}
+
 
       if (!targetBlock.position) {
         targetBlock.position = {
@@ -1292,6 +1331,7 @@ function setupPreviewLyricsDrag() {
         };
       }
 
+   
 
       /*
        * ドラッグ開始前の状態を保存。
@@ -1312,16 +1352,15 @@ function setupPreviewLyricsDrag() {
         event.clientY;
 
 
-      startX =
-        Number(
-          targetBlock.position.x
-        ) || 0;
+startX =
+  Number(
+    ratioLayout.position.x
+  ) || 0;
 
-      startY =
-        Number(
-          targetBlock.position.y
-        ) || 0;
-
+startY =
+  Number(
+    ratioLayout.position.y
+  ) || 0;
 
       previewLyrics.classList.add(
         'is-dragging'
@@ -1466,11 +1505,16 @@ const deltaY =
           });
 
 
-      targetBlock.position.x =
-        snapped.x;
+     const ratioLayout =
+  getLyricsLayoutForCurrentRatio(
+    targetBlock
+  );
 
-      targetBlock.position.y =
-        snapped.y;
+ratioLayout.position.x =
+  snapped.x;
+
+ratioLayout.position.y =
+  snapped.y;
 
 
       previewLyrics.style.transform =
@@ -3771,6 +3815,11 @@ function buildLyricsPayloadForVisualizer(
     getCurrentInspectorStyle();
 
 
+    const ratioLayout =
+  getLyricsLayoutForCurrentRatio(
+    block
+  );
+
   /*
    * 現在の再生時刻。
    *
@@ -3845,20 +3894,23 @@ function buildLyricsPayloadForVisualizer(
     text:
       block.text || '',
 
-    position:
-      block.position ||
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
+   position:
+  ratioLayout?.position ||
+  block.position ||
+  {
+    x: 0,
+    y: 0,
+    z: 0
+  },
 
-    layout:
-      block.layout ||
-      {
-        width: 900,
-        rotation: 0
-      },
+layout:
+  ratioLayout?.layout ||
+  block.layout ||
+  {
+    width: 900,
+    rotation: 0
+  },
+
 
     /*
      * IN / HOLD / OUTを
@@ -3874,10 +3926,11 @@ function buildLyricsPayloadForVisualizer(
         style.font ||
         'Arial',
 
-      size:
-        Number(
-          style.size
-        ) || 72,
+     size:
+  Number(
+    ratioLayout?.size ??
+    style.size
+  ) || 72,
 
       opacity:
         Number(style.opacity) || 100,
@@ -5617,6 +5670,7 @@ block.animation.out = {
         block.position = { x: 0, y: 0, z: 0 };
       }
 
+
       console.log('STYLE SAVED TO BLOCK:', block);
     });
   });
@@ -6264,7 +6318,19 @@ function setupLyricsSelectionResize() {
     resizing = true;
 
     startMouseX = event.clientX;
-    startFontSize = Number(targetBlock.style?.size || 72);
+    const ratioLayout =
+  getLyricsLayoutForCurrentRatio(
+    targetBlock
+  );
+
+if (!ratioLayout) {
+  return;
+}
+
+startFontSize =
+  Number(
+    ratioLayout.size
+  ) || 72;
 
     event.preventDefault();
     event.stopPropagation();
@@ -6277,7 +6343,17 @@ function setupLyricsSelectionResize() {
 
     const newSize = Math.max(10, Math.round(startFontSize + dx));
 
-    targetBlock.style.size = newSize;
+    const ratioLayout =
+  getLyricsLayoutForCurrentRatio(
+    targetBlock
+  );
+
+if (!ratioLayout) {
+  return;
+}
+
+ratioLayout.size =
+  newSize;
 
     sizeInput.value = newSize;
 
@@ -6310,13 +6386,25 @@ function setupLyricsWidthResize() {
     targetBlock = getSelectedLyricsBlockData();
     if (!targetBlock) return;
 
-    if (!targetBlock.layout) {
-      targetBlock.layout = { width: 900 };
-    }
+    const ratioLayout =
+  getLyricsLayoutForCurrentRatio(
+    targetBlock
+  );
 
-    resizing = true;
-    startMouseX = event.clientX;
-    startWidth = Number(targetBlock.layout.width) || 900;
+if (!ratioLayout) {
+  return;
+}
+
+resizing = true;
+startMouseX =
+  event.clientX;
+
+startWidth =
+  Number(
+    ratioLayout.layout?.width
+  ) || 900;
+
+
     activeSide = handle.dataset.sideHandle;
 
     event.preventDefault();
@@ -6343,7 +6431,17 @@ function setupLyricsWidthResize() {
 
   newWidth = Math.max(80, Math.round(newWidth));
 
-  targetBlock.layout.width = newWidth;
+  const ratioLayout =
+  getLyricsLayoutForCurrentRatio(
+    targetBlock
+  );
+
+if (!ratioLayout) {
+  return;
+}
+
+ratioLayout.layout.width =
+  newWidth;
 
   updateEditorPreview(targetBlock);
   sendLyricsBlockToVisualizer(targetBlock);
@@ -6854,12 +6952,14 @@ function setupLyricsRotationHandle() {
       if (!targetBlock) return;
 
 
-      if (!targetBlock.layout) {
-        targetBlock.layout = {
-          width: 900,
-          rotation: 0
-        };
-      }
+      const ratioLayout =
+  getLyricsLayoutForCurrentRatio(
+    targetBlock
+  );
+
+if (!ratioLayout) {
+  return;
+}
 
 
       /*
@@ -6892,9 +6992,9 @@ function setupLyricsRotationHandle() {
 
 
       startRotation =
-        Number(
-          targetBlock.layout.rotation
-        ) || 0;
+  Number(
+    ratioLayout.layout?.rotation
+  ) || 0;
 
 
       rotating = true;
@@ -6974,16 +7074,24 @@ function setupLyricsRotationHandle() {
             );
 
 
-      if (
-        nextRotation !==
-        targetBlock.layout.rotation
-      ) {
-        hasRotated = true;
-      }
+      const ratioLayout =
+  getLyricsLayoutForCurrentRatio(
+    targetBlock
+  );
 
+if (!ratioLayout) {
+  return;
+}
 
-      targetBlock.layout.rotation =
-        nextRotation;
+if (
+  nextRotation !==
+  ratioLayout.layout.rotation
+) {
+  hasRotated = true;
+}
+
+ratioLayout.layout.rotation =
+  nextRotation;
 
 
       updateEditorPreview(
@@ -8977,7 +9085,7 @@ setupLyricsInspectorTabs();
 const EDITOR_ASPECT_RATIO_STORAGE_KEY =
   'norahEditorAspectRatio';
 
-function getCurrentEditorAspectRatio() {
+ function getCurrentEditorAspectRatio() {
   const activeButton =
     document.querySelector(
       '#previewRatioControls .ratioButton.is-active'
@@ -8988,6 +9096,330 @@ function getCurrentEditorAspectRatio() {
     '16:9'
   );
 }
+
+
+function getLyricsLayoutForCurrentRatio(
+  block
+) {
+  if (!block) {
+    return null;
+  }
+
+  const ratio =
+    getCurrentEditorAspectRatio();
+
+  if (!block.layoutByRatio) {
+    block.layoutByRatio = {};
+  }
+
+  /*
+   * 現在比率にまだデータがない場合だけ、
+   * 従来データを初期値としてコピーする。
+   */
+  if (!block.layoutByRatio[ratio]) {
+    block.layoutByRatio[ratio] = {
+      position: {
+        x:
+          Number(
+            block.position?.x
+          ) || 0,
+
+        y:
+          Number(
+            block.position?.y
+          ) || 0,
+
+        z:
+          Number(
+            block.position?.z
+          ) || 0
+      },
+
+      layout: {
+        width:
+          Number(
+            block.layout?.width
+          ) || 900,
+
+        rotation:
+          Number(
+            block.layout?.rotation
+          ) || 0
+      },
+
+      size:
+        Number(
+          block.style?.size
+        ) || 72
+    };
+  }
+
+  return block.layoutByRatio[
+    ratio
+  ];
+}
+
+
+function ensureBlockLayoutByRatio(
+  block
+) {
+  if (!block) {
+    return;
+  }
+
+  if (!block.style) {
+    block.style = {};
+  }
+
+  if (!block.position) {
+    block.position = {
+      x: 0,
+      y: 0,
+      z: 0
+    };
+  }
+
+  if (!block.layout) {
+    block.layout = {
+      width: 900,
+      rotation: 0
+    };
+  }
+
+
+  if (!block.layoutByRatio) {
+
+    const initialLayout = {
+      position: {
+        x:
+          Number(
+            block.position.x
+          ) || 0,
+
+        y:
+          Number(
+            block.position.y
+          ) || 0,
+
+        z:
+          Number(
+            block.position.z
+          ) || 0
+      },
+
+      layout: {
+        width:
+          Number(
+            block.layout.width
+          ) || 900,
+
+        rotation:
+          Number(
+            block.layout.rotation
+          ) || 0
+      },
+
+      size:
+        Number(
+          block.style.size
+        ) || 72
+    };
+
+
+    /*
+     * 既存プロジェクト互換。
+     *
+     * 最初だけ現在値を
+     * 両方の比率へ複製する。
+     */
+    block.layoutByRatio = {
+
+      '16:9':
+        JSON.parse(
+          JSON.stringify(
+            initialLayout
+          )
+        ),
+
+      '9:16':
+        JSON.parse(
+          JSON.stringify(
+            initialLayout
+          )
+        )
+    };
+  }
+}
+
+
+
+function saveBlockLayoutForRatio(
+  block,
+  ratio
+) {
+  if (!block) {
+    return;
+  }
+
+  ensureBlockLayoutByRatio(
+    block
+  );
+
+  const normalizedRatio =
+    ratio === '9:16'
+      ? '9:16'
+      : '16:9';
+
+
+  block.layoutByRatio[
+    normalizedRatio
+  ] = {
+
+    position: {
+      x:
+        Number(
+          block.position?.x
+        ) || 0,
+
+      y:
+        Number(
+          block.position?.y
+        ) || 0,
+
+      z:
+        Number(
+          block.position?.z
+        ) || 0
+    },
+
+    layout: {
+      width:
+        Number(
+          block.layout?.width
+        ) || 900,
+
+      rotation:
+        Number(
+          block.layout?.rotation
+        ) || 0
+    },
+
+    size:
+      Number(
+        block.style?.size
+      ) || 72
+  };
+}
+
+
+function loadBlockLayoutForRatio(
+  block,
+  ratio
+) {
+  if (!block) {
+    return;
+  }
+
+  ensureBlockLayoutByRatio(
+    block
+  );
+
+  const normalizedRatio =
+    ratio === '9:16'
+      ? '9:16'
+      : '16:9';
+
+  const ratioData =
+    block.layoutByRatio[
+      normalizedRatio
+    ];
+
+  if (!ratioData) {
+    return;
+  }
+
+
+  block.position = {
+    x:
+      Number(
+        ratioData.position?.x
+      ) || 0,
+
+    y:
+      Number(
+        ratioData.position?.y
+      ) || 0,
+
+    z:
+      Number(
+        ratioData.position?.z
+      ) || 0
+  };
+
+
+  block.layout = {
+    width:
+      Number(
+        ratioData.layout?.width
+      ) || 900,
+
+    rotation:
+      Number(
+        ratioData.layout?.rotation
+      ) || 0
+  };
+
+
+  block.style = {
+    ...(block.style || {}),
+
+    size:
+      Number(
+        ratioData.size
+      ) || 72
+  };
+}
+
+
+
+function saveAllBlockLayoutsForRatio(
+  ratio
+) {
+  Object.values(
+    sectionData
+  ).forEach(blocks => {
+
+    (blocks || [])
+      .forEach(block => {
+
+        saveBlockLayoutForRatio(
+          block,
+          ratio
+        );
+      });
+  });
+}
+
+
+function loadAllBlockLayoutsForRatio(
+  ratio
+) {
+  Object.values(
+    sectionData
+  ).forEach(blocks => {
+
+    (blocks || [])
+      .forEach(block => {
+
+        loadBlockLayoutForRatio(
+          block,
+          ratio
+        );
+      });
+  });
+}
+
+
 
 function saveEditorAspectRatio(ratio) {
   if (
@@ -9026,10 +9458,24 @@ function applyEditorAspectRatio(
     return;
   }
 
+  const previousRatio =
+  getCurrentEditorAspectRatio();
+
   const normalizedRatio =
     ratio === '9:16'
       ? '9:16'
       : '16:9';
+
+
+  console.log(
+  '★★★★★ RATIO SWITCH ★★★★★',
+  {
+    previousRatio,
+    normalizedRatio
+  }
+);
+
+  
 
   previewStage.classList.toggle(
     'ratio-16-9',
@@ -9049,6 +9495,51 @@ function applyEditorAspectRatio(
     );
   });
 
+if (
+  previousRatio !==
+  normalizedRatio
+) {
+
+  console.log(
+    '★★★★★ BEFORE RATIO LOAD ★★★★★',
+    {
+      ratio: normalizedRatio,
+
+      activePosition:
+        getSelectedLyricsBlockData()
+          ?.position,
+
+      targetPosition:
+        getSelectedLyricsBlockData()
+          ?.layoutByRatio?.[
+            normalizedRatio
+          ]?.position
+    }
+  );
+
+  loadAllBlockLayoutsForRatio(
+    normalizedRatio
+  );
+
+  console.log(
+    '★★★★★ AFTER RATIO LOAD ★★★★★',
+    {
+      ratio: normalizedRatio,
+
+      activePosition:
+        getSelectedLyricsBlockData()
+          ?.position,
+
+      targetPosition:
+        getSelectedLyricsBlockData()
+          ?.layoutByRatio?.[
+            normalizedRatio
+          ]?.position
+    }
+  );
+}
+
+
   if (save) {
     saveEditorAspectRatio(
       normalizedRatio
@@ -9063,11 +9554,55 @@ function applyEditorAspectRatio(
       resizeEditorPreviewCanvas();
     }
 
+    renderSectionBlocks();
+
+applyLyricsBlockSelectionClasses();
+
+const selectedData =
+  getSelectedLyricsBlockData();
+
+if (selectedData) {
+  const element =
+    document.querySelector(
+      `.lyricsBlock[data-block-id="${selectedData.id}"]`
+    );
+
+  if (element) {
+   //loadLyricsBlockToInspector(
+     // element
+    // );
+  }
+
+  updateEditorPreview(
+    selectedData,
+    {
+      animate: false
+    }
+  );
+
+  sendLyricsBlockToVisualizer(
+    selectedData
+  );
+}
+
     updateEditorSongInfoPreview();
 
     window.dispatchEvent(
       new Event('resize')
     );
+
+console.log(
+  '★★★★★ AFTER RATIO RENDER ★★★★★',
+  {
+    ratio:
+      getCurrentEditorAspectRatio(),
+
+    activePosition:
+      getSelectedLyricsBlockData()
+        ?.position
+  }
+);
+
   });
 }
 
@@ -9095,12 +9630,13 @@ function setupEditorAspectRatioPersistence() {
       EDITOR_ASPECT_RATIO_STORAGE_KEY
     );
 
-  applyEditorAspectRatio(
-    savedRatio || '16:9',
-    {
-      save: false
-    }
-  );
+   applyEditorAspectRatio(
+  savedRatio || '16:9',
+  {
+    save: false
+  }
+);
+
 }
 
 setupEditorAspectRatioPersistence();
