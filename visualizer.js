@@ -2500,6 +2500,37 @@ function resizeVisualizerCanvas() {
         baseHeight
     );
 
+  /*
+   * Canvasの基準サイズ
+   */
+  canvas.style.width =
+    `${baseWidth}px`;
+
+  canvas.style.height =
+    `${baseHeight}px`;
+
+  /*
+   * Canvasそのものを
+   * Visualizer画面の中央へ配置
+   */
+  canvas.style.position =
+    'absolute';
+
+  canvas.style.left =
+    '50%';
+
+  canvas.style.top =
+    '50%';
+
+  canvas.style.transformOrigin =
+    'center center';
+
+  canvas.style.transform =
+    `translate(-50%, -50%) scale(${scale})`;
+
+  /*
+   * 既存処理との互換用
+   */
   canvas.style.setProperty(
     '--visualizer-canvas-scale',
     String(scale)
