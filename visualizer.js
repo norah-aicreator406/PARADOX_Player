@@ -1578,7 +1578,7 @@ function setLyricsBlocks(blocks) {
     return;
   }
 
-  const safeBlocks =
+ const safeBlocks =
   Array.isArray(blocks)
     ? blocks
         .filter(Boolean)
@@ -2471,15 +2471,39 @@ ipcRenderer.on('visualizer-time', (event, data) => {
 });
 
 function resizeVisualizerCanvas() {
-  const canvas = document.getElementById('visualizerCanvas');
+  const canvas =
+    document.getElementById(
+      'visualizerCanvas'
+    );
+
   if (!canvas) return;
 
-  const scale = Math.min(
-    window.innerWidth / 1080,
-    window.innerHeight / 1920
-  );
+  const ratio =
+    getVisualizerAspectRatio();
 
-  canvas.style.setProperty('--visualizer-canvas-scale', String(scale));
+  const baseWidth =
+    ratio === '16:9'
+      ? 1920
+      : 1080;
+
+  const baseHeight =
+    ratio === '16:9'
+      ? 1080
+      : 1920;
+
+  const scale =
+    Math.min(
+      window.innerWidth /
+        baseWidth,
+
+      window.innerHeight /
+        baseHeight
+    );
+
+  canvas.style.setProperty(
+    '--visualizer-canvas-scale',
+    String(scale)
+  );
 }
 
 
