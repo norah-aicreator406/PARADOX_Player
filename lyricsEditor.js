@@ -3882,6 +3882,9 @@ function buildLyricsPayloadForVisualizer(
     end:
       block.end,
 
+    layoutByRatio:
+    block.layoutByRatio || null,
+
     elapsedSeconds,
 
     remainingSeconds,

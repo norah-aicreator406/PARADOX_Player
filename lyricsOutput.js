@@ -423,6 +423,71 @@ if (
    Payload router
 ======================================== */
 
+function getLyricsOutputAspectRatio() {
+  return window.innerWidth >
+    window.innerHeight
+      ? '16:9'
+      : '9:16';
+}
+
+
+function resolveLyricsBlockForOutput(
+  block
+) {
+  if (!block) {
+    return block;
+  }
+
+  const ratio =
+    getLyricsOutputAspectRatio();
+
+  const ratioLayout =
+    block.layoutByRatio?.[
+      ratio
+    ];
+
+  if (!ratioLayout) {
+    return block;
+  }
+
+  return {
+    ...block,
+
+    position:
+      ratioLayout.position ||
+      block.position ||
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+
+    layout:
+      ratioLayout.layout ||
+      block.layout ||
+      {
+        width: 900,
+        rotation: 0
+      },
+
+    style: {
+      ...(block.style || {}),
+
+      size:
+        Number(
+          ratioLayout.size
+        ) ||
+        Number(
+          block.style?.size
+        ) ||
+        72
+    }
+  };
+}
+
+
+
+
 function receiveLyricsPayload(
   lyricsPayload
 ) {
@@ -459,8 +524,10 @@ function receiveLyricsPayload(
   }
 
   setLyricsBlocks(
-    lyricsPayload.blocks
-  );
+  lyricsPayload.blocks.map(
+    resolveLyricsBlockForOutput
+  )
+);
 
   return;
 }
@@ -476,8 +543,10 @@ function receiveLyricsPayload(
       false;
 
     setLyricsBlocks(
-      lyricsPayload.blocks
-    );
+  lyricsPayload.blocks.map(
+    resolveLyricsBlockForOutput
+  )
+);
 
     return;
   }
@@ -516,13 +585,15 @@ function receiveLyricsPayload(
    * sourceなしのblocks形式。
    */
   if (
-    Array.isArray(
-      lyricsPayload.blocks
+  Array.isArray(
+    lyricsPayload
+  )
+) {
+  setLyricsBlocks(
+    lyricsPayload.map(
+      resolveLyricsBlockForOutput
     )
-  ) {
-    setLyricsBlocks(
-      lyricsPayload.blocks
-    );
+  );
 
     return;
   }

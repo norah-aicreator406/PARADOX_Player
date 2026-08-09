@@ -261,26 +261,32 @@ function loadLyricsBlocksFromProject(song) {
         block.text || '',
 
       style:
-        block.style || {},
+  block.style || {},
 
-      position:
-        block.position || {
-          x: 0,
-          y: 0,
-          z: 0
-        },
+/*
+ * 16:9 / 9:16 の
+ * 比率別レイアウトも保持する。
+ */
+layoutByRatio:
+  block.layoutByRatio || null,
 
-      layout:
-        block.layout || {
-          width: 900,
-          rotation: 0
-        },
+/*
+ * 旧プロジェクト互換用。
+ */
+position:
+  block.position || {
+    x: 0,
+    y: 0,
+    z: 0
+  },
 
-      /*
-       * 保存されたIN / HOLD / OUTを
-       * そのまま読み込む。
-       */
-      animation:
+layout:
+  block.layout || {
+    width: 900,
+    rotation: 0
+  },
+
+animation:
         normalizePlayerLyricsAnimation(
           block
         )
@@ -388,10 +394,17 @@ function updateLyricsByTime() {
         block.position,
 
       layout:
-        block.layout,
+  block.layout,
 
-      animation:
-        block.animation,
+/*
+ * 16:9 / 9:16
+ * 比率別レイアウトをOutputへ渡す。
+ */
+layoutByRatio:
+  block.layoutByRatio || null,
+
+animation:
+  block.animation,
 
       elapsedSeconds:
         Math.max(

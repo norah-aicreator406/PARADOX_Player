@@ -114,6 +114,104 @@ function getVisualizerAspectRatio() {
 }
 
 
+function resolveLyricsBlockForVisualizer(
+  block
+) {
+  if (!block) {
+    return block;
+  }
+
+  const ratio =
+    getVisualizerAspectRatio();
+
+  const ratioLayout =
+    block.layoutByRatio?.[
+      ratio
+    ];
+
+  console.log(
+    '★★★★★ VISUALIZER RATIO DEBUG ★★★★★',
+    {
+      ratio,
+
+      layoutByRatio:
+        block.layoutByRatio,
+
+      chosen:
+        ratioLayout,
+
+      oldPosition:
+        block.position,
+
+      oldLayout:
+        block.layout,
+
+      oldSize:
+        block.style?.size
+    }
+  );
+
+  if (!ratioLayout) {
+    console.warn(
+      '★★★★★ layoutByRatio NOT FOUND ★★★★★',
+      block
+    );
+
+    return block;
+  }
+
+  const resolvedBlock = {
+    ...block,
+
+    position:
+      ratioLayout.position ||
+      block.position ||
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+
+    layout:
+      ratioLayout.layout ||
+      block.layout ||
+      {
+        width: 900,
+        rotation: 0
+      },
+
+    style: {
+      ...(block.style || {}),
+
+      size:
+        Number(
+          ratioLayout.size
+        ) ||
+        Number(
+          block.style?.size
+        ) ||
+        72
+    }
+  };
+
+  console.log(
+    '★★★★★ VISUALIZER RESOLVED ★★★★★',
+    {
+      position:
+        resolvedBlock.position,
+
+      layout:
+        resolvedBlock.layout,
+
+      size:
+        resolvedBlock.style?.size
+    }
+  );
+
+  return resolvedBlock;
+}
+
+
 function applyVisualizerSongInfoPosition() {
   if (!currentSongInfoEditorSettings) {
     return;
@@ -1480,10 +1578,16 @@ function setLyricsBlocks(blocks) {
     return;
   }
 
-  const safeBlocks = Array.isArray(blocks)
-    ? blocks.filter(Boolean)
+  const safeBlocks =
+  Array.isArray(blocks)
+    ? blocks
+        .filter(Boolean)
+        .map(
+          resolveLyricsBlockForVisualizer
+        )
     : [];
 
+    
   const activeIds = new Set(
     safeBlocks.map(block => String(block.id || ''))
   );
