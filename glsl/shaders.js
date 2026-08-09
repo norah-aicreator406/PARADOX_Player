@@ -709,8 +709,11 @@ float orbitSegments(
         vUv;
 
       vec2 p =
-        uv -
-        0.5;
+  uv -
+  vec2(
+    0.47,
+    0.52
+  );
 
       /*
        * 縦長・横長の画面でも
@@ -2152,8 +2155,989 @@ color =
   `
 }
 
+,
+
+neonFlow: {
+  name: "Neon Flow V2",
+
+  vertex: `
+    varying vec2 vUv;
+
+    void main() {
+      vUv = uv;
+
+      gl_Position =
+        projectionMatrix *
+        modelViewMatrix *
+        vec4(position, 1.0);
+    }
+  `,
+
+  fragment: `
+    precision highp float;
+
+    varying vec2 vUv;
+
+    uniform float uTime;
+    uniform vec2 uResolution;
+
+    uniform float uBass;
+    uniform float uMid;
+    uniform float uHigh;
+    uniform float uLevel;
+    uniform float uBeat;
+
+
+    const float PI =
+      3.14159265359;
+
+    const float TAU =
+      6.28318530718;
+
+
+    float hash(float n) {
+      return fract(
+        sin(n * 127.1) *
+        43758.5453123
+      );
+    }
+
+
+    vec3 hsv2rgb(vec3 c) {
+
+      vec3 p =
+        abs(
+          fract(
+            c.xxx +
+            vec3(
+              0.0,
+              2.0 / 3.0,
+              1.0 / 3.0
+            )
+          ) *
+          6.0 -
+          3.0
+        );
+
+      return
+        c.z *
+        mix(
+          vec3(1.0),
+          clamp(
+            p - 1.0,
+            0.0,
+            1.0
+          ),
+          c.y
+        );
+    }
+
+
+    void main() {
+
+      /*
+       * -------------------------------
+       * BASIC
+       * -------------------------------
+       */
+
+      vec2 uv =
+        vUv;
+
+      vec2 p =
+        uv -
+        0.5;
+
+
+      /*
+       * アスペクト比補正
+       */
+      p.x *=
+        uResolution.x /
+        max(
+          uResolution.y,
+          1.0
+        );
+
+
+      float bass =
+        clamp(
+          uBass,
+          0.0,
+          1.0
+        );
+
+      float mid =
+        clamp(
+          uMid,
+          0.0,
+          1.0
+        );
+
+      float high =
+        clamp(
+          uHigh,
+          0.0,
+          1.0
+        );
+
+      float level =
+        clamp(
+          uLevel,
+          0.0,
+          1.0
+        );
+
+      float beat =
+        clamp(
+          uBeat,
+          0.0,
+          1.0
+        );
+
+
+      float radius =
+        length(p);
+
+      float angle =
+        atan(
+          p.y,
+          p.x
+        );
+
+
+      /*
+       * -------------------------------
+       * BACKGROUND
+       * -------------------------------
+       */
+
+      vec3 color =
+        vec3(
+          0.0003,
+          0.0004,
+          0.0018
+        );
+
+
+      /*
+       * -------------------------------
+       * COLOR PALETTE
+       * -------------------------------
+       *
+       * 全面Rainbowではなく、
+       * 一つの色相が画面全体を支配する。
+       */
+
+      float paletteHue =
+        fract(
+          0.76 +
+          uTime * 0.004 +
+          mid * 0.035
+        );
+
+
+      vec3 primaryColor =
+        hsv2rgb(
+          vec3(
+            paletteHue,
+            0.74,
+            1.0
+          )
+        );
+
+
+      vec3 secondaryColor =
+        hsv2rgb(
+          vec3(
+            fract(
+              paletteHue +
+              0.075
+            ),
+            0.82,
+            1.0
+          )
+        );
+
+
+      vec3 hotColor =
+        mix(
+          vec3(1.0),
+          primaryColor,
+          0.10
+        );
+
+
+      /*
+       * -------------------------------
+       * GLOBAL FLOW FIELD
+       * -------------------------------
+       *
+       * ここがV2の核。
+       *
+       * 全ての光を同じ渦へ沿わせる。
+       */
+
+
+      /*
+       * 中心に近いほど強く回転。
+       */
+      /*
+ * -------------------------------
+ * MULTI FLOW FIELD
+ * -------------------------------
+ *
+ * 1個の巨大な渦ではなく、
+ * 複数の局所的な流れを混ぜる。
+ */
+
+
+/*
+ * メインFlow。
+ * 画面全体の大きな方向性だけ担当。
+ */
+float mainPower =
+  exp(
+    -radius * 2.4
+  );
+
+float mainFlow =
+  angle +
+  mainPower *
+  (
+    1.65 +
+    bass * 0.55
+  );
+
+
+/*
+ * Flow Center A
+ * 左上寄り。
+ */
+vec2 flowPosA =
+  vec2(
+    -0.16,
+    0.13
+  );
+
+vec2 flowVecA =
+  p -
+  flowPosA;
+
+float flowRadiusA =
+  length(
+    flowVecA
+  );
+
+float flowAngleA =
+  atan(
+    flowVecA.y,
+    flowVecA.x
+  );
+
+float flowWeightA =
+  exp(
+    -flowRadiusA * 5.2
+  );
+
+
+/*
+ * Flow Center B
+ * 右下寄り。
+ */
+vec2 flowPosB =
+  vec2(
+    0.18,
+    -0.16
+  );
+
+vec2 flowVecB =
+  p -
+  flowPosB;
+
+float flowRadiusB =
+  length(
+    flowVecB
+  );
+
+float flowAngleB =
+  atan(
+    flowVecB.y,
+    flowVecB.x
+  );
+
+float flowWeightB =
+  exp(
+    -flowRadiusB * 4.8
+  );
+
+
+/*
+ * 3つのFlowを混ぜる。
+ *
+ * AとBは逆方向へ少し捻ることで
+ * 単純な螺旋を壊す。
+ */
+float swirl =
+  mainFlow;
+
+swirl +=
+  sin(
+    flowAngleA * 2.0 +
+    flowRadiusA * 7.0 -
+    uTime * 0.24
+  ) *
+  flowWeightA *
+  (
+    0.75 +
+    mid * 0.18
+  );
+
+swirl -=
+  sin(
+    flowAngleB * 2.5 -
+    flowRadiusB * 8.0 +
+    uTime * 0.19
+  ) *
+  flowWeightB *
+  (
+    0.68 +
+    high * 0.15
+  );
+
+
+/*
+ * 大きな横方向のうねり。
+ * 「渦巻き」より「流れ」に見せる。
+ */
+swirl +=
+  sin(
+    p.y * 5.0 +
+    p.x * 2.2 -
+    uTime * 0.16
+  ) *
+  0.14;
+
+
+/*
+ * 小さい不規則性。
+ */
+swirl +=
+  sin(
+    p.x * 8.0 -
+    p.y * 6.0 +
+    uTime * 0.12
+  ) *
+  0.045;
+
+
+      /*
+       * -------------------------------
+       * FINE STREAMLINES
+       * -------------------------------
+       *
+       * 大量の細い光線。
+       * 全て同じFlow Fieldに従う。
+       */
+
+
+      float fineLines =
+        0.0;
+
+
+      /*
+       * Layer A
+       */
+      float flowA =
+        sin(
+          swirl * 18.0 +
+          radius * 52.0 -
+          uTime *
+          (
+            1.15 +
+            mid * 0.45
+          )
+        );
+
+      flowA =
+        pow(
+          max(
+            0.0,
+            1.0 -
+            abs(flowA)
+          ),
+          14.0
+        );
+
+
+      /*
+       * Layer B
+       */
+      float flowB =
+        sin(
+          swirl * 25.0 -
+          radius * 68.0 +
+          uTime *
+          (
+            0.88 +
+            high * 0.55
+          ) +
+          1.6
+        );
+
+      flowB =
+        pow(
+          max(
+            0.0,
+            1.0 -
+            abs(flowB)
+          ),
+          17.0
+        );
+
+
+      /*
+       * Layer C
+       */
+      float flowC =
+        sin(
+          swirl * 33.0 +
+          radius * 82.0 -
+          uTime * 1.42 +
+          3.2
+        );
+
+      flowC =
+        pow(
+          max(
+            0.0,
+            1.0 -
+            abs(flowC)
+          ),
+          20.0
+        );
+
+
+      fineLines =
+        flowA * 0.55 +
+        flowB * 0.32 +
+        flowC * 0.18;
+
+
+      /*
+       * 画面全体を均一に埋めない。
+       */
+      float flowGate =
+        0.40 +
+        0.60 *
+        smoothstep(
+          -0.35,
+          0.80,
+          sin(
+            swirl * 2.2 -
+            uTime * 0.33
+          )
+        );
+
+
+      fineLines *=
+        flowGate;
+
+
+      /*
+       * 中心付近を少し密にする。
+       */
+      float centerDensity =
+  0.72 +
+  exp(
+    -radius * 1.45
+  ) *
+  0.38;
+
+fineLines *=
+  centerDensity;
+
+
+      /*
+       * 色Glow。
+       */
+      color +=
+        primaryColor *
+        fineLines *
+        (
+          0.12 +
+          level * 0.18 +
+          high * 0.12
+        );
+
+
+      /*
+       * 細線の高温部分。
+       */
+      color +=
+  hotColor *
+  pow(
+    fineLines,
+    2.1
+  ) *
+  0.0;
+
+
+        /*
+ * --------------------------------
+ * MOVING HOT STREAKS
+ * --------------------------------
+ *
+ * Fine Streamlinesの一部分だけを
+ * 高輝度化して高速で流す。
+ */
+
+float streakPhase =
+  fract(
+    (
+      swirl * 1.35 +
+      radius * 14.0 -
+      uTime *
+      (
+        1.8 +
+        high * 0.9
+      )
+    ) /
+    TAU
+  );
+
+/*
+ * 発光区間をかなり短くする。
+ */
+float streakWindow =
+  exp(
+    -pow(
+      (
+        streakPhase -
+        0.50
+      ) /
+      0.065,
+      2.0
+    )
+  );
+
+/*
+ * Fine Linesが存在する場所だけ発光。
+ */
+float hotStreak =
+  fineLines *
+  streakWindow;
+
+/*
+ * 色付きGlow。
+ */
+color +=
+  secondaryColor *
+  hotStreak *
+  (
+    0.18 +
+    high * 0.26 +
+    beat * 0.18
+  );
+
+/*
+ * 白熱した芯。
+ */
+  color +=
+  hotColor *
+  pow(
+    hotStreak,
+    1.65
+  ) *
+  0.0;
+
+
+      /*
+       * -------------------------------
+       * ENERGY RIBBON A
+       * -------------------------------
+       *
+       * 数本だけ強烈に光る太い帯。
+       */
+
+
+      float ribbonWaveA =
+        sin(
+          swirl * 3.0 +
+          radius * 17.0 -
+          uTime *
+          (
+            1.00 +
+            bass * 0.45
+          )
+        );
+
+
+      float ribbonA =
+  1.0 -
+  smoothstep(
+    0.018,
+    0.095,
+    abs(ribbonWaveA)
+  );
+
+
+/*
+ * Ribbon A：
+ * Flow上を移動する短い発光区間。
+ */
+float ribbonPhaseA =
+  fract(
+    (
+      swirl * 0.85 +
+      radius * 11.0 -
+      uTime *
+      (
+        1.25 +
+        high * 0.45
+      )
+    ) /
+    TAU
+  );
+
+float ribbonSegmentA =
+  exp(
+    -pow(
+      (
+        ribbonPhaseA -
+        0.50
+      ) /
+      0.115,
+      2.0
+    )
+  );
+
+ribbonA *=
+  ribbonSegmentA;
+
+
+      /*
+       * 広いGlow
+       */
+    color +=
+  secondaryColor *
+  hotStreak *
+  0.0;
+
+
+      /*
+       * 白熱Core
+       */
+      color +=
+        hotColor *
+        pow(
+          ribbonA,
+          3.2
+        ) *
+        (
+          0.25 +
+          bass * 0.40 +
+          beat * 0.48
+        );
+
+
+      /*
+       * -------------------------------
+       * ENERGY RIBBON B
+       * -------------------------------
+       */
+
+
+      float ribbonWaveB =
+        sin(
+          swirl * 2.0 -
+          radius * 21.0 +
+          uTime * 0.72 +
+          2.4
+        );
+
+
+      float ribbonB =
+  1.0 -
+  smoothstep(
+    0.014,
+    0.075,
+    abs(ribbonWaveB)
+  );
+
+
+ /*
+ * Ribbon B：
+ * Aより短く高速な発光区間。
+ */
+float ribbonPhaseB =
+  fract(
+    (
+      swirl * 1.10 -
+      radius * 13.5 +
+      uTime *
+      (
+        1.65 +
+        high * 0.55
+      ) +
+      2.1
+    ) /
+    TAU
+  );
+
+float ribbonSegmentB =
+  exp(
+    -pow(
+      (
+        ribbonPhaseB -
+        0.50
+      ) /
+      0.080,
+      2.0
+    )
+  );
+
+ribbonB *=
+  ribbonSegmentB;
+
+
+      color +=
+        primaryColor *
+        ribbonB *
+        (
+          0.07 +
+          mid * 0.14
+        );
+
+
+      color +=
+        hotColor *
+        pow(
+          ribbonB,
+          3.6
+        ) *
+        (
+          0.14 +
+          high * 0.20 +
+          beat * 0.20
+        );
+
+
+      /*
+       * -------------------------------
+       * MOVING ENERGY HOTSPOTS
+       * -------------------------------
+       *
+       * Ribbon上を白いエネルギーが流れる。
+       */
+
+
+      float movingPulse =
+        0.5 +
+        0.5 *
+        sin(
+          swirl * 4.0 -
+          radius * 29.0 -
+          uTime *
+          (
+            4.0 +
+            high * 2.2
+          )
+        );
+
+
+      movingPulse =
+        smoothstep(
+          0.74,
+          0.97,
+          movingPulse
+        );
+
+
+      float hotspot =
+        movingPulse *
+        (
+          ribbonA +
+          ribbonB
+        );
+
+
+      color +=
+        vec3(1.0) *
+        hotspot *
+        (
+          0.24 +
+          high * 0.32 +
+          beat * 0.44
+        );
+
+
+      /*
+       * -------------------------------
+       * CORE / VOID
+       * -------------------------------
+       *
+       * 中央は明るい玉ではなく、
+       * 暗い核＋縁だけ強く発光。
+       */
+
+
+      float voidMask =
+        1.0 -
+        smoothstep(
+          0.018,
+          0.080 +
+          bass * 0.012,
+          radius
+        );
+
+
+      /*
+       * 中心を暗くする。
+       */
+      color *=
+        1.0 -
+        voidMask * 0.88;
+
+
+      /*
+       * Voidの縁。
+       */
+      float voidEdge =
+        exp(
+          -abs(
+            radius -
+            (
+              0.070 +
+              bass * 0.010
+            )
+          ) *
+          125.0
+        );
+
+
+      color +=
+        primaryColor *
+        voidEdge *
+        (
+          0.10 +
+          bass * 0.18
+        );
+
+
+      color +=
+        hotColor *
+        pow(
+          voidEdge,
+          2.6
+        ) *
+        (
+          0.16 +
+          beat * 0.30
+        );
+
+
+      /*
+       * -------------------------------
+       * BEAT FLASH
+       * -------------------------------
+       *
+       * 全面を白くしない。
+       * Flowの明るい部分だけ強くする。
+       */
+
+
+      float beatEnergy =
+        clamp(
+          fineLines +
+          ribbonA +
+          ribbonB,
+          0.0,
+          1.0
+        );
+
+
+      color +=
+        hotColor *
+        beatEnergy *
+        beat *
+        0.18;
+
+
+      /*
+       * -------------------------------
+       * VIGNETTE
+       * -------------------------------
+       */
+
+
+      float vignette =
+        smoothstep(
+          0.88,
+          0.20,
+          radius
+        );
+
+
+      color *=
+        0.16 +
+        vignette * 0.84;
+
+
+      /*
+       * -------------------------------
+       * HDR
+       * -------------------------------
+       */
+
+
+      float exposure =
+        1.32 +
+        level * 0.22 +
+        beat * 0.18;
+
+
+      color =
+        1.0 -
+        exp(
+          -color *
+          exposure
+        );
+
+
+      /*
+       * 深い黒を残す。
+       */
+      color =
+        max(
+          color -
+          vec3(0.016),
+          vec3(0.0)
+        );
+
+
+      /*
+       * 少しだけコントラスト。
+       */
+      color =
+        pow(
+          color,
+          vec3(1.10)
+        );
+
+
+      gl_FragColor =
+        vec4(
+          color,
+          1.0
+        );
+    }
+  `
+}
+
 
 
 
 
 };
+
