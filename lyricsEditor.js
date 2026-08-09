@@ -553,20 +553,12 @@ const outDurationValue =
     'lyricsOutDurationValue'
   );
 
-const applyInAnimationButton =
+const applyAllAnimationButton =
   document.getElementById(
-    'applyInAnimationButton'
+    'applyAllAnimationButton'
   );
 
-const applyHoldAnimationButton =
-  document.getElementById(
-    'applyHoldAnimationButton'
-  );
 
-const applyOutAnimationButton =
-  document.getElementById(
-    'applyOutAnimationButton'
-  );
 const sizeInput = document.getElementById('lyricsSize');
 const opacityInput = document.getElementById('lyricsOpacity');
 
@@ -3252,7 +3244,34 @@ console.log('Lyrics Editor Loaded');
 
 inDurationInput?.addEventListener(
   'input',
-  updateAnimationControlValues
+  () => {
+    updateAnimationControlValues();
+    previewAnimationFromControls('in');
+  }
+);
+
+holdSpeedInput?.addEventListener(
+  'input',
+  () => {
+    updateAnimationControlValues();
+    previewAnimationFromControls('hold');
+  }
+);
+
+holdStrengthInput?.addEventListener(
+  'input',
+  () => {
+    updateAnimationControlValues();
+    previewAnimationFromControls('hold');
+  }
+);
+
+outDurationInput?.addEventListener(
+  'input',
+  () => {
+    updateAnimationControlValues();
+    previewAnimationFromControls('out');
+  }
 );
 
 holdSpeedInput?.addEventListener(
@@ -3272,17 +3291,26 @@ outDurationInput?.addEventListener(
 
 animationPresetInput?.addEventListener(
   'change',
-  updateAnimationDescription
+  () => {
+    updateAnimationDescription();
+    previewAnimationFromControls('in');
+  }
 );
 
 holdPresetInput?.addEventListener(
   'change',
-  updateHoldDescription
+  () => {
+    updateHoldDescription();
+    previewAnimationFromControls('hold');
+  }
 );
 
 outPresetInput?.addEventListener(
   'change',
-  updateOutDescription
+  () => {
+    updateOutDescription();
+    previewAnimationFromControls('out');
+  }
 );
 
 updateAnimationControlValues();
@@ -5046,71 +5074,35 @@ if (
 }
 
 
-applyInAnimationButton?.addEventListener(
+applyAllAnimationButton?.addEventListener(
   'click',
   () => {
+
+    const draftAnimation =
+      getAnimationDraftFromControls();
+
     applyAnimationValueToScope(
       block => {
-        block.animation.in = {
-          preset:
-            animationPresetInput.value,
 
-          duration:
-            Number(
-              inDurationInput.value
-            ) || 0.5
+        block.animation = {
+          in: {
+            ...draftAnimation.in
+          },
+
+          hold: {
+            ...draftAnimation.hold
+          },
+
+          out: {
+            ...draftAnimation.out
+          }
         };
 
         /*
-         * 旧形式との互換用
+         * 旧形式との互換用。
          */
         block.animationPreset =
           block.animation.in.preset;
-      }
-    );
-  }
-);
-
-
-applyHoldAnimationButton?.addEventListener(
-  'click',
-  () => {
-    applyAnimationValueToScope(
-      block => {
-        block.animation.hold = {
-          preset:
-            holdPresetInput.value,
-
-          speed:
-            Number(
-              holdSpeedInput.value
-            ) || 1,
-
-          strength:
-            Number(
-              holdStrengthInput.value
-            ) || 12
-        };
-      }
-    );
-  }
-);
-
-
-applyOutAnimationButton?.addEventListener(
-  'click',
-  () => {
-    applyAnimationValueToScope(
-      block => {
-        block.animation.out = {
-          preset:
-            outPresetInput.value,
-
-          duration:
-            Number(
-              outDurationInput.value
-            ) || 0.5
-        };
       }
     );
   }
@@ -8906,6 +8898,138 @@ commitEditorHistory(
 );
 }
 }
+
+
+/*
+ * Inspector上の現在値から
+ * 一時プレビュー用Animationを作る。
+ *
+ * sectionData自体は変更しない。
+ */
+function getAnimationDraftFromControls() {
+  return {
+    in: {
+      preset:
+        animationPresetInput?.value ||
+        'off',
+
+      duration:
+        Number(
+          inDurationInput?.value
+        ) || 0.5
+    },
+
+    hold: {
+      preset:
+        holdPresetInput?.value ||
+        'off',
+
+      speed:
+        Number(
+          holdSpeedInput?.value
+        ) || 1,
+
+      strength:
+        Number(
+          holdStrengthInput?.value
+        ) || 12
+    },
+
+    out: {
+      preset:
+        outPresetInput?.value ||
+        'off',
+
+      duration:
+        Number(
+          outDurationInput?.value
+        ) || 0.5
+    }
+  };
+}
+
+
+/*
+ * Inspectorを触った瞬間に
+ * 選択中ブロックだけプレビューする。
+ *
+ * 保存はしない。
+ */
+function previewAnimationFromControls(
+  phase = 'all'
+) {
+  const selectedBlock =
+    getSelectedLyricsBlockData();
+
+  if (!selectedBlock) {
+    return;
+  }
+
+  const draftAnimation =
+    getAnimationDraftFromControls();
+
+  const previewBlock = {
+    ...selectedBlock,
+
+    animation:
+      draftAnimation,
+
+    /*
+     * 旧形式互換。
+     */
+    animationPreset:
+      draftAnimation.in.preset
+  };
+
+
+  /*
+   * Editor内プレビュー。
+   *
+   * INを変更したときだけ
+   * 登場アニメーションを再スタート。
+   */
+  updateEditorPreview(
+    previewBlock,
+    {
+      animate:
+        phase === 'in'
+    }
+  );
+
+
+  /*
+   * 外出しVisualizerにも
+   * 保存前のDraftを送る。
+   */
+  sendLyricsBlockToVisualizer(
+    previewBlock
+  );
+
+
+  /*
+   * OUTだけは停止中だと通常表示になるため、
+   * OUT操作時だけ直接プレビューする。
+   */
+  if (phase === 'out') {
+    const previewLyrics =
+      document.getElementById(
+        'editorPreviewLyrics'
+      );
+
+    if (previewLyrics) {
+      applyEditorLyricsOutAnimation(
+        previewLyrics,
+        draftAnimation,
+        Math.max(
+          0.01,
+          draftAnimation.out.duration *
+          0.5
+        )
+      );
+    }
+  }
+}
+
 
 
 function updateAnimationControlValues() {
