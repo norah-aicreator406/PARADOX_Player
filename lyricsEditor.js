@@ -52,6 +52,224 @@ const lyricsEditorTimeline =
 
 
 
+/* ==================================================
+   Media Track Module Connection (Phase 3-1)
+
+   project.jsonへの保存はPhase 3-2で対応する。
+   このフェーズではメモリ上のmediaLayersのみを扱う。
+================================================== */
+
+let mediaLayers = [];
+
+const MEDIA_TRACK_COLLAPSED_STORAGE_KEY =
+  'norahEditorMediaTrackCollapsed';
+
+const lyricsEditorMediaTrack =
+  window.LyricsEditorMediaTrack.create({
+    getCurrentLayers() {
+      return mediaLayers;
+    },
+
+    getTimelineScale() {
+      return timelineScale;
+    },
+
+    getTotalWidth() {
+      return getTimelineTotalWidth();
+    },
+
+    parseTime(
+      timeText
+    ) {
+      return parseTimeToSeconds(
+        timeText
+      );
+    },
+
+    formatTime(
+      seconds
+    ) {
+      return formatSecondsToTime(
+        seconds
+      );
+    },
+
+    minBlockWidth:
+      TIMELINE_MIN_BLOCK_WIDTH,
+
+    rowHeight:
+      44
+  });
+
+
+function createMediaLayerData(type) {
+  const startSeconds =
+    editorAudio?.currentTime || 0;
+
+  const nowIso =
+    new Date().toISOString();
+
+  return {
+    id:
+      `media_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+
+    type,
+
+    source: {
+      path: '',
+      fileName: ''
+    },
+
+    start:
+      formatSecondsToTime(
+        startSeconds
+      ),
+
+    end:
+      formatSecondsToTime(
+        startSeconds + 3
+      ),
+
+    loop: false,
+    muted: true,
+
+    opacity: 1,
+    visible: true,
+
+    layoutByRatio:
+      window.NorahMediaLayout.createDefaultLayoutByRatio(),
+
+    createdAt: nowIso,
+    updatedAt: nowIso
+  };
+}
+
+
+const addMediaLayerButton =
+  document.getElementById(
+    'addMediaLayerButton'
+  );
+
+if (addMediaLayerButton) {
+  addMediaLayerButton.addEventListener(
+    'click',
+    () => {
+      const layer =
+        createMediaLayerData(
+          'image'
+        );
+
+      mediaLayers.push(
+        layer
+      );
+
+      lyricsEditorMediaTrack.render();
+      lyricsEditorMediaTrack.selectLayer(
+        layer.id
+      );
+    }
+  );
+}
+
+
+const deleteMediaLayerButton =
+  document.getElementById(
+    'deleteMediaLayerButton'
+  );
+
+if (deleteMediaLayerButton) {
+  deleteMediaLayerButton.addEventListener(
+    'click',
+    () => {
+      const selectedId =
+        lyricsEditorMediaTrack.getSelectedId();
+
+      if (!selectedId) {
+        return;
+      }
+
+      const ok =
+        confirm(
+          'このメディアレイヤーを削除しますか？'
+        );
+
+      if (!ok) {
+        return;
+      }
+
+      mediaLayers =
+        mediaLayers.filter(
+          layer => layer.id !== selectedId
+        );
+
+      lyricsEditorMediaTrack.clearSelection();
+    }
+  );
+}
+
+
+const mediaTrackPanel =
+  document.getElementById(
+    'mediaTrackPanel'
+  );
+
+const mediaTrackHeader =
+  mediaTrackPanel?.querySelector(
+    '.mediaTrackHeader'
+  );
+
+if (mediaTrackPanel && mediaTrackHeader) {
+  if (
+    localStorage.getItem(
+      MEDIA_TRACK_COLLAPSED_STORAGE_KEY
+    ) === 'true'
+  ) {
+    mediaTrackPanel.classList.add(
+      'is-collapsed'
+    );
+  }
+
+  mediaTrackHeader.addEventListener(
+    'click',
+    (event) => {
+      if (event.target.closest('button')) {
+        return;
+      }
+
+      mediaTrackPanel.classList.toggle(
+        'is-collapsed'
+      );
+
+      localStorage.setItem(
+        MEDIA_TRACK_COLLAPSED_STORAGE_KEY,
+        mediaTrackPanel.classList.contains('is-collapsed')
+          ? 'true'
+          : 'false'
+      );
+    }
+  );
+}
+
+
+/*
+ * ここではrender()を呼ばない。
+ *
+ * editorAudioは2455行目でletされ、
+ * setupEditorAudioPlayer()内で実際に
+ * 代入されるため、スクリプト読み込み中の
+ * この時点で呼ぶとTDZ(Temporal Dead Zone)
+ * エラーになる。
+ *
+ * mediaLayersは初期状態で空配列であり、
+ * #mediaBlockListも初期状態で空のため、
+ * ここで描画しなくても見た目に差はない。
+ * 追加/削除ボタンのハンドラはユーザー操作後
+ * （スクリプト読み込み完了後）にのみ発火するため、
+ * そちらのrender()呼び出しは問題ない。
+ */
+
+
+
 const lyricsImportDialog = document.getElementById('lyricsImportDialog');
 const openLyricsImportButton = document.getElementById('openLyricsImportButton');
 const cancelLyricsImportButton = document.getElementById('cancelLyricsImportButton');

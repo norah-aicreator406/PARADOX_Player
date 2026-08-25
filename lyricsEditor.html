@@ -1795,6 +1795,46 @@
   </div>
 </div>
 
+<!-- ==================================================
+     Media Track (Phase 3-1)
+     既存の.timelineGrid終了直後・既存の閉じタグより前へ
+     自己完結したブロックとして追加。既存タグは無変更。
+================================================== -->
+<div id="mediaTrackPanel">
+
+  <div class="mediaTrackHeader">
+    <span class="mediaTrackCollapseToggle">▼</span>
+    <span class="mediaTrackTitle">メディア</span>
+
+    <button
+      id="addMediaLayerButton"
+      class="mediaTrackAddButton"
+      type="button"
+    >
+      ＋ 追加
+    </button>
+
+    <button
+      id="deleteMediaLayerButton"
+      class="mediaTrackDeleteButton"
+      type="button"
+    >
+      削除
+    </button>
+  </div>
+
+  <div class="mediaTrackBody">
+    <div class="mediaTrackScrollArea">
+      <div id="mediaTrackContent">
+        <div class="mediaTrackArea">
+          <div id="mediaBlockList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
   </div>
 </section>
 
@@ -2137,6 +2177,10 @@
 <script src="./lyricsEditorAnimation.js"></script>
 <script src="./FontManager.js"></script>
 <script src="./lyricsEditorFontLibrary.js"></script>
+
+<script src="./mediaLayoutResolver.js"></script>
+<script src="./lyricsEditorMediaTrack.js"></script>
+
 <script src="./lyricsEditor.js"></script>
 
 
