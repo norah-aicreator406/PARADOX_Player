@@ -7247,81 +7247,875 @@ showSection(currentSectionName);
 }
 
 
-function renderSectionTabs() {
-  const container = document.getElementById('sectionTabs');
-  if (!container) return;
 
-  container.innerHTML = '';
+function openSectionNameDialog({
+  title = 'セクション追加',
+  initialValue = '',
+  onConfirm
+} = {}) {
+  const dialog =
+    document.getElementById(
+      'sectionNameDialog'
+    );
 
-  Object.keys(sectionData).forEach(sectionName => {
-    const tab = document.createElement('button');
-    tab.className = 'sectionTab';
-    tab.textContent = sectionName;
+  const titleElement =
+    document.getElementById(
+      'sectionNameDialogTitle'
+    );
 
-    if (sectionName === currentSectionName) {
-      tab.classList.add('active');
-    }
+  const input =
+    document.getElementById(
+      'sectionNameDialogInput'
+    );
 
-    let sectionTabClickTimer = null;
+  const confirmButton =
+    document.getElementById(
+      'sectionNameDialogConfirm'
+    );
 
-    tab.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
+  const cancelButton =
+    document.getElementById(
+      'sectionNameDialogCancel'
+    );
 
-      if (sectionTabClickTimer) {
-        clearTimeout(sectionTabClickTimer);
-        sectionTabClickTimer = null;
-        renameSection(sectionName);
-        return;
-      }
-
-      sectionTabClickTimer = setTimeout(() => {
-        showSection(sectionName);
-        sectionTabClickTimer = null;
-      }, 220);
-    });
-
-    container.appendChild(tab);
-  });
-
-  const addButton = document.createElement('button');
-  addButton.className = 'sectionTab sectionTabAdd';
-  addButton.textContent = '+';
-
-  addButton.addEventListener('click', () => {
-    const name = prompt('セクション名を入力してください', 'New Section');
-    if (!name) return;
-
-    if (!sectionData[name]) {
-      sectionData[name] = [];
-    }
-
-    showSection(name);
-  });
-
-  container.appendChild(addButton);
-}
-
-
-function renameSection(oldName) {
-  const newName = prompt('セクション名を変更', oldName);
-
-  if (!newName) return;
-  if (newName === oldName) return;
-
-  if (sectionData[newName]) {
-    alert('同じ名前のセクションがすでにあります。');
+  if (
+    !dialog ||
+    !input ||
+    !confirmButton ||
+    !cancelButton
+  ) {
     return;
   }
 
-  sectionData[newName] = sectionData[oldName] || [];
-  delete sectionData[oldName];
+  titleElement.textContent =
+    title;
 
-  if (currentSectionName === oldName) {
-    currentSectionName = newName;
+  input.value =
+    initialValue;
+
+  dialog.classList.remove(
+    'is-hidden'
+  );
+
+  requestAnimationFrame(() => {
+    input.focus();
+    input.select();
+  });
+
+  const close = () => {
+    dialog.classList.add(
+      'is-hidden'
+    );
+
+    confirmButton.onclick =
+      null;
+
+    cancelButton.onclick =
+      null;
+
+    input.onkeydown =
+      null;
+  };
+
+  const confirm = () => {
+    const value =
+      input.value.trim();
+
+    if (!value) {
+      return;
+    }
+
+    onConfirm?.(
+      value
+    );
+
+    close();
+  };
+
+  confirmButton.onclick =
+    confirm;
+
+  cancelButton.onclick =
+    close;
+
+  input.onkeydown =
+    event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        confirm();
+      }
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        close();
+      }
+    };
+}
+
+
+function renderSectionTabs() {
+  const container =
+    document.getElementById(
+      'sectionTabs'
+    );
+
+  if (!container) {
+    return;
   }
 
-  showSection(currentSectionName);
+  container.innerHTML = '';
+
+  let draggedSectionName = null;
+  let dragBeforeState = null;
+  let suppressNextClick = false;
+
+
+  /*
+   * sectionData のキー順を
+   * 指定された順番へ並び替える。
+   *
+   * sectionData 自体は const なので、
+   * オブジェクトを再代入せず、
+   * 一度削除して同じデータを
+   * 新しい順番で入れ直す。
+   */
+  function reorderSectionData(
+    orderedNames
+  ) {
+    const savedData = {};
+
+    orderedNames.forEach(
+      sectionName => {
+        savedData[sectionName] =
+          sectionData[
+            sectionName
+          ];
+      }
+    );
+
+    Object.keys(
+      sectionData
+    ).forEach(
+      sectionName => {
+        delete sectionData[
+          sectionName
+        ];
+      }
+    );
+
+    orderedNames.forEach(
+      sectionName => {
+        sectionData[
+          sectionName
+        ] =
+          savedData[
+            sectionName
+          ];
+      }
+    );
+  }
+
+
+  Object
+    .keys(
+      sectionData
+    )
+    .forEach(
+      sectionName => {
+        const tab =
+          document.createElement(
+            'button'
+          );
+
+        tab.type =
+          'button';
+
+        tab.className =
+          'sectionTab';
+
+        tab.textContent =
+          sectionName;
+
+        tab.dataset.sectionName =
+          sectionName;
+
+        /*
+         * タブをドラッグ可能にする。
+         */
+        tab.draggable =
+          true;
+
+
+        if (
+          sectionName ===
+          currentSectionName
+        ) {
+          tab.classList.add(
+            'active'
+          );
+        }
+
+
+        let sectionTabClickTimer =
+          null;
+
+
+        /*
+         * 通常クリック /
+         * ダブルクリック名前変更
+         */
+        tab.addEventListener(
+          'click',
+          event => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            /*
+             * ドラッグ終了直後に発生する
+             * clickを無視する。
+             */
+            if (
+              suppressNextClick
+            ) {
+              suppressNextClick =
+                false;
+
+              return;
+            }
+
+
+            if (
+              sectionTabClickTimer
+            ) {
+              clearTimeout(
+                sectionTabClickTimer
+              );
+
+              sectionTabClickTimer =
+                null;
+
+              renameSection(
+                sectionName
+              );
+
+              return;
+            }
+
+
+            sectionTabClickTimer =
+              setTimeout(
+                () => {
+                  showSection(
+                    sectionName
+                  );
+
+                  sectionTabClickTimer =
+                    null;
+                },
+                220
+              );
+          }
+        );
+
+
+        /*
+ * =========================
+ * 右クリック
+ * セクション削除
+ * =========================
+ */
+tab.addEventListener(
+  'contextmenu',
+  event => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    deleteSection(
+      sectionName
+    );
+  }
+);
+
+
+        /*
+         * =========================
+         * Drag Start
+         * =========================
+         */
+        tab.addEventListener(
+          'dragstart',
+          event => {
+            draggedSectionName =
+              sectionName;
+
+            dragBeforeState =
+              captureEditorState();
+
+            suppressNextClick =
+              true;
+
+            tab.classList.add(
+              'is-dragging'
+            );
+
+
+            if (
+              event.dataTransfer
+            ) {
+              event
+                .dataTransfer
+                .effectAllowed =
+                  'move';
+
+              event
+                .dataTransfer
+                .setData(
+                  'text/plain',
+                  sectionName
+                );
+            }
+          }
+        );
+
+
+        /*
+         * =========================
+         * Drag Over
+         * =========================
+         */
+        tab.addEventListener(
+          'dragover',
+          event => {
+            if (
+              !draggedSectionName ||
+              draggedSectionName ===
+                sectionName
+            ) {
+              return;
+            }
+
+            event.preventDefault();
+
+
+            const rect =
+              tab.getBoundingClientRect();
+
+            const midpoint =
+              rect.left +
+              rect.width / 2;
+
+            const insertBefore =
+              event.clientX <
+              midpoint;
+
+
+            tab.classList.toggle(
+              'drag-before',
+              insertBefore
+            );
+
+            tab.classList.toggle(
+              'drag-after',
+              !insertBefore
+            );
+          }
+        );
+
+
+        tab.addEventListener(
+          'dragleave',
+          () => {
+            tab.classList.remove(
+              'drag-before',
+              'drag-after'
+            );
+          }
+        );
+
+
+        /*
+         * =========================
+         * Drop
+         * =========================
+         */
+        tab.addEventListener(
+          'drop',
+          event => {
+            event.preventDefault();
+
+            if (
+              !draggedSectionName ||
+              draggedSectionName ===
+                sectionName
+            ) {
+              return;
+            }
+
+
+            const rect =
+              tab.getBoundingClientRect();
+
+            const insertBefore =
+              event.clientX <
+              (
+                rect.left +
+                rect.width / 2
+              );
+
+
+            const orderedNames =
+              Object.keys(
+                sectionData
+              );
+
+
+            /*
+             * 移動元をいったん削除。
+             */
+            const filteredNames =
+              orderedNames.filter(
+                name =>
+                  name !==
+                  draggedSectionName
+              );
+
+
+            let targetIndex =
+              filteredNames.indexOf(
+                sectionName
+              );
+
+
+            if (!insertBefore) {
+              targetIndex += 1;
+            }
+
+
+            /*
+             * 新しい位置へ挿入。
+             */
+            filteredNames.splice(
+              targetIndex,
+              0,
+              draggedSectionName
+            );
+
+
+            reorderSectionData(
+              filteredNames
+            );
+
+
+            /*
+             * UI再描画。
+             *
+             * currentSectionNameは
+             * 変更しないので、
+             * 選択中セクションも維持される。
+             */
+            renderSectionTabs();
+
+
+            if (
+              dragBeforeState
+            ) {
+              commitEditorHistory(
+                dragBeforeState
+              );
+            }
+
+
+            draggedSectionName =
+              null;
+
+            dragBeforeState =
+              null;
+          }
+        );
+
+
+        /*
+         * =========================
+         * Drag End
+         * =========================
+         */
+        tab.addEventListener(
+          'dragend',
+          () => {
+            document
+              .querySelectorAll(
+                '.sectionTab'
+              )
+              .forEach(
+                item => {
+                  item.classList.remove(
+                    'is-dragging',
+                    'drag-before',
+                    'drag-after'
+                  );
+                }
+              );
+
+
+            draggedSectionName =
+              null;
+
+            dragBeforeState =
+              null;
+
+
+            /*
+             * dragend直後のclickを
+             * 確実に無視する。
+             */
+            setTimeout(
+              () => {
+                suppressNextClick =
+                  false;
+              },
+              50
+            );
+          }
+        );
+
+
+        container.appendChild(
+          tab
+        );
+      }
+    );
+
+
+  /*
+   * =========================
+   * セクション追加ボタン
+   * =========================
+   */
+  const addButton =
+    document.createElement(
+      'button'
+    );
+
+  addButton.type =
+    'button';
+
+  addButton.className =
+    'sectionTab sectionTabAdd';
+
+  addButton.textContent =
+    '+';
+
+
+  addButton.addEventListener(
+    'click',
+    () => {
+      openSectionNameDialog({
+        title:
+          'セクション追加',
+
+        initialValue:
+          'New Section',
+
+        onConfirm:
+          name => {
+            if (
+              sectionData[
+                name
+              ]
+            ) {
+              alert(
+                '同じ名前のセクションがすでにあります。'
+              );
+
+              return;
+            }
+
+
+            const beforeState =
+              captureEditorState();
+
+
+            sectionData[
+              name
+            ] = [];
+
+
+            currentSectionName =
+              name;
+
+
+            showSection(
+              name
+            );
+
+
+            commitEditorHistory(
+              beforeState
+            );
+          }
+      });
+    }
+  );
+
+
+  /*
+   * ＋は必ず最後。
+   * draggableにもしていない。
+   */
+  container.appendChild(
+    addButton
+  );
+}
+
+
+function deleteSection(
+  sectionName
+) {
+  const sectionNames =
+    Object.keys(
+      sectionData
+    );
+
+  /*
+   * 最低1セクションは残す。
+   */
+  if (
+    sectionNames.length <= 1
+  ) {
+    alert(
+      '最後のセクションは削除できません。'
+    );
+
+    return;
+  }
+
+
+  const blocksToDelete =
+    sectionData[
+      sectionName
+    ] || [];
+
+
+  const confirmed =
+    window.confirm(
+      `「${sectionName}」を削除しますか？\n\n` +
+      `${blocksToDelete.length}個の歌詞ブロックも削除されます。`
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  const beforeState =
+    captureEditorState();
+
+
+  /*
+   * 削除対象ブロックIDを保存。
+   */
+  const deletedBlockIds =
+    new Set(
+      blocksToDelete.map(
+        block => block.id
+      )
+    );
+
+
+  /*
+   * sectionDataから削除。
+   */
+  delete sectionData[
+    sectionName
+  ];
+
+
+  /*
+   * セクションごとの
+   * 選択記録も削除。
+   */
+  lastSelectedBlockIdBySection
+    .delete(
+      sectionName
+    );
+
+
+  /*
+   * 削除されたブロックが
+   * 複数選択状態に残らないようにする。
+   */
+  deletedBlockIds.forEach(
+    blockId => {
+      selectedLyricsBlockIds
+        .delete(
+          blockId
+        );
+    }
+  );
+
+
+  /*
+   * 最後に選択していたブロックも
+   * 削除対象なら解除。
+   */
+  if (
+    deletedBlockIds.has(
+      lastSelectedLyricsBlockId
+    )
+  ) {
+    lastSelectedLyricsBlockId =
+      null;
+  }
+
+
+  /*
+   * 現在表示中のセクションを
+   * 削除した場合。
+   *
+   * できるだけ削除位置に近い
+   * セクションへ移動する。
+   */
+  if (
+    currentSectionName ===
+    sectionName
+  ) {
+    const deletedIndex =
+      sectionNames.indexOf(
+        sectionName
+      );
+
+    const remainingNames =
+      Object.keys(
+        sectionData
+      );
+
+    const nextIndex =
+      Math.min(
+        deletedIndex,
+        remainingNames.length - 1
+      );
+
+    currentSectionName =
+      remainingNames[
+        nextIndex
+      ];
+  }
+
+
+  /*
+   * 現在セクションを再表示。
+   */
+  showSection(
+    currentSectionName
+  );
+
+
+  /*
+   * Undo 1回で戻せるようにする。
+   */
+  commitEditorHistory(
+    beforeState
+  );
+}
+
+
+function renameSection(
+  oldName
+) {
+  openSectionNameDialog({
+    title:
+      'セクション名を変更',
+
+    initialValue:
+      oldName,
+
+    onConfirm:
+      newName => {
+        if (
+          newName ===
+          oldName
+        ) {
+          return;
+        }
+
+        if (
+          sectionData[
+            newName
+          ]
+        ) {
+          alert(
+            '同じ名前のセクションがすでにあります。'
+          );
+
+          return;
+        }
+
+        const beforeState =
+          captureEditorState();
+
+        /*
+         * データを新しい名前へ移動
+         */
+        sectionData[
+          newName
+        ] =
+          sectionData[
+            oldName
+          ] || [];
+
+        delete sectionData[
+          oldName
+        ];
+
+        /*
+         * 選択中なら
+         * 現在セクション名も更新
+         */
+        if (
+          currentSectionName ===
+          oldName
+        ) {
+          currentSectionName =
+            newName;
+        }
+
+        /*
+         * セクションごとの
+         * 最終選択ブロック記録も移動
+         */
+        if (
+          lastSelectedBlockIdBySection
+            .has(
+              oldName
+            )
+        ) {
+          const blockId =
+            lastSelectedBlockIdBySection
+              .get(
+                oldName
+              );
+
+          lastSelectedBlockIdBySection
+            .delete(
+              oldName
+            );
+
+          lastSelectedBlockIdBySection
+            .set(
+              newName,
+              blockId
+            );
+        }
+
+        showSection(
+          currentSectionName
+        );
+
+        commitEditorHistory(
+          beforeState
+        );
+      }
+  });
 }
 
 

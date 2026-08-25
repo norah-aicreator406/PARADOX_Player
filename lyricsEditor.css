@@ -6862,6 +6862,147 @@ body.font-library-open
 }
 
 
+.sectionNameDialog {
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.55);
+
+  z-index: 20000;
+}
+
+.sectionNameDialog.is-hidden {
+  display: none;
+}
+
+.sectionNameDialogPanel {
+  width: 360px;
+  padding: 24px;
+
+  border-radius: 16px;
+
+  background: #151b24;
+  border: 1px solid rgba(120, 180, 255, 0.25);
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+.sectionNameDialogTitle {
+  margin-bottom: 16px;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  color: #ffffff;
+}
+
+#sectionNameDialogInput {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 12px 14px;
+
+  border-radius: 10px;
+  border: 1px solid #39475a;
+
+  background: #0e131b;
+  color: #ffffff;
+
+  font-size: 16px;
+}
+
+.sectionNameDialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+
+  margin-top: 18px;
+}
+
+.sectionNameDialogActions button {
+  padding: 9px 16px;
+
+  border-radius: 10px;
+  border: none;
+
+  cursor: pointer;
+}
+
+
+
+.sectionTab {
+  position: relative;
+}
+
+.sectionTab[draggable="true"] {
+  cursor: grab;
+}
+
+.sectionTab[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.sectionTab.is-dragging {
+  opacity: 0.42;
+}
+
+
+/*
+ * 左側へ挿入
+ */
+.sectionTab.drag-before::before {
+  content: "";
+
+  position: absolute;
+  left: -3px;
+  top: 4px;
+  bottom: 4px;
+
+  width: 3px;
+
+  border-radius: 3px;
+
+  background: #7cfbff;
+
+  box-shadow:
+    0 0 8px
+    rgba(124, 251, 255, 0.75);
+}
+
+
+/*
+ * 右側へ挿入
+ */
+.sectionTab.drag-after::after {
+  content: "";
+
+  position: absolute;
+  right: -3px;
+  top: 4px;
+  bottom: 4px;
+
+  width: 3px;
+
+  border-radius: 3px;
+
+  background: #7cfbff;
+
+  box-shadow:
+    0 0 8px
+    rgba(124, 251, 255, 0.75);
+}
+
+
+.sectionTabAdd {
+  cursor: pointer;
+}
+
+
 /*
 #fontLibraryOverlay.is-font-dragging::after {
   content:

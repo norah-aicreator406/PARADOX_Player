@@ -685,6 +685,195 @@ function deleteSong(songId) {
 
 
 /*
+  Media Layer（画像・動画レイヤー）の読み書き。
+  project.jsonのproject.visualLayersを唯一の保存先とする。
+*/
+function getVisualLayers(songId) {
+  const song = getSongById(songId);
+
+  if (
+    !song ||
+    !song.projectPath ||
+    !fs.existsSync(song.projectPath)
+  ) {
+    return [];
+  }
+
+  try {
+    const project = JSON.parse(
+      fs.readFileSync(
+        song.projectPath,
+        'utf-8'
+      )
+    );
+
+    const visualLayers =
+      project?.project?.visualLayers;
+
+    return Array.isArray(visualLayers)
+      ? visualLayers
+      : [];
+  } catch (error) {
+    console.warn(
+      'visualLayersの読み込みに失敗しました:',
+      error
+    );
+
+    return [];
+  }
+}
+
+function saveVisualLayers(songId, visualLayers) {
+  const song = getSongById(songId);
+
+  if (
+    !song ||
+    !song.projectPath ||
+    !fs.existsSync(song.projectPath)
+  ) {
+    return false;
+  }
+
+  try {
+    const project = JSON.parse(
+      fs.readFileSync(
+        song.projectPath,
+        'utf-8'
+      )
+    );
+
+    /*
+      visualLayers導入前に作られた
+      古い形式のproject.jsonにも対応する。
+    */
+    project.project =
+      project.project || {};
+
+    project.project.visualLayers =
+      Array.isArray(visualLayers)
+        ? visualLayers
+        : [];
+
+    project.updatedAt =
+      new Date().toISOString();
+
+    fs.writeFileSync(
+      song.projectPath,
+      JSON.stringify(
+        project,
+        null,
+        2
+      ),
+      'utf-8'
+    );
+
+    return true;
+  } catch (error) {
+    console.warn(
+      'visualLayersの保存に失敗しました:',
+      error
+    );
+
+    return false;
+  }
+}
+
+/*
+  曲フォルダ内のassetsディレクトリを返す。
+  存在しない場合は作成する。
+*/
+function getSongAssetsDir(songId) {
+  const song = getSongById(songId);
+
+  if (!song || !song.projectPath) {
+    return null;
+  }
+
+  const songDir =
+    path.dirname(song.projectPath);
+
+  const assetsDir = path.join(
+    songDir,
+    'assets'
+  );
+
+  fs.mkdirSync(assetsDir, {
+    recursive: true
+  });
+
+  return assetsDir;
+}
+
+/*
+  Media Layer素材をassetsフォルダへコピーする。
+
+  同名ファイルが既にある場合は上書きせず、
+  background.png → background_2.png のように
+  連番を付けた別名で保存する（duplicate-safe）。
+*/
+function copyMediaAssetIntoSong(songId, sourceFilePath) {
+  if (
+    !sourceFilePath ||
+    !fs.existsSync(sourceFilePath)
+  ) {
+    return null;
+  }
+
+  const assetsDir =
+    getSongAssetsDir(songId);
+
+  if (!assetsDir) {
+    return null;
+  }
+
+  const extension =
+    path.extname(sourceFilePath);
+
+  const baseName =
+    sanitizeFileName(
+      path.basename(
+        sourceFilePath,
+        extension
+      )
+    );
+
+  let fileName =
+    `${baseName}${extension}`;
+
+  let destinationPath = path.join(
+    assetsDir,
+    fileName
+  );
+
+  let duplicateIndex = 2;
+
+  while (
+    fs.existsSync(destinationPath)
+  ) {
+    fileName =
+      `${baseName}_${duplicateIndex}${extension}`;
+
+    destinationPath = path.join(
+      assetsDir,
+      fileName
+    );
+
+    duplicateIndex += 1;
+  }
+
+  fs.copyFileSync(
+    sourceFilePath,
+    destinationPath
+  );
+
+  return {
+    path: toStoredPath(destinationPath),
+    fileName
+  };
+}
+
+
+/*
   フォルダを再帰的にコピーする。
   fs.cpSyncへ依存せず、ElectronのNodeバージョン差を避ける。
 */
@@ -1295,5 +1484,10 @@ module.exports = {
   getSongById,
   updateSong,
   deleteSong,
-  updateSongArtwork
+  updateSongArtwork,
+
+  getVisualLayers,
+  saveVisualLayers,
+  getSongAssetsDir,
+  copyMediaAssetIntoSong
 };

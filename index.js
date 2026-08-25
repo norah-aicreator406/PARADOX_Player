@@ -1360,6 +1360,54 @@ function saveLibraryTabs() {
 }
 
 
+function removeSongFromCurrentPlaylist(
+  songId
+) {
+  if (
+    activeLibraryFilter.type !==
+    'playlist'
+  ) {
+    return;
+  }
+
+  const playlist =
+    libraryTabs.find(
+      tab =>
+        tab.type ===
+          'playlist' &&
+        tab.id ===
+          activeLibraryFilter.value
+    );
+
+  if (!playlist) {
+    console.warn(
+      '現在のプレイリストが見つかりません'
+    );
+
+    return;
+  }
+
+  playlist.songIds =
+    (
+      Array.isArray(
+        playlist.songIds
+      )
+        ? playlist.songIds
+        : []
+    ).filter(
+      id => id !== songId
+    );
+
+  saveLibraryTabs();
+
+  /*
+   * 再生中の曲は止めない。
+   * 表示中のプレイリストからだけ消す。
+   */
+  renderLibrarySongs();
+}
+
+
 
 function renderLibraryTabs() {
   console.log('renderLibraryTabs called', libraryTabs);
@@ -1591,9 +1639,22 @@ currentPlaybackList = filteredLibrary.map(song =>
 
   <div class="librarySongGenre">${song.genre || '-'}</div>
 
-  <button class="libraryPlaylistAddButton" title="プレイリストに追加">
-    ＋
-  </button>
+  <button
+  class="libraryPlaylistAddButton"
+  title="${
+    activeLibraryFilter.type ===
+      'playlist'
+      ? 'プレイリストから外す'
+      : 'プレイリストに追加'
+  }"
+>
+  ${
+    activeLibraryFilter.type ===
+      'playlist'
+      ? '−'
+      : '＋'
+  }
+</button>
 
   <button class="libraryReserveButton">
     予約
@@ -1636,16 +1697,40 @@ if (reserveButton) {
 }
 
 const playlistAddButton =
-  songElement.querySelector('.libraryPlaylistAddButton');
+  songElement.querySelector(
+    '.libraryPlaylistAddButton'
+  );
 
 if (playlistAddButton) {
-  playlistAddButton.addEventListener('click', (event) => {
-    event.stopPropagation();
+  playlistAddButton.addEventListener(
+    'click',
+    event => {
+      event.stopPropagation();
 
-    console.log('playlist + clicked:', song.id);
+      /*
+       * プレイリスト表示中なら
+       * 現在のプレイリストから外す。
+       */
+      if (
+        activeLibraryFilter.type ===
+        'playlist'
+      ) {
+        removeSongFromCurrentPlaylist(
+          song.id
+        );
 
-    openPlaylistSelectOverlay(song.id);
-  });
+        return;
+      }
+
+      /*
+       * 通常表示なら
+       * 従来どおりプレイリストへ追加。
+       */
+      openPlaylistSelectOverlay(
+        song.id
+      );
+    }
+  );
 }
 
 
